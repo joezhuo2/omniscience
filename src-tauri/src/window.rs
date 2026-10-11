@@ -1,9 +1,11 @@
 //! Overlay window placement.
 
-use tauri::{PhysicalPosition, WebviewWindow};
+use tauri::{LogicalSize, PhysicalPosition, WebviewWindow};
 
 /// Gap between the top of the work area and the overlay, in logical px.
 pub const TOP_MARGIN: f64 = 8.0;
+/// Collapsed overlay size in logical px. Must match `tauri.conf.json`.
+pub const COLLAPSED_SIZE: (f64, f64) = (400.0, 42.0);
 
 /// Top-left position (physical px) that horizontally centers a window at the top of a monitor
 /// work area, `margin` physical px below its top edge.
@@ -20,21 +22,30 @@ pub fn top_center(
 
 /// Moves `window` to the top-center of the primary monitor's work area.
 /// Does nothing if no primary monitor is reported.
+///
+/// Two passes: the first move can cross onto a monitor with a different DPI, and the resulting
+/// `WM_DPICHANGED` rescale changes the window's physical size. The size is then re-asserted in
+/// logical px and the position recomputed from the final size. The window is still hidden, so
+/// nothing visibly jumps.
 pub fn place_top_center(window: &WebviewWindow) -> tauri::Result<()> {
-    let Some(monitor) = window.primary_monitor()? else {
-        return Ok(());
-    };
-    let area = monitor.work_area();
-    let size = window.outer_size()?;
-    let margin = (TOP_MARGIN * monitor.scale_factor()).round() as i32;
-    let (x, y) = top_center(
-        area.position.x,
-        area.position.y,
-        area.size.width,
-        size.width,
-        margin,
-    );
-    window.set_position(PhysicalPosition::new(x, y))
+    for _ in 0..2 {
+        let Some(monitor) = window.primary_monitor()? else {
+            return Ok(());
+        };
+        let area = monitor.work_area();
+        let size = window.outer_size()?;
+        let margin = (TOP_MARGIN * monitor.scale_factor()).round() as i32;
+        let (x, y) = top_center(
+            area.position.x,
+            area.position.y,
+            area.size.width,
+            size.width,
+            margin,
+        );
+        window.set_position(PhysicalPosition::new(x, y))?;
+        window.set_size(LogicalSize::new(COLLAPSED_SIZE.0, COLLAPSED_SIZE.1))?;
+    }
+    Ok(())
 }
 
 #[cfg(test)]
