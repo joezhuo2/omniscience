@@ -35,6 +35,7 @@ jobs:
           workspaces: './src-tauri -> target'
 
       - run: npm ci
+      - run: npm run version:check -- ${{ github.ref_name }}
 
       - uses: tauri-apps/tauri-action@v0
         env:

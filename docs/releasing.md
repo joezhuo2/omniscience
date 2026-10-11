@@ -32,7 +32,8 @@ verification and the banner shows the error.
 ## Cutting a release
 
 1. Bump the version in `package.json`, `src-tauri/Cargo.toml`, and `src-tauri/tauri.conf.json`
-   (all three must match).
+   (all three must match). `npm run version:check` verifies this; CI runs it on every push, and
+   the release workflow also fails if the tag does not match.
 2. Move the `[Unreleased]` entries in `CHANGELOG.md` under a new version heading.
 3. Commit, then tag and push:
 
