@@ -17,3 +17,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ESLint, Prettier, rustfmt, and clippy configuration.
 - GitHub Actions CI for Windows and macOS (lint, test, build).
 - Memory/CPU measurement script, window-style probe, and performance log.
+- Telemetry engine: one background thread samples CPU, RAM, disk active time, network, per-GPU usage, package power and temperatures each second and emits a typed snapshot; per-core, per-GPU and process detail is sampled only while the dashboard is open.
+- GPU names, VRAM and temperature via D3DKMT and power via Windows Energy Meter counters, with no admin rights, no drivers and no NVML (a sleeping laptop dGPU is never woken).
+- Guarded `kill_process_group` command that refuses critical OS processes, PIDs 0 and 4, and Omniscience's own process tree.

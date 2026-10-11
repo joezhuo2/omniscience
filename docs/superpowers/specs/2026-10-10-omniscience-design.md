@@ -27,7 +27,7 @@ Success means:
 | Layer | Choice |
 |---|---|
 | Shell | Tauri 2 |
-| Backend | Rust (stable), `sysinfo`, `windows` crate (PDH, Win32), `nvml-wrapper` (runtime-loaded), `ts-rs` |
+| Backend | Rust (stable), `sysinfo`, `windows-sys` (PDH, D3DKMT, Win32), `ts-rs` |
 | Frontend | React 19, TypeScript, Vite, Tailwind CSS v4, `motion` (`motion/react`, formerly Framer Motion), Lucide React, Zustand |
 | Plugins | `tauri-plugin-store`, `tauri-plugin-autostart`, `tauri-plugin-global-shortcut`, `tauri-plugin-updater`, `tauri-plugin-process` |
 | Tests | `cargo test`, Vitest, Testing Library |
@@ -103,7 +103,7 @@ struct Snapshot {
 struct CoreMetrics {
     cpu: Metric,                 // percent
     ram: MemoryMetric,           // used_bytes, total_bytes, percent, level
-    disk: Metric,                // active-time percent
+    disk: Option<Metric>,        // active-time percent (None where unavailable)
     net: NetMetric,              // down_bps, up_bps, down_pct, up_pct (vs rolling peak), level
     igpu: Option<Metric>,
     dgpu: Option<Metric>,
@@ -145,9 +145,9 @@ The thresholds are user-configurable. The frontend maps `Level` to colors and ne
 | RAM | `sysinfo` | `sysinfo` |
 | Network down/up | `sysinfo` networks (sum of non-loopback interfaces) | `sysinfo` |
 | Disk active % | PDH `\PhysicalDisk(_Total)\% Idle Time`, so active = 100 - idle | IOKit block-storage busy time (experimental) |
-| iGPU / dGPU % | PDH `\GPU Engine(*)\Utilization Percentage`, grouped by adapter LUID, max over engine types; LUID mapped to adapter name and kind via DXGI | `--` |
-| GPU memory | PDH `\GPU Adapter Memory(*)\Dedicated Usage` / `Shared Usage`; NVML for NVIDIA totals | `--` |
-| dGPU temp | NVML, **detail tier only and only if PDH shows the dGPU active** (NVML calls can wake a sleeping Optimus dGPU) | `--` |
+| iGPU / dGPU % | PDH `\GPU Engine(*)\Utilization Percentage`, grouped by adapter LUID, max over engine types; LUID mapped to adapter name and kind via D3DKMT | `--` |
+| GPU memory | PDH `\GPU Adapter Memory(*)\Dedicated Usage` / `Shared Usage`; dedicated size from D3DKMT `GETSEGMENTSIZE` | `--` |
+| GPU temp | D3DKMT `ADAPTERPERFDATA` (the value Task Manager shows, any vendor), **detail tier only**; for a discrete GPU only if PDH shows it active, so a sleeping dGPU is never queried | `--` |
 | Package / APU / CPU / GPU / NPU watts | PDH `\Energy Meter(*)\Power` (milliwatts), no admin needed | `--` |
 | Per-core watts | PDH `\Energy Meter(RAPL_Package0_CoreN_CORE)\Power` where present | `--` |
 | Temperatures | PDH `\Thermal Zone Information(*)\High Precision Temperature` (tenths of Kelvin) | `--` |
@@ -158,9 +158,9 @@ displayed. Temperatures are shown as package/zone readings and labeled that way.
 **Network rolling peak:** each direction's ring percent = current bps / max(bps over the last 60 s,
 1 MB/s floor). The ring color uses the same thresholds on this percent.
 
-**GPU discovery:** adapters come from PDH instance names (LUIDs) joined with DXGI adapter descriptions.
-Integrated vs. discrete is decided by DXGI dedicated video memory size and vendor (an adapter with
-less than 1 GiB dedicated memory counts as integrated). Machines with a single GPU show one GPU ring.
+**GPU discovery:** adapters come from D3DKMT (`EnumAdapters2`, registry name, segment sizes) joined to PDH instance
+names by LUID. Integrated vs. discrete is decided by dedicated video memory (an adapter with less than
+1 GiB dedicated memory counts as integrated). Machines with a single GPU show one GPU ring.
 Machines with none show both GPU rings in the missing state.
 
 ### 4.5 Process management
@@ -293,8 +293,7 @@ suspended (`ICoreWebView2_3::TrySuspend`). It resumes on show.
     and to `Normal` while expanded.
   - The webview is suspended while hidden.
   - `sysinfo` refreshes only the kinds each tier needs, and buffers are reused.
-  - No NVML calls in the core tier.
-  - No continuous animations except the critical pulse.
+    - No continuous animations except the critical pulse.
   - Lean bundle: tree-shaken Lucide, `motion` used through its React entry, no UI kit.
 - **Measurement:** `docs/perf.md` records idle collapsed, expanded, and hidden memory and CPU, measured
   on the reference machine (Ryzen AI 9 HX 370, Radeon 890M + RTX 5060 Laptop, 32 GB, Windows 11) at
