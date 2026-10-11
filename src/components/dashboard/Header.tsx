@@ -13,7 +13,7 @@ function Badge({ icon, children }: { icon: ReactNode; children: ReactNode }) {
   );
 }
 
-/** Dashboard header. Also the drag handle for moving the overlay. */
+/** Dashboard header. */
 export function Header({ onSettings }: { onSettings?: () => void }) {
   const watts = useTelemetryStore((s) => s.snapshot?.core.package_watts);
   const hottest = useTelemetryStore((s) =>
@@ -23,11 +23,8 @@ export function Header({ onSettings }: { onSettings?: () => void }) {
     ),
   );
   return (
-    <header data-tauri-drag-region className="flex h-9 items-center gap-2 px-1">
-      <span
-        data-tauri-drag-region
-        className="flex-1 text-xs font-semibold tracking-wide text-island-text"
-      >
+    <header className="flex h-9 items-center gap-2 px-1">
+      <span className="flex-1 text-xs font-semibold tracking-wide text-island-text">
         Omniscience
       </span>
       <StaleDot />

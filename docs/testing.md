@@ -43,7 +43,7 @@ Helpers:
 - [ ] Top processes are grouped by app. The CPU/RAM toggle re-sorts. 3 rows by default; "Show more" expands a scrollable list.
 - [ ] End? then confirm on a harmless app (e.g. Notepad) closes it.
 - [ ] End on a critical process (e.g. `csrss`, `System`) or on Omniscience itself is refused: the row comes back with a toast.
-- [ ] Dragging the header moves the overlay. After restarting the app, it reopens at the new position.
+- [ ] Dragging the pill (row of rings) moves the overlay; the dashboard header no longer drags. After restarting the app, it reopens at the new position.
 
 ## Settings
 

@@ -66,7 +66,7 @@ collapsed pill costs almost nothing.
   **Launch at startup**, **Auto-check for updates**, **Hide over fullscreen apps**, **Check for
   updates now**, **Settings…**, and **Quit**.
 - ⌨️ A global show/hide hotkey, `Ctrl+Shift+O` by default (`Cmd+Shift+O` on macOS).
-- 🖐️ Drag the dashboard header to move the overlay. The position is remembered per monitor layout and
+- 🖐️ Drag the pill (the row of rings) to move the overlay. The position is remembered per monitor layout and
   never restored off-screen.
 - 🎬 Hides automatically while a fullscreen game, video or presentation covers its monitor, and comes
   back when it ends. Telemetry pauses while hidden.
@@ -151,7 +151,7 @@ Settings are kept after uninstalling. Delete the [settings file](#configuration)
 | Open the dashboard       | Move the cursor onto the pill                                  |
 | Close the dashboard      | Move the cursor away, or press **Esc**                         |
 | Show or hide the overlay | `Ctrl+Shift+O` (`Cmd+Shift+O` on macOS), or tray > Show / Hide |
-| Move the overlay         | Drag the dashboard header                                      |
+| Move the overlay         | Drag the pill (the row of rings)                               |
 | Reset its position       | Settings > Reset position                                      |
 | Sort processes           | Click the CPU / RAM toggle on the Top processes card           |
 | End an app               | Click **End?** on its row, then confirm                        |

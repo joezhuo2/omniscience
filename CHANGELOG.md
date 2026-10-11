@@ -23,7 +23,7 @@ First public release.
 - GPU names, VRAM and temperature via D3DKMT and power via Windows Energy Meter counters, with no admin rights, no drivers and no NVML, so a sleeping laptop dGPU is never woken.
 - Tray menu: Show / Hide, Launch at startup, Auto-check for updates, Hide over fullscreen apps (on by default), Check for updates now, Settings…, Quit.
 - Settings view (gear in the dashboard header or tray > Settings…): warning/critical thresholds with step arrows, a segmented update-interval picker (0.5-5 s), a show/hide hotkey recorder (default Ctrl+Shift+O), iOS-style switches for the tray toggles, and Reset position. Settings are saved to the app config folder.
-- Drag the overlay by the dashboard header; its position is remembered per monitor layout and never restored off-screen.
+- Drag the overlay by the pill (the row of rings); its position is remembered per monitor layout and never restored off-screen.
 - The overlay hides itself while a fullscreen app covers its monitor and comes back afterwards. Telemetry pauses and WebView2 memory is trimmed whenever the overlay is hidden.
 - WebView2 runs with software compositing and a low memory target while collapsed, to keep idle memory down.
 - A second launch reveals the running instance instead of starting another.

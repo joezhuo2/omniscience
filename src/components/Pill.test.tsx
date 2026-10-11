@@ -13,6 +13,11 @@ describe('Pill', () => {
     expect(screen.getByTestId('pill').textContent).toBe('');
   });
 
+  it('is the drag handle, including the rings inside it', () => {
+    render(<Pill />);
+    expect(screen.getByTestId('pill')).toHaveAttribute('data-tauri-drag-region', 'deep');
+  });
+
   it('shows every ring as missing before the first tick', () => {
     render(<Pill />);
     expect(screen.queryAllByTestId('ring-arc')).toHaveLength(0);
