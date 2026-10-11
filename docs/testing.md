@@ -1,6 +1,7 @@
 # Manual test checklist
 
-Run before handing off each branch. Record results in the branch handoff notes.
+Run before every release, and before handing off a branch that touches the area. Test the release
+build (`npm run tauri build`), not `tauri dev`. Record results in the release log at the bottom.
 
 Helpers:
 
@@ -9,7 +10,7 @@ Helpers:
 - `powershell -ExecutionPolicy Bypass -File scripts/measure.ps1 -Seconds 30` measures memory and CPU
   (see `docs/perf.md`).
 
-## Window (feat/scaffold)
+## Window
 
 - [ ] Pill appears at top-center of the primary monitor, about 8 px below the top of the work area.
 - [ ] No jump on launch (window is not visible at another position first).
@@ -17,8 +18,72 @@ Helpers:
 - [ ] No title bar or window frame.
 - [ ] Stays above other windows after clicking another app.
 - [ ] No taskbar button. Not listed in Alt+Tab or Win+Tab.
-- [ ] Tray icon present. Left-click hides/shows the pill. Right-click menu: Show / Hide, Quit. Quit exits fully (no omniscience.exe left in Task Manager).
-- [ ] After hiding and showing from the tray, `scripts/window-style.ps1` still reports `TOOLWINDOW=True`, `APPWINDOW=False`.
-- [ ] After restarting Explorer (Task Manager > Windows Explorer > Restart), the tray icon comes back.
+- [ ] `scripts/window-style.ps1` reports `TOOLWINDOW=True`, `APPWINDOW=False`, `TOPMOST=True`.
+- [ ] Clicks on the transparent area beside the pill reach the window underneath.
 - [ ] Correct position at 100% and 150% display scaling (Settings > Display > Scale), restarting the app after each change.
 - [ ] With a second monitor placed left of the primary, the pill still appears on the primary monitor.
+
+## Pill
+
+- [ ] Six rings: CPU, RAM, iGPU, dGPU, Disk, Network (download outside, upload inside). No text.
+- [ ] Rings move with load (start a heavy task and watch CPU climb).
+- [ ] A ring turns amber above the warning threshold and pulses red above the critical one (lower the thresholds in Settings to force it).
+- [ ] A ring with no sensor is dashed, not stuck at 0%.
+
+## Dashboard
+
+- [ ] Moving the cursor onto the pill opens the dashboard at once with the clip-path morph. No flicker or white flash.
+- [ ] Moving the cursor away collapses it at once; coming back mid-collapse reverses it.
+- [ ] Esc closes it.
+- [ ] Header shows package watts and hottest temperature, or `--` where the hardware does not report them.
+- [ ] Metric strip: CPU % with GHz on a second line, RAM like `15/31 GB`, download/upload on two lines.
+- [ ] GPU & Power card lists each GPU with usage, VRAM and temperature, and the watt breakdown.
+- [ ] CPU heatmap has one cell per logical core. Hovering a cell shows usage, clock, watts and temperature.
+- [ ] Skeletons show briefly on first open, then real data.
+- [ ] Top processes are grouped by app. The CPU/RAM toggle re-sorts. 3 rows by default; "Show more" expands a scrollable list.
+- [ ] End? then confirm on a harmless app (e.g. Notepad) closes it.
+- [ ] End on a critical process (e.g. `csrss`, `System`) or on Omniscience itself is refused: the row comes back with a toast.
+- [ ] Dragging the header moves the overlay. After restarting the app, it reopens at the new position.
+
+## Settings
+
+- [ ] Opens from the gear icon and from tray > Settings…; dashboard and settings fade into each other.
+- [ ] Threshold step arrows, update-interval picker and switches all change the value immediately.
+- [ ] Changes survive a restart (`%APPDATA%\io.github.joezhuo2.omniscience\settings.json` is updated).
+- [ ] Hotkey recorder: record a new combination; the new one toggles the overlay and the old one no longer does.
+- [ ] Reset position moves the overlay back to the top-center of the primary monitor.
+- [ ] Deleting `settings.json`, or putting out-of-range values in it, still starts the app with defaults or clamped values.
+
+## Tray and app shell
+
+- [ ] Tray icon present. Left-click hides/shows the pill.
+- [ ] Right-click menu: Show / Hide, Launch at startup, Auto-check for updates, Hide over fullscreen apps, Check for updates now, Settings…, Quit. Checkboxes match Settings.
+- [ ] `Ctrl+Shift+O` hides and shows the overlay.
+- [ ] After hiding and showing, `scripts/window-style.ps1` still reports `TOOLWINDOW=True`, `APPWINDOW=False`.
+- [ ] Launch at startup: toggling it adds/removes Omniscience in Settings > Apps > Startup, and the app starts after sign-in.
+- [ ] A fullscreen video or game on the overlay's monitor hides it; leaving fullscreen brings it back. With the toggle off, it stays.
+- [ ] Launching a second copy reveals the running one; only one `omniscience.exe` stays running.
+- [ ] After restarting Explorer (Task Manager > Windows Explorer > Restart), the tray icon comes back.
+- [ ] Quit exits fully (no `omniscience.exe` or its WebView2 children left in Task Manager).
+
+## Updates
+
+- [ ] Tray > Check for updates now with no newer release reports that you are up to date.
+- [ ] With a newer published release, the island opens with "vX available. Update? Yes / No" and stays until answered.
+- [ ] Yes downloads, installs and restarts into the new version. No dismisses it.
+- [ ] With Auto-check off, no request goes to GitHub at launch.
+
+## Install
+
+- [ ] NSIS installer on a clean user: SmartScreen "More info > Run anyway" works, app starts, tray icon appears.
+- [ ] MSI installer installs and starts.
+- [ ] Uninstall from Settings > Apps removes the app; `settings.json` is kept.
+
+## Release log
+
+Record each pre-release run here: date, version or commit, machine, and anything that failed or was not
+checked.
+
+| Date       | Build             | Machine                     | Result                                                                                                                                                                                                                                                                                                                    |
+| ---------- | ----------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-11 | 0.1.0 (`816bc11`) | Reference machine (perf.md) | Partial, automated only. Pass: window styles (`TOOLWINDOW`, no `APPWINDOW`, `TOPMOST`), top-center position, six rings render, second launch keeps one process. Not run: everything needing real mouse or keyboard input (a synthetic cursor move did not expand the island), installers, updates. Perf: CPU over budget. |
