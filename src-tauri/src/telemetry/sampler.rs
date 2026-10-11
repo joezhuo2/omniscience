@@ -180,6 +180,7 @@ impl Sampler {
             return None;
         }
 
+        #[cfg(windows)]
         let n_logical = self.sys.cpus().len();
         let cores = self
             .sys

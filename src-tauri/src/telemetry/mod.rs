@@ -1,6 +1,7 @@
 //! Telemetry engine: a single background thread samples sensors on a fixed interval and emits one
 //! [`types::Snapshot`] per tick as the `telemetry://tick` event.
 
+#[cfg(any(windows, test))]
 mod parse;
 mod peak;
 pub mod processes;

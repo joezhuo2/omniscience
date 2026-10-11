@@ -116,6 +116,8 @@ pub struct TempSample {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, TS)]
 #[serde(rename_all = "snake_case")]
 #[ts(export)]
+// Only the Windows adapter probe classifies GPUs.
+#[cfg_attr(not(windows), allow(dead_code))]
 pub enum GpuKind {
     Integrated,
     Discrete,
@@ -182,6 +184,8 @@ pub struct Snapshot {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, TS)]
 #[serde(rename_all = "snake_case")]
 #[ts(export)]
+// Only Windows reports access-denied kills.
+#[cfg_attr(not(windows), allow(dead_code))]
 pub enum KillOutcome {
     Killed,
     Protected,

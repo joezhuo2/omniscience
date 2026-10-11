@@ -1,14 +1,17 @@
 //! Hides the overlay while a fullscreen app (game, video, presentation) covers its monitor.
 
 /// A rectangle in physical px: left, top, right, bottom.
+#[cfg(any(windows, test))]
 pub type Rect = (i32, i32, i32, i32);
 
 /// True if `window` covers all of `monitor` (fullscreen or borderless-fullscreen).
+#[cfg(any(windows, test))]
 pub fn covers(window: Rect, monitor: Rect) -> bool {
     window.0 <= monitor.0 && window.1 <= monitor.1 && window.2 >= monitor.2 && window.3 >= monitor.3
 }
 
 /// Shell windows that span the monitor without being a fullscreen app.
+#[cfg(any(windows, test))]
 pub fn is_shell_class(class: &str) -> bool {
     matches!(
         class,
