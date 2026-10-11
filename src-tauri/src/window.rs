@@ -2,13 +2,14 @@
 
 use tauri::{LogicalSize, PhysicalPosition, WebviewWindow};
 
-/// Gap between the top of the work area and the overlay, in logical px.
-pub const TOP_MARGIN: f64 = 8.0;
+/// Gap between the top of the work area and the window, in logical px. The pill itself sits
+/// `hover::TOP_GAP` lower, inside the window.
+pub const TOP_MARGIN: f64 = 0.0;
 /// Collapsed overlay size in logical px. Must match `tauri.conf.json`.
-pub const COLLAPSED_SIZE: (f64, f64) = (400.0, 42.0);
+pub const COLLAPSED_SIZE: (f64, f64) = (420.0, 48.0);
 /// Tallest the expanded dashboard may grow (logical px). The frontend fits the window to its
 /// content within this.
-pub const EXPANDED_MAX_HEIGHT: f64 = 560.0;
+pub const EXPANDED_MAX_HEIGHT: f64 = 640.0;
 
 /// Sets the window height (logical px), clamped to the collapsed and expanded bounds. Width and
 /// the top-left corner never change, so the pill does not move while the window grows or shrinks.
@@ -71,10 +72,10 @@ mod tests {
 
     #[test]
     fn clamps_requested_heights() {
-        assert_eq!(clamp_height(10.0), 42.0);
+        assert_eq!(clamp_height(10.0), 48.0);
         assert_eq!(clamp_height(300.0), 300.0);
-        assert_eq!(clamp_height(5000.0), 560.0);
-        assert_eq!(clamp_height(f64::NAN), 42.0);
+        assert_eq!(clamp_height(5000.0), 640.0);
+        assert_eq!(clamp_height(f64::NAN), 48.0);
     }
 
     #[test]

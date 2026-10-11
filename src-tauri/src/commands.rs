@@ -27,6 +27,10 @@ pub fn set_expanded(
         window::COLLAPSED_SIZE.1
     };
     window::set_height(&window, height).map_err(|e| e.to_string())?;
+    // Collapsed, clicks pass through the transparent margins around the pill.
+    window
+        .set_ignore_cursor_events(!expanded)
+        .map_err(|e| e.to_string())?;
     webview::set_memory_low(&window, !expanded);
     Ok(())
 }

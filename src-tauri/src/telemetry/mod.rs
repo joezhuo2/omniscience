@@ -52,6 +52,10 @@ impl Telemetry {
         })
     }
 
+    pub fn control(&self) -> Control {
+        *self.control.lock().unwrap_or_else(|e| e.into_inner())
+    }
+
     /// Applies `f` to the control state and wakes the collector so the change takes effect now.
     pub fn update(&self, f: impl FnOnce(&mut Control)) {
         let mut c = self.control.lock().unwrap_or_else(|e| e.into_inner());

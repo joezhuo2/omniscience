@@ -1,5 +1,6 @@
 mod commands;
 mod fullscreen;
+mod hover;
 mod platform;
 mod positions;
 mod settings;
@@ -72,6 +73,8 @@ pub fn run() {
             }
             positions.set_tracking(true);
             webview::set_memory_low(&main, true);
+            main.set_ignore_cursor_events(true)?;
+            hover::spawn(app.handle().clone());
             tray::init(app.handle())?;
             main.show()?;
             telemetry.start(app.handle().clone());
