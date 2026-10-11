@@ -6,6 +6,21 @@
 - **Repository:** [joezhuo2/omniscience](https://github.com/joezhuo2/omniscience)
 - **Bundle identifier:** `io.github.joezhuo2.omniscience`
 
+> **Revision (2026-10-11, maintainer request):** the theme and animations follow islet
+> (https://github.com/joezhuo2/islet). This replaces the faux-glass look, the "cool neon" palette, and the
+> Motion spring morph described below:
+>
+> - **Look:** a solid black pill (260 x 34) drawn inside a fixed 420 x 48 window (400 px panel, 22 px
+>   radius), with iOS system colors. Alerts are amber `#FFB340` (warning) and red `#FF453A` (critical).
+> - **Rings:** 22 px, with no icons in the pill. A critical ring pulses three times, not in a loop.
+> - **Morph:** the shape grows with a `clip-path` transition (280 ms, `cubic-bezier(0.32, 0.72, 0, 1)`),
+>   and content fades in after it. Motion is no longer a dependency.
+> - **Hover:** while collapsed, clicks pass through the window and an 80 ms backend cursor poll detects
+>   hover.
+> - **Hover timing:** no delays. The island opens when the cursor reaches the pill and starts closing
+>   when it leaves (maintainer follow-up).
+> - **Update prompt:** it opens the island and keeps it open until answered.
+
 ## 1. Purpose and success criteria
 
 Omniscience is a lightweight, open-source system monitor that lives at the top of the screen as a
@@ -27,7 +42,7 @@ Success means:
 | Layer | Choice |
 |---|---|
 | Shell | Tauri 2 |
-| Backend | Rust (stable), `sysinfo`, `windows` crate (PDH, Win32), `nvml-wrapper` (runtime-loaded), `ts-rs` |
+| Backend | Rust (stable), `sysinfo`, `windows-sys` (PDH, D3DKMT, Win32), `ts-rs` |
 | Frontend | React 19, TypeScript, Vite, Tailwind CSS v4, `motion` (`motion/react`, formerly Framer Motion), Lucide React, Zustand |
 | Plugins | `tauri-plugin-store`, `tauri-plugin-autostart`, `tauri-plugin-global-shortcut`, `tauri-plugin-updater`, `tauri-plugin-process` |
 | Tests | `cargo test`, Vitest, Testing Library |
@@ -41,6 +56,12 @@ Dependency versions are pinned to the latest stable releases at scaffold time.
 - `decorations: false`, `transparent: true`, `alwaysOnTop: true`, `skipTaskbar: true`, `resizable: false`,
   `shadow: false`. macOS requires `macOSPrivateApi: true` for transparency (excludes the Mac App Store,
   which is acceptable).
+- **No taskbar button, no Alt+Tab entry, no Dock icon.** The tray icon is the app's only presence.
+  - On Windows, `WS_EX_TOOLWINDOW` is set and `WS_EX_APPWINDOW` cleared on the HWND before the window is
+    first shown.
+  - On macOS, the app uses `ActivationPolicy::Accessory`.
+  - The window is deliberately *not* made non-activating (`WS_EX_NOACTIVATE`), so keyboard input such as
+    Esc and settings fields keeps working.
 - **Collapsed size:** about 400 x 42 px. **Expanded size:** about 400 x 560 px. Final values are tuned in
   `feat/morph`.
 - **Morph strategy: snap the window, animate the content.** On expand, Rust resizes the native window to
@@ -97,7 +118,7 @@ struct Snapshot {
 struct CoreMetrics {
     cpu: Metric,                 // percent
     ram: MemoryMetric,           // used_bytes, total_bytes, percent, level
-    disk: Metric,                // active-time percent
+    disk: Option<Metric>,        // active-time percent (None where unavailable)
     net: NetMetric,              // down_bps, up_bps, down_pct, up_pct (vs rolling peak), level
     igpu: Option<Metric>,
     dgpu: Option<Metric>,
@@ -139,9 +160,9 @@ The thresholds are user-configurable. The frontend maps `Level` to colors and ne
 | RAM | `sysinfo` | `sysinfo` |
 | Network down/up | `sysinfo` networks (sum of non-loopback interfaces) | `sysinfo` |
 | Disk active % | PDH `\PhysicalDisk(_Total)\% Idle Time`, so active = 100 - idle | IOKit block-storage busy time (experimental) |
-| iGPU / dGPU % | PDH `\GPU Engine(*)\Utilization Percentage`, grouped by adapter LUID, max over engine types; LUID mapped to adapter name and kind via DXGI | `--` |
-| GPU memory | PDH `\GPU Adapter Memory(*)\Dedicated Usage` / `Shared Usage`; NVML for NVIDIA totals | `--` |
-| dGPU temp | NVML, **detail tier only and only if PDH shows the dGPU active** (NVML calls can wake a sleeping Optimus dGPU) | `--` |
+| iGPU / dGPU % | PDH `\GPU Engine(*)\Utilization Percentage`, grouped by adapter LUID, max over engine types; LUID mapped to adapter name and kind via D3DKMT | `--` |
+| GPU memory | PDH `\GPU Adapter Memory(*)\Dedicated Usage` / `Shared Usage`; dedicated size from D3DKMT `GETSEGMENTSIZE` | `--` |
+| GPU temp | D3DKMT `ADAPTERPERFDATA` (the value Task Manager shows, any vendor), **detail tier only**; for a discrete GPU only if PDH shows it active, so a sleeping dGPU is never queried | `--` |
 | Package / APU / CPU / GPU / NPU watts | PDH `\Energy Meter(*)\Power` (milliwatts), no admin needed | `--` |
 | Per-core watts | PDH `\Energy Meter(RAPL_Package0_CoreN_CORE)\Power` where present | `--` |
 | Temperatures | PDH `\Thermal Zone Information(*)\High Precision Temperature` (tenths of Kelvin) | `--` |
@@ -152,9 +173,9 @@ displayed. Temperatures are shown as package/zone readings and labeled that way.
 **Network rolling peak:** each direction's ring percent = current bps / max(bps over the last 60 s,
 1 MB/s floor). The ring color uses the same thresholds on this percent.
 
-**GPU discovery:** adapters come from PDH instance names (LUIDs) joined with DXGI adapter descriptions.
-Integrated vs. discrete is decided by DXGI dedicated video memory size and vendor (an adapter with
-less than 1 GiB dedicated memory counts as integrated). Machines with a single GPU show one GPU ring.
+**GPU discovery:** adapters come from D3DKMT (`EnumAdapters2`, registry name, segment sizes) joined to PDH instance
+names by LUID. Integrated vs. discrete is decided by dedicated video memory (an adapter with less than
+1 GiB dedicated memory counts as integrated). Machines with a single GPU show one GPU ring.
 Machines with none show both GPU rings in the missing state.
 
 ### 4.5 Process management
@@ -249,8 +270,9 @@ Settings are saved with `tauri-plugin-store` and applied live.
 
 ### 6.1 Tray
 
-There is no taskbar entry and no window chrome, so the tray icon is the main control surface.
-Right-click menu:
+There is no taskbar entry, no Alt+Tab entry, and no window chrome, so the tray icon is the only control
+surface. Left-click toggles show/hide. A minimal tray (Show / Hide, Quit) ships in `feat/scaffold` so the
+app can always be closed. The full menu below lands in `feat/app-shell`. Right-click menu:
 
 - Show / Hide Omniscience
 - ☐ Launch at startup
@@ -286,8 +308,7 @@ suspended (`ICoreWebView2_3::TrySuspend`). It resumes on show.
     and to `Normal` while expanded.
   - The webview is suspended while hidden.
   - `sysinfo` refreshes only the kinds each tier needs, and buffers are reused.
-  - No NVML calls in the core tier.
-  - No continuous animations except the critical pulse.
+    - No continuous animations except the critical pulse.
   - Lean bundle: tree-shaken Lucide, `motion` used through its React entry, no UI kit.
 - **Measurement:** `docs/perf.md` records idle collapsed, expanded, and hidden memory and CPU, measured
   on the reference machine (Ryzen AI 9 HX 370, Radeon 890M + RTX 5060 Laptop, 32 GB, Windows 11) at
@@ -319,7 +340,8 @@ suspended (`ICoreWebView2_3::TrySuspend`). It resumes on show.
 
 Branches, in order:
 
-1. `feat/scaffold`: Tauri 2 + Vite + React 19 + TS + Tailwind v4 + motion + Lucide; window config;
+1. `feat/scaffold`: Tauri 2 + Vite + React 19 + TS + Tailwind v4 + motion + Lucide; window config
+   (tool window, no taskbar or Alt+Tab entry); minimal tray (Show / Hide, Quit);
    ESLint/Prettier/Vitest; `cargo fmt`/`clippy`; CI workflow.
 2. `feat/telemetry`: collector with tiers, sources, threshold logic, rolling peak, kill guard, `ts-rs`
    types, tick event.

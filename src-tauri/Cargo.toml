@@ -1,0 +1,48 @@
+[package]
+name = "omniscience"
+version = "0.1.0"
+description = "Dynamic Island-style system monitor overlay"
+authors = ["Omniscience contributors"]
+license = "MIT"
+repository = "https://github.com/joezhuo2/omniscience"
+edition = "2024"
+rust-version = "1.90"
+
+[lib]
+name = "omniscience_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.7", features = [] }
+
+[dependencies]
+tauri = { version = "2.12", features = ["macos-private-api", "tray-icon"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sysinfo = { version = "0.39", default-features = false, features = ["system", "network"] }
+ts-rs = "12"
+tauri-plugin-autostart = "2"
+tauri-plugin-global-shortcut = "2"
+tauri-plugin-process = "2"
+tauri-plugin-single-instance = "2"
+tauri-plugin-updater = "2"
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = 3
+strip = true
+
+[target.'cfg(windows)'.dependencies]
+# Same versions wry uses, for WebView2 memory-level control.
+webview2-com = "0.39"
+windows-core = "0.62"
+windows-sys = { version = "0.61", features = [
+  "Wdk_Graphics_Direct3D",
+  "Win32_Foundation",
+  "Win32_Graphics_Gdi",
+  "Win32_System_Performance",
+  "Win32_System_Threading",
+  "Win32_UI_Shell",
+  "Win32_UI_WindowsAndMessaging",
+] }
