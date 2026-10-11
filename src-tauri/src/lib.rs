@@ -1,6 +1,9 @@
 mod commands;
+mod fullscreen;
 mod platform;
 mod positions;
+mod settings;
+mod shell;
 mod telemetry;
 mod tray;
 mod webview;
@@ -13,11 +16,23 @@ use tauri::Manager;
 pub fn run() {
     let telemetry = telemetry::Telemetry::new(telemetry::Control::default());
     tauri::Builder::default()
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            // A second launch just reveals the running overlay.
+            app.state::<Arc<shell::Shell>>().show(app);
+        }))
+        .plugin(tauri_plugin_autostart::init(
+            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+            Some(vec!["--autostarted"]),
+        ))
+        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .manage(telemetry.clone())
         .invoke_handler(tauri::generate_handler![
             commands::set_expanded,
             commands::set_overlay_height,
-            commands::kill_process_group
+            commands::kill_process_group,
+            commands::get_settings,
+            commands::set_settings,
+            commands::reset_position
         ])
         .on_window_event(|window, event| {
             if let (tauri::WindowEvent::Moved(pos), Some(main)) =
@@ -33,6 +48,15 @@ pub fn run() {
         .setup(move |app| {
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+
+            let settings = settings::load(app.handle());
+            telemetry.update(|c| {
+                c.thresholds = settings.thresholds();
+                c.interval = settings.interval();
+            });
+            let shell = shell::Shell::new(settings);
+            app.manage(shell.clone());
+            shell.init(app.handle());
 
             let main = app
                 .get_webview_window("main")

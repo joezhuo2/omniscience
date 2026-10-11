@@ -2,8 +2,11 @@
 
 use std::sync::Arc;
 
-use tauri::{State, WebviewWindow};
+use tauri::{AppHandle, State, WebviewWindow};
 
+use crate::positions::Positions;
+use crate::settings::Settings;
+use crate::shell::Shell;
 use crate::telemetry::types::KillReport;
 use crate::telemetry::{Telemetry, processes};
 use crate::{webview, window};
@@ -47,4 +50,32 @@ pub async fn kill_process_group(key: String) -> KillReport {
                 message: Some(e.to_string()),
             }],
         })
+}
+
+#[tauri::command]
+pub fn get_settings(shell: State<'_, Arc<Shell>>) -> Settings {
+    shell.settings()
+}
+
+/// Applies and saves settings; returns the values actually applied (after clamping).
+#[tauri::command]
+pub fn set_settings(
+    settings: Settings,
+    app: AppHandle,
+    shell: State<'_, Arc<Shell>>,
+) -> Result<Settings, String> {
+    shell.update_settings(&app, settings)
+}
+
+/// Moves the overlay back to the top-center of the primary monitor and forgets the saved spot.
+#[tauri::command]
+pub fn reset_position(
+    window: WebviewWindow,
+    positions: State<'_, Arc<Positions>>,
+) -> Result<(), String> {
+    positions.set_tracking(false);
+    let result = window::place_top_center(&window).map_err(|e| e.to_string());
+    positions.forget(&window);
+    positions.set_tracking(true);
+    result
 }
