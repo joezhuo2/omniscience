@@ -23,7 +23,9 @@ sysinfo = { version = "0.39", default-features = false, features = ["system", "n
 ts-rs = "12"
 tauri-plugin-autostart = "2"
 tauri-plugin-global-shortcut = "2"
+tauri-plugin-process = "2"
 tauri-plugin-single-instance = "2"
+tauri-plugin-updater = "2"
 
 [profile.release]
 codegen-units = 1
