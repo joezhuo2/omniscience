@@ -3,49 +3,253 @@
 A lightweight, open-source system monitor that floats at the top of your screen as a
 Dynamic Island–style pill and expands into a compact dashboard on hover.
 
+Omniscience stays out of the way: no taskbar button, no Alt+Tab entry, no window to manage. Six
+small rings show CPU, RAM, GPU, disk and network load at a glance. Move the cursor onto the pill and
+it morphs into a dashboard with per-core usage, GPU power and temperature, and the apps using the
+most resources.
+
 > **Status:** pre-alpha. All v1 features are implemented; no release has been published yet.
+
+## Contents
+
+- [Features](#features)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Configuration](#configuration)
+- [Platform support](#platform-support)
+- [Performance](#performance)
+- [Privacy and permissions](#privacy-and-permissions)
+- [Troubleshooting](#troubleshooting)
+- [Development](#development)
+- [Releasing](#releasing)
+- [Contributing](#contributing)
+- [Acknowledgements](#acknowledgements)
+- [License](#license)
 
 ## Features
 
-- **Pill:** a black Dynamic Island–style pill (styled after [islet](https://github.com/joezhuo2/islet))
-  with six live rings (CPU, RAM, iGPU, dGPU, Disk, and a download/upload Network ring), colored by
-  load: the metric's accent up to 70%, amber above 70%, red above 90%.
-- **Hover to expand** into a dashboard with:
-  - top processes grouped by app, with a CPU/RAM sort and a safe two-step "End?" button
-    (critical OS processes are refused);
-  - a GPU & Power card: per-GPU usage, VRAM (`5.2 / 8.0 GB`), temperature, and package watts
-    with an APU/CPU/GPU/NPU breakdown where the hardware reports it;
-  - a per-core CPU heatmap with tooltips (usage, clock, per-core watts, package temperature).
-- **Tray only:** no taskbar button and no Alt+Tab entry. The tray menu has launch at startup,
-  auto-check for updates, hide over fullscreen apps, check for updates now, settings, and quit.
-- **Global show/hide hotkey** (default `Ctrl+Shift+O`), drag-to-move with the position
-  remembered per monitor layout, and auto-hide over fullscreen apps.
-- **No admin rights, drivers, or third-party tools.** Sensors come from Windows performance
-  counters and D3DKMT; a sleeping laptop dGPU is never woken. Missing sensors show `--`.
-- **In-app updates** from GitHub Releases, with a Yes/No prompt.
+### The pill
 
-## Footprint
+- A black, Dynamic Island–style pill pinned to the top-center of your screen, styled after
+  [islet](https://github.com/joezhuo2/islet).
+- Six live rings with icons and no text: **CPU**, **RAM**, **iGPU**, **dGPU**, **Disk** (active
+  time), and a concentric **Network** ring with download outside and upload inside.
+- Rings are colored by load: the metric's own accent color normally, amber above the warning
+  threshold (default 70%), and pulsing red above the critical threshold (default 90%).
+- A ring is drawn dashed when its sensor is missing on your machine, instead of showing a fake 0%.
 
-The target is at most 50 MB of RAM and below 0.1% CPU while collapsed and idle. Measured numbers
-are in [docs/perf.md](docs/perf.md).
+### The dashboard
 
-## Platforms
+Hover the pill and it expands in place with a 280 ms clip-path morph. It opens the moment the cursor
+arrives and collapses the moment it leaves; coming back mid-collapse reverses it. Press **Esc** to
+close it.
+
+- **Header:** total package power in watts and the hottest temperature reported, plus an amber
+  indicator if telemetry stops arriving.
+- **Metric strip:** labeled values for each ring, such as CPU usage with its live clock in GHz,
+  RAM as `15/31 GB`, and download/upload speeds on two lines.
+- **GPU & Power card:** usage, VRAM (`5.2 / 8.0 GB`) and temperature for each GPU, and package
+  watts broken down into APU, CPU, GPU and NPU where the hardware reports them.
+- **CPU heatmap:** one cell per logical core. Hover a cell for its usage, clock, per-core watts and
+  the package temperature.
+- **Top processes:** grouped by app (so 30 browser processes show as one row), sortable by CPU or
+  RAM. Three rows by default, with "Show more" for a scrollable list.
+- **End process:** a two-step "End?" button. Critical OS processes, PIDs 0 and 4, and Omniscience
+  itself are refused; the row comes back with a toast explaining why.
+
+Per-core, per-GPU and per-process data is only sampled while the dashboard is open, so the
+collapsed pill costs almost nothing.
+
+### Lives in the tray
+
+- No taskbar button and no Alt+Tab entry. Everything else is in the tray menu: **Show / Hide**,
+  **Launch at startup**, **Auto-check for updates**, **Hide over fullscreen apps**, **Check for
+  updates now**, **Settings…**, and **Quit**.
+- A global show/hide hotkey, `Ctrl+Shift+O` by default (`Cmd+Shift+O` on macOS).
+- Drag the dashboard header to move the overlay. The position is remembered per monitor layout and
+  never restored off-screen.
+- Hides automatically while a fullscreen game, video or presentation covers its monitor, and comes
+  back when it ends. Telemetry pauses while hidden.
+- Launching it a second time reveals the running copy instead of starting another.
+
+### No extra software
+
+- No admin rights, kernel drivers, or third-party tools such as HWiNFO or LibreHardwareMonitor.
+- On Windows, sensors come from built-in performance counters, the Energy Meter counters and
+  D3DKMT. NVIDIA's NVML is not used, so a sleeping laptop dGPU is never woken just to be measured.
+- Missing sensors show `--`.
+
+### Updates
+
+With auto-check on, Omniscience checks GitHub Releases at launch. When a new version is out, the
+island opens with "vX available. Update? Yes / No". **Yes** downloads, installs and restarts.
+Updates are signature-checked before they are installed.
+
+## Installation
+
+> No release has been published yet. Until then, [build from source](#build-from-source).
+
+Download the latest build from the
+[Releases page](https://github.com/joezhuo2/omniscience/releases/latest).
+
+### Windows 10/11
+
+1. Download either installer:
+   - `Omniscience_x.y.z_x64-setup.exe` (NSIS, per-user, recommended), or
+   - `Omniscience_x.y.z_x64_en-US.msi` (MSI, for managed installs).
+2. Run it. Builds are not code-signed yet, so SmartScreen may warn about an unrecognized app. Click
+   **More info**, then **Run anyway**.
+3. Omniscience starts at the top of your primary monitor and adds an icon to the tray. If the icon
+   is hidden, open the tray overflow (the `^` arrow) and drag it onto the taskbar to keep it
+   visible.
+
+WebView2 is required and ships with Windows 11. On Windows 10 the installer downloads it if it is
+missing.
+
+### macOS (experimental)
+
+1. Download `Omniscience_x.y.z_universal.dmg`. It runs natively on Apple silicon and Intel Macs.
+2. Open the dmg and drag **Omniscience** to **Applications**.
+3. Builds are not signed or notarized yet, so Gatekeeper blocks the first launch. Right-click the
+   app, choose **Open**, then **Open** again. If macOS says the app is damaged, clear the
+   quarantine flag:
+
+   ```bash
+   xattr -dr com.apple.quarantine /Applications/Omniscience.app
+   ```
+
+See [Platform support](#platform-support) for what works on macOS.
+
+### Build from source
+
+Prerequisites:
+
+- [Node.js 24+](https://nodejs.org)
+- [Rust (stable)](https://rustup.rs)
+- The [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/) for your OS: the MSVC build
+  tools on Windows, or the Xcode command-line tools on macOS.
+
+```bash
+git clone https://github.com/joezhuo2/omniscience.git
+cd omniscience
+npm install
+npm run tauri build
+```
+
+Installers end up in `src-tauri/target/release/bundle/`. To build only the executable, run
+`npm run tauri build -- --no-bundle`.
+
+### Uninstalling
+
+- **Windows:** Settings > Apps > Installed apps > Omniscience > Uninstall.
+- **macOS:** quit from the tray, then move `Omniscience.app` to the Trash.
+
+Settings are kept after uninstalling. Delete the [settings file](#configuration) to remove them.
+
+## Usage
+
+| Action                   | How                                                            |
+| ------------------------ | -------------------------------------------------------------- |
+| Open the dashboard       | Move the cursor onto the pill                                  |
+| Close the dashboard      | Move the cursor away, or press **Esc**                         |
+| Show or hide the overlay | `Ctrl+Shift+O` (`Cmd+Shift+O` on macOS), or tray > Show / Hide |
+| Move the overlay         | Drag the dashboard header                                      |
+| Reset its position       | Settings > Reset position                                      |
+| Sort processes           | Click the CPU / RAM toggle on the Top processes card           |
+| End an app               | Click **End?** on its row, then confirm                        |
+| Open settings            | Gear icon in the dashboard header, or tray > Settings…         |
+| Check for updates        | Tray > Check for updates now                                   |
+| Quit                     | Tray > Quit                                                    |
+
+Clicks pass through the transparent area around the pill to whatever is underneath, so the overlay
+never blocks the window behind it.
+
+## Configuration
+
+Open **Settings** from the gear icon in the dashboard header or from the tray.
+
+| Setting                | Default        | Notes                                                       |
+| ---------------------- | -------------- | ----------------------------------------------------------- |
+| Warning threshold      | 70%            | Rings turn amber above this                                 |
+| Critical threshold     | 90%            | Rings turn red and pulse above this                         |
+| Update interval        | 1 s            | 0.5 to 5 s. Longer intervals use less CPU                   |
+| Show/hide hotkey       | `Ctrl+Shift+O` | Click the recorder and press a new combination              |
+| Launch at startup      | Off            | Also in the tray menu; mirrors the OS login items           |
+| Auto-check for updates | On             | Checks GitHub Releases once at launch                       |
+| Hide over fullscreen   | On             | Hides while a fullscreen app covers the overlay's monitor   |
+| Reset position         | —              | Moves the overlay back to the top-center of the primary one |
+
+Settings are saved as JSON in the app config folder:
+
+- **Windows:** `%APPDATA%\io.github.joezhuo2.omniscience\settings.json`
+- **macOS:** `~/Library/Application Support/io.github.joezhuo2.omniscience/settings.json`
+
+Missing keys fall back to their defaults and out-of-range values are clamped, so a hand-edited or
+older file still loads.
+
+## Platform support
 
 | Platform      | Status                                                                 |
 | ------------- | ---------------------------------------------------------------------- |
 | Windows 10/11 | Primary, tested                                                        |
 | macOS         | Experimental. Builds in CI but is untested, and some sensors show `--` |
 
-## Tech stack
+Sensor coverage depends on the hardware and drivers:
 
-Tauri 2, Rust, React 19, TypeScript, Tailwind CSS v4, Lucide. Theme and morph animation follow
-[islet](https://github.com/joezhuo2/islet).
+| Sensor                     | Windows                                 | macOS   |
+| -------------------------- | --------------------------------------- | ------- |
+| CPU, RAM, disk, network    | Yes                                     | Yes     |
+| Per-core usage and clock   | Yes                                     | Yes     |
+| GPU usage and VRAM         | Yes, per GPU (D3DKMT)                   | `--`    |
+| GPU temperature            | Where the driver reports it             | `--`    |
+| Package and per-core watts | Where Energy Meter counters are exposed | `--`    |
+| Temperatures               | ACPI thermal zones, GPU driver          | `--`    |
+| Hide over fullscreen apps  | Yes                                     | Not yet |
+
+On Windows, power readings are most complete on recent AMD and Intel laptops, which expose Energy
+Meter counters. Desktop CPUs often do not, and show `--`.
+
+## Performance
+
+The budget is at most **50 MB** of RAM across the whole process tree and below **0.1% CPU** while
+collapsed and idle. To get there, the WebView runs with software compositing and a low memory
+target, detail sampling only runs while the dashboard is open, and telemetry pauses entirely while
+the overlay is hidden.
+
+Measured numbers, the method, and the reference machine are in [docs/perf.md](docs/perf.md).
+
+## Privacy and permissions
+
+- Omniscience reads system counters locally. It sends no telemetry, analytics or crash reports.
+- The only network request is the update check against this repository's GitHub Releases. Turn off
+  **Auto-check for updates** to stop it entirely.
+- It needs no admin rights. Ending a process that belongs to another user or an elevated app fails
+  with an "access denied" toast rather than prompting for elevation.
+
+## Troubleshooting
+
+**The overlay disappeared.** Press the hotkey or use tray > Show / Hide. If **Hide over
+fullscreen apps** is on, it also hides while a fullscreen window covers its monitor, including some
+borderless games and video players.
+
+**The overlay is off-screen after unplugging a monitor.** Positions are saved per monitor layout and
+never restored off-screen, but if it still looks wrong, use Settings > Reset position.
+
+**A ring is dashed or a value shows `--`.** That sensor is not available on your hardware or
+platform. See [Platform support](#platform-support).
+
+**The hotkey does nothing.** Another app may have registered the same combination. Pick a different
+one in Settings.
+
+**"Update failed" when installing an update.** The update did not pass signature verification. Download the latest
+installer from the [Releases page](https://github.com/joezhuo2/omniscience/releases) instead.
+
+**Something else is wrong.** [Open an issue](https://github.com/joezhuo2/omniscience/issues) with
+your OS version, CPU and GPU models, and what you expected to happen.
 
 ## Development
 
-Prerequisites: [Node.js 24+](https://nodejs.org), [Rust (stable)](https://rustup.rs), and the
-[Tauri prerequisites](https://v2.tauri.app/start/prerequisites/) for your OS (WebView2 is
-preinstalled on Windows 11).
+Install the [build-from-source prerequisites](#build-from-source), then:
 
 ```bash
 npm install
@@ -60,16 +264,68 @@ The overlay has no taskbar button. Use the tray icon to show, hide, or quit it.
 | `npm test`                                        | Frontend unit tests (Vitest)                                   |
 | `cargo test --manifest-path src-tauri/Cargo.toml` | Rust unit tests                                                |
 | `npm run lint` / `npm run format`                 | ESLint / Prettier                                              |
+| `npm run typecheck`                               | TypeScript type check                                          |
 | `npm run tauri build`                             | Release build and installers                                   |
 | `cargo test` (as above)                           | Also regenerates the TypeScript types in `src/types/generated` |
 
-Performance numbers: [docs/perf.md](docs/perf.md). Manual test checklist:
-[docs/testing.md](docs/testing.md). Releasing and updater keys: [docs/releasing.md](docs/releasing.md).
-`
+CI runs lint, format check, tests, `cargo clippy -D warnings` and a release build on both Windows and
+macOS for every push and pull request.
 
-## Design
+### Project layout
 
-See the [design spec](docs/superpowers/specs/2026-10-10-omniscience-design.md).
+```text
+src/                    React frontend
+  components/           Pill, rings, update banner
+  components/dashboard/ Expanded dashboard cards
+  components/settings/  Settings view
+  types/generated/      TypeScript types generated from Rust (do not edit)
+src-tauri/src/          Rust backend
+  telemetry/            Sampler thread, Windows counters, process list
+  shell.rs, tray.rs     Tray menu, hotkey, fullscreen auto-hide
+  settings.rs           Persisted settings
+  positions.rs          Per-monitor-layout window positions
+scripts/                Performance measurement and window-style probes
+docs/                   Performance log, test checklist, release guide, design spec
+```
+
+### Tech stack
+
+[Tauri 2](https://v2.tauri.app), Rust, React 19, TypeScript, Tailwind CSS v4, Zustand, and
+[Lucide](https://lucide.dev) icons. Theme and morph animation follow
+[islet](https://github.com/joezhuo2/islet).
+
+### Further reading
+
+- [Design spec](docs/superpowers/specs/2026-10-10-omniscience-design.md)
+- [Manual test checklist](docs/testing.md)
+- [Performance log](docs/perf.md)
+- [Changelog](CHANGELOG.md)
+
+## Releasing
+
+Pushing a `v*` tag builds the Windows installers and a universal macOS dmg, signs the updater
+artifacts, and drafts a GitHub Release with `latest.json`. One-time updater key setup and the full
+checklist are in [docs/releasing.md](docs/releasing.md).
+
+## Contributing
+
+Issues and pull requests are welcome.
+
+1. Fork the repository and create a branch from `main`.
+2. Make your change, with tests where it makes sense.
+3. Run `npm run lint`, `npm run format:check`, `npm test` and
+   `cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings`.
+4. Add a line under **Unreleased** in [CHANGELOG.md](CHANGELOG.md).
+5. Open a pull request describing what changed and how you tested it.
+
+If you have a Mac, testing the experimental macOS build and reporting what works is especially
+helpful.
+
+## Acknowledgements
+
+- [islet](https://github.com/joezhuo2/islet) for the pill design, theme and morph animation.
+- [Tauri](https://tauri.app), [sysinfo](https://github.com/GuillaumeGomez/sysinfo) and
+  [Lucide](https://lucide.dev).
 
 ## License
 
