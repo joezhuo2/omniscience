@@ -4,3 +4,9 @@ export function ringDash(percent: number, r: number) {
   const p = Math.min(100, Math.max(0, percent));
   return { circumference, offset: circumference * (1 - p / 100) };
 }
+
+/**
+ * Smallest change, in whole percent, that animates. Smaller changes (idle jitter) snap in one
+ * frame, because every animation frame repaints the overlay in software.
+ */
+export const ANIMATE_MIN_DELTA = 3;

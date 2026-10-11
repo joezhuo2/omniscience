@@ -39,6 +39,19 @@ describe('Ring', () => {
     expect(screen.getByTestId('ring-arc')).not.toHaveClass('ring-critical');
   });
 
+  it('animates large changes and snaps small ones', () => {
+    const ring = (percent: number) => (
+      <Ring outer={{ percent, level: 'normal', accent }} size={28} stroke={3} label="CPU" />
+    );
+    const { rerender } = render(ring(10));
+    const arc = () => screen.getByTestId('ring-arc');
+    expect(arc()).toHaveClass('ring-arc-snap');
+    rerender(ring(40));
+    expect(arc()).not.toHaveClass('ring-arc-snap');
+    rerender(ring(41.4));
+    expect(arc()).toHaveClass('ring-arc-snap');
+  });
+
   it('shows a dimmed dashed track and no arc when the sensor is missing', () => {
     render(
       <Ring outer={{ percent: null, level: 'normal', accent }} size={28} stroke={3} label="dGPU" />,

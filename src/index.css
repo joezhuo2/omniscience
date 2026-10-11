@@ -85,10 +85,17 @@ body {
   transition-delay: calc(var(--shape-ms) * 0.6);
 }
 
+/* Each animation frame repaints the whole overlay in software (WebView2 runs with --disable-gpu),
+   so the arc moves in 4 steps over 240 ms instead of a smooth 400 ms ease: ~6x fewer frames. */
 .ring-arc {
   transition:
-    stroke-dashoffset 400ms var(--ease),
-    stroke 400ms;
+    stroke-dashoffset 240ms steps(4, jump-end),
+    stroke 240ms steps(1, jump-end);
+}
+
+/* Small changes snap instead of animating; see ANIMATE_MIN_DELTA. */
+.ring-arc-snap {
+  transition: none;
 }
 
 /* One-shot attention cue when a metric turns critical, not a loop, so idle rendering stays at

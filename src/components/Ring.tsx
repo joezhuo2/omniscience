@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { levelColor } from '../lib/levels';
-import { ringDash } from '../lib/ring';
+import { ANIMATE_MIN_DELTA, ringDash } from '../lib/ring';
 import type { Level } from '../types/telemetry';
 
 export interface Arc {
@@ -22,7 +22,15 @@ interface RingProps {
 
 function ArcCircle({ arc, r, c, stroke }: { arc: Arc; r: number; c: number; stroke: number }) {
   const missing = arc.percent == null;
-  const { circumference, offset } = ringDash(arc.percent ?? 0, r);
+  // Whole percent, so sub-percent jitter does not repaint at all.
+  const shown = Math.round(arc.percent ?? 0);
+  const [prev, setPrev] = useState(shown);
+  const [animate, setAnimate] = useState(false);
+  if (shown !== prev) {
+    setPrev(shown);
+    setAnimate(Math.abs(shown - prev) >= ANIMATE_MIN_DELTA);
+  }
+  const { circumference, offset } = ringDash(shown, r);
   return (
     <>
       <circle
@@ -38,7 +46,7 @@ function ArcCircle({ arc, r, c, stroke }: { arc: Arc; r: number; c: number; stro
         <circle
           data-testid="ring-arc"
           data-level={arc.level}
-          className={`ring-arc${arc.level === 'critical' ? ' ring-critical' : ''}`}
+          className={`ring-arc${animate ? '' : ' ring-arc-snap'}${arc.level === 'critical' ? ' ring-critical' : ''}`}
           cx={c}
           cy={c}
           r={r}
