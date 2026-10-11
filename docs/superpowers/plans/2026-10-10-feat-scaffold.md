@@ -22,7 +22,7 @@ ESLint 10 (flat config) + typescript-eslint 8, Prettier 3, GitHub Actions.
 - TypeScript pinned `~6.0.3`, because typescript-eslint 8.71 requires `typescript <6.1.0`.
 - Bundle identifier: `io.github.joezhuo2.omniscience`. Product name: `Omniscience`. Version `0.1.0`.
 - Window: `decorations: false`, `transparent: true`, `alwaysOnTop: true`, `resizable: false`, `shadow: false`, initial size 400 x 42 logical px.
-- `skipTaskbar` stays **false** in this branch. There is no tray yet, and the taskbar entry is the only way to find or close the window. It flips to `true` in `feat/app-shell`.
+- **No taskbar button, no Alt+Tab entry, no Dock icon** (maintainer request, 2026-10-10): `skipTaskbar: true`; the Windows HWND gets `WS_EX_TOOLWINDOW` with `WS_EX_APPWINDOW` cleared before first show; macOS uses `ActivationPolicy::Accessory`. Do **not** add `WS_EX_NOACTIVATE`, because keyboard input must keep working. A minimal tray (left-click toggle; menu Show / Hide, Quit) ships in this branch so the app can always be closed (Task 3b).
 - `macOSPrivateApi: true` (needed for macOS transparency). This requires the `macos-private-api` feature on the `tauri` crate.
 - Dark only. The page background must stay transparent (`html, body, #root`).
 - Commits: Conventional Commits, small, on branch `feat/scaffold`. Never push. The maintainer merges.
@@ -646,7 +646,7 @@ pub fn run() {}
         "maximizable": false,
         "minimizable": false,
         "shadow": false,
-        "skipTaskbar": false,
+        "skipTaskbar": true,
         "visible": false,
         "focus": false
       }
@@ -802,7 +802,7 @@ Expected: clippy clean, 6 passed.
 - [ ] **Step 12: Run the app**
 
 Run: `npm run tauri dev`
-Expected: a 400 x 42 dark rounded pill reading "Omniscience" appears at the top-center of the primary monitor, about 8 px below the top. There is no title bar, the corners show the desktop behind, and it stays above other windows when you click elsewhere. A taskbar entry exists (expected in this branch). Close it with Ctrl+C in the terminal.
+Expected: a 400 x 42 dark rounded pill reading "Omniscience" appears at the top-center of the primary monitor, about 8 px below the top. There is no title bar, the corners show the desktop behind, and it stays above other windows when you click elsewhere. No taskbar entry exists. Close it with Ctrl+C in the terminal (the tray arrives in Task 3b).
 
 - [ ] **Step 13: Commit (two commits)**
 
@@ -811,6 +811,248 @@ git add app-icon.svg src-tauri/icons
 git commit -m "chore: add app icon source and generated desktop icons"
 git add src-tauri/Cargo.toml src-tauri/Cargo.lock src-tauri/build.rs src-tauri/tauri.conf.json src-tauri/capabilities src-tauri/src
 git commit -m "feat(window): add tauri shell with transparent top-center overlay window"
+```
+
+---
+
+### Task 3b: Tool window (no taskbar / Alt+Tab) and minimal tray
+
+**Files:**
+- Create: `src-tauri/src/platform.rs`, `src-tauri/src/tray.rs`
+- Modify: `src-tauri/Cargo.toml` (tauri `tray-icon` feature, `windows-sys`), `src-tauri/src/lib.rs`
+- Test: unit tests inside `src-tauri/src/platform.rs`
+
+**Interfaces:**
+- Produces:
+  - `platform::tool_window_ex_style(ex_style: isize) -> isize`: pure. Adds `WS_EX_TOOLWINDOW`, clears `WS_EX_APPWINDOW`, keeps every other bit.
+  - `platform::prepare_overlay(window: &tauri::WebviewWindow)`: applies it to the HWND on Windows, no-op elsewhere.
+  - `tray::init(app: &tauri::AppHandle) -> tauri::Result<()>` and `tray::toggle_main(app: &tauri::AppHandle)`. `feat/app-shell` extends the menu and reuses `toggle_main` for the hotkey.
+
+- [ ] **Step 1: Add dependencies to `src-tauri/Cargo.toml`**
+
+Change the tauri line and add a Windows-only section:
+
+```toml
+tauri = { version = "2.12", features = ["macos-private-api", "tray-icon"] }
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_UI_WindowsAndMessaging"] }
+```
+
+- [ ] **Step 2: Write the failing tests in `src-tauri/src/platform.rs`**
+
+```rust
+//! Platform-specific window tweaks.
+
+/// `WS_EX_TOOLWINDOW`: no taskbar button and no Alt+Tab entry.
+pub const WS_EX_TOOLWINDOW: isize = 0x0000_0080;
+/// `WS_EX_APPWINDOW`: forces a taskbar button. It must be cleared or it wins over TOOLWINDOW.
+pub const WS_EX_APPWINDOW: isize = 0x0004_0000;
+
+/// Extended window style for the overlay.
+pub fn tool_window_ex_style(ex_style: isize) -> isize {
+    unimplemented!()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const WS_EX_TOPMOST: isize = 0x0000_0008;
+    const WS_EX_LAYERED: isize = 0x0008_0000;
+
+    #[test]
+    fn adds_toolwindow() {
+        assert_eq!(tool_window_ex_style(0) & WS_EX_TOOLWINDOW, WS_EX_TOOLWINDOW);
+    }
+
+    #[test]
+    fn clears_appwindow() {
+        assert_eq!(tool_window_ex_style(WS_EX_APPWINDOW) & WS_EX_APPWINDOW, 0);
+    }
+
+    #[test]
+    fn keeps_other_bits() {
+        let style = WS_EX_TOPMOST | WS_EX_LAYERED | WS_EX_APPWINDOW;
+        assert_eq!(
+            tool_window_ex_style(style),
+            WS_EX_TOPMOST | WS_EX_LAYERED | WS_EX_TOOLWINDOW
+        );
+    }
+
+    #[test]
+    fn is_idempotent() {
+        let once = tool_window_ex_style(WS_EX_APPWINDOW);
+        assert_eq!(tool_window_ex_style(once), once);
+    }
+}
+```
+
+Add `mod platform;` to `lib.rs`.
+
+- [ ] **Step 3: Run tests to verify they fail**
+
+Run: `cargo test --manifest-path src-tauri/Cargo.toml platform`
+Expected: 4 tests FAIL with `not implemented`.
+
+- [ ] **Step 4: Implement**
+
+```rust
+pub fn tool_window_ex_style(ex_style: isize) -> isize {
+    (ex_style | WS_EX_TOOLWINDOW) & !WS_EX_APPWINDOW
+}
+```
+
+Then add the HWND glue below it:
+
+```rust
+/// Hides the overlay from the taskbar and Alt+Tab. Call before the window is first shown.
+#[cfg(windows)]
+pub fn prepare_overlay(window: &tauri::WebviewWindow) {
+    use windows_sys::Win32::UI::WindowsAndMessaging::{
+        GWL_EXSTYLE, GetWindowLongPtrW, SetWindowLongPtrW,
+    };
+    let Ok(hwnd) = window.hwnd() else { return };
+    let hwnd = hwnd.0 as windows_sys::Win32::Foundation::HWND;
+    // SAFETY: hwnd is a live window owned by this process, used on the thread that created it.
+    unsafe {
+        let style = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
+        SetWindowLongPtrW(hwnd, GWL_EXSTYLE, tool_window_ex_style(style));
+    }
+}
+
+#[cfg(not(windows))]
+pub fn prepare_overlay(_window: &tauri::WebviewWindow) {}
+```
+
+- [ ] **Step 5: Run tests to verify they pass**
+
+Run: `cargo test --manifest-path src-tauri/Cargo.toml`
+Expected: 10 passed (6 window + 4 platform).
+
+- [ ] **Step 6: Write `src-tauri/src/tray.rs`**
+
+```rust
+//! Tray icon: the app's only presence (no taskbar button, no Alt+Tab entry).
+
+use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
+use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
+use tauri::{AppHandle, Manager};
+
+const SHOW_HIDE: &str = "show_hide";
+const QUIT: &str = "quit";
+
+pub fn init(app: &AppHandle) -> tauri::Result<()> {
+    let menu = Menu::with_items(
+        app,
+        &[
+            &MenuItem::with_id(app, SHOW_HIDE, "Show / Hide Omniscience", true, None::<&str>)?,
+            &PredefinedMenuItem::separator(app)?,
+            &MenuItem::with_id(app, QUIT, "Quit", true, None::<&str>)?,
+        ],
+    )?;
+    let mut builder = TrayIconBuilder::with_id("main")
+        .tooltip("Omniscience")
+        .menu(&menu)
+        .show_menu_on_left_click(false)
+        .on_menu_event(|app, event| match event.id().as_ref() {
+            SHOW_HIDE => toggle_main(app),
+            QUIT => app.exit(0),
+            _ => {}
+        })
+        .on_tray_icon_event(|tray, event| {
+            if let TrayIconEvent::Click {
+                button: MouseButton::Left,
+                button_state: MouseButtonState::Up,
+                ..
+            } = event
+            {
+                toggle_main(tray.app_handle());
+            }
+        });
+    if let Some(icon) = app.default_window_icon() {
+        builder = builder.icon(icon.clone());
+    }
+    builder.build(app)?;
+    Ok(())
+}
+
+/// Shows the overlay if hidden, hides it if shown.
+pub fn toggle_main(app: &AppHandle) {
+    let Some(window) = app.get_webview_window("main") else {
+        return;
+    };
+    let result = match window.is_visible() {
+        Ok(true) => window.hide(),
+        _ => window.show(),
+    };
+    if let Err(e) = result {
+        eprintln!("toggle overlay: {e}");
+    }
+}
+```
+
+> If `show_menu_on_left_click` does not exist in the resolved Tauri version, use `menu_on_left_click(false)`.
+
+- [ ] **Step 7: Wire `lib.rs`**
+
+```rust
+mod platform;
+mod tray;
+mod window;
+
+use tauri::Manager;
+
+pub fn run() {
+    tauri::Builder::default()
+        .setup(|app| {
+            #[cfg(target_os = "macos")]
+            app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+
+            let main = app
+                .get_webview_window("main")
+                .expect("window \"main\" is declared in tauri.conf.json");
+            platform::prepare_overlay(&main);
+            window::place_top_center(&main)?;
+            tray::init(app.handle())?;
+            main.show()?;
+            Ok(())
+        })
+        .run(tauri::generate_context!())
+        .expect("error while running Omniscience");
+}
+```
+
+- [ ] **Step 8: fmt, clippy, tests, run**
+
+```bash
+cargo fmt --manifest-path src-tauri/Cargo.toml
+cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
+cargo test --manifest-path src-tauri/Cargo.toml
+```
+
+Expected: clippy clean, 10 passed.
+
+Run: `npm run tauri dev`
+Expected:
+- The pill appears top-center with no taskbar button, and it does not appear in Alt+Tab.
+- A tray icon (the app icon) appears in the notification area.
+- Left-click toggles the pill.
+- Right-click shows "Show / Hide Omniscience" and "Quit", and Quit exits the app.
+
+- [ ] **Step 9: Commit**
+
+```bash
+git add src-tauri/Cargo.toml src-tauri/Cargo.lock src-tauri/src
+git commit -m "feat(window): hide overlay from taskbar and alt-tab and add minimal tray"
+```
+
+Add to `docs/testing.md` (Task 5) under the window section:
+
+```markdown
+- [ ] No taskbar button. Not listed in Alt+Tab or Win+Tab.
+- [ ] Tray icon present. Left-click hides/shows the pill. Right-click menu: Show / Hide, Quit. Quit exits fully (no omniscience.exe left in Task Manager).
+- [ ] After restarting Explorer (Task Manager > Windows Explorer > Restart), the tray icon comes back.
 ```
 
 ---

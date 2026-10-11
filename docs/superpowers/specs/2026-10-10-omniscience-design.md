@@ -41,6 +41,12 @@ Dependency versions are pinned to the latest stable releases at scaffold time.
 - `decorations: false`, `transparent: true`, `alwaysOnTop: true`, `skipTaskbar: true`, `resizable: false`,
   `shadow: false`. macOS requires `macOSPrivateApi: true` for transparency (excludes the Mac App Store,
   which is acceptable).
+- **No taskbar button, no Alt+Tab entry, no Dock icon.** The tray icon is the app's only presence.
+  - On Windows, `WS_EX_TOOLWINDOW` is set and `WS_EX_APPWINDOW` cleared on the HWND before the window is
+    first shown.
+  - On macOS, the app uses `ActivationPolicy::Accessory`.
+  - The window is deliberately *not* made non-activating (`WS_EX_NOACTIVATE`), so keyboard input such as
+    Esc and settings fields keeps working.
 - **Collapsed size:** about 400 x 42 px. **Expanded size:** about 400 x 560 px. Final values are tuned in
   `feat/morph`.
 - **Morph strategy: snap the window, animate the content.** On expand, Rust resizes the native window to
@@ -249,8 +255,9 @@ Settings are saved with `tauri-plugin-store` and applied live.
 
 ### 6.1 Tray
 
-There is no taskbar entry and no window chrome, so the tray icon is the main control surface.
-Right-click menu:
+There is no taskbar entry, no Alt+Tab entry, and no window chrome, so the tray icon is the only control
+surface. Left-click toggles show/hide. A minimal tray (Show / Hide, Quit) ships in `feat/scaffold` so the
+app can always be closed. The full menu below lands in `feat/app-shell`. Right-click menu:
 
 - Show / Hide Omniscience
 - ☐ Launch at startup
@@ -319,7 +326,8 @@ suspended (`ICoreWebView2_3::TrySuspend`). It resumes on show.
 
 Branches, in order:
 
-1. `feat/scaffold`: Tauri 2 + Vite + React 19 + TS + Tailwind v4 + motion + Lucide; window config;
+1. `feat/scaffold`: Tauri 2 + Vite + React 19 + TS + Tailwind v4 + motion + Lucide; window config
+   (tool window, no taskbar or Alt+Tab entry); minimal tray (Show / Hide, Quit);
    ESLint/Prettier/Vitest; `cargo fmt`/`clippy`; CI workflow.
 2. `feat/telemetry`: collector with tiers, sources, threshold logic, rolling peak, kill guard, `ts-rs`
    types, tick event.
