@@ -116,6 +116,20 @@ pub fn parse_energy(items: &[(String, f64)]) -> EnergyReadings {
     r
 }
 
+/// Watts for logical CPU `logical`. RAPL reports physical cores; with SMT (twice as many logical
+/// CPUs as RAPL cores) Windows numbers sibling threads adjacently, so both read their core's power.
+pub fn core_watts(cores: &HashMap<u32, f32>, logical: u32, logical_count: usize) -> Option<f32> {
+    if cores.is_empty() {
+        return None;
+    }
+    let physical = if cores.len() * 2 == logical_count {
+        logical / 2
+    } else {
+        logical
+    };
+    cores.get(&physical).copied()
+}
+
 /// `rapl_package0_core12_core` -> 12.
 fn rapl_core_index(lower: &str) -> Option<u32> {
     let rest = lower.strip_prefix("rapl_")?;
@@ -210,6 +224,17 @@ mod tests {
         assert_eq!(r.cores[&0], 0.5);
         assert_eq!(r.cores[&11], 0.25);
         assert_eq!(r.cores.len(), 2);
+    }
+
+    #[test]
+    fn maps_smt_threads_to_their_physical_core() {
+        let cores: HashMap<u32, f32> = (0..12).map(|c| (c, c as f32)).collect();
+        assert_eq!(core_watts(&cores, 0, 24), Some(0.0));
+        assert_eq!(core_watts(&cores, 1, 24), Some(0.0));
+        assert_eq!(core_watts(&cores, 23, 24), Some(11.0));
+        // Without SMT, one to one.
+        assert_eq!(core_watts(&cores, 11, 12), Some(11.0));
+        assert_eq!(core_watts(&HashMap::new(), 0, 24), None);
     }
 
     #[test]

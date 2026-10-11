@@ -155,18 +155,21 @@ impl Sampler {
         #[cfg(windows)] win: &win::CoreSample,
     ) -> Option<DetailMetrics> {
         let detail = self.detail.get_or_insert_with(|| Detail {
-            procs: System::new(),
+            procs: processes::new_system(),
             #[cfg(windows)]
             win: super::windows::Query::new(&win::DETAIL_COUNTERS),
             warm: false,
         });
-        processes::refresh(&mut detail.procs);
+        if detail.warm {
+            processes::refresh(&mut detail.procs);
+        }
         self.sys.refresh_cpu_frequency();
         if !detail.warm {
             detail.warm = true;
             return None;
         }
 
+        let n_logical = self.sys.cpus().len();
         let cores = self
             .sys
             .cpus()
@@ -177,7 +180,7 @@ impl Sampler {
                 usage_pct: round1(c.cpu_usage()),
                 freq_mhz: c.frequency(),
                 #[cfg(windows)]
-                watts: win.energy.cores.get(&(i as u32)).copied().map(round1),
+                watts: super::parse::core_watts(&win.energy.cores, i as u32, n_logical).map(round1),
                 #[cfg(not(windows))]
                 watts: None,
                 level: classify(c.cpu_usage(), t),
@@ -388,5 +391,18 @@ mod tests {
         assert!(!d.processes.is_empty());
         assert!(s.sample(t, false).detail.is_none());
         assert!(s.detail.is_none(), "detail state released on collapse");
+    }
+
+    /// Machine-dependent: `cargo test snapshot_live -- --ignored --nocapture` prints a real
+    /// expanded snapshot, to check sensors on new hardware.
+    #[test]
+    #[ignore]
+    fn snapshot_live() {
+        let mut s = Sampler::new();
+        let t = Thresholds::default();
+        s.sample(t, true);
+        std::thread::sleep(std::time::Duration::from_secs(1));
+        let snap = s.sample(t, true);
+        println!("{}", serde_json::to_string_pretty(&snap).unwrap());
     }
 }
