@@ -1,0 +1,4 @@
+[env]
+# ts-rs writes TypeScript bindings here when `cargo test` runs. Lives at the repo root so it applies
+# whether cargo runs from the root (`--manifest-path`) or from src-tauri (tauri dev/build).
+TS_RS_EXPORT_DIR = { value = "src/types/generated", relative = true }
