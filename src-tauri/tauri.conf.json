@@ -52,7 +52,7 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "REPLACE_WITH_TAURI_UPDATER_PUBLIC_KEY",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDM3QjY1RDQ5RDFCQUE3REIKUldUYnA3clJTVjIyTjZEYzRkdnBpOEFkMHpZdllBS013Rzd2U0p6eHdSNjVjUndmQ1EvQmN4SncK",
       "endpoints": ["https://github.com/joezhuo2/omniscience/releases/latest/download/latest.json"],
       "windows": {
         "installMode": "passive"

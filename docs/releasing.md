@@ -18,16 +18,16 @@ npx tauri signer generate -w ~/.tauri/omniscience.key
 Then:
 
 1. Paste the **public** key (the contents of `~/.tauri/omniscience.key.pub`) into
-   `src-tauri/tauri.conf.json` at `plugins.updater.pubkey`, replacing
-   `REPLACE_WITH_TAURI_UPDATER_PUBLIC_KEY`, and commit it.
+   `src-tauri/tauri.conf.json` at `plugins.updater.pubkey`, and commit it. This is done: the
+   committed key has minisign ID `37B65D49D1BAA7DB`.
 2. In the GitHub repository settings, open Secrets and variables > Actions and add:
    - `TAURI_SIGNING_PRIVATE_KEY`: the contents of `~/.tauri/omniscience.key`
    - `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`: the password you chose (empty if none)
 3. Keep the private key safe and backed up. If it is lost, existing installs can no longer
    verify updates and users have to reinstall manually.
 
-Until the public key is set, update checks still work, but installing an update fails signature
-verification and the banner shows the error.
+Every installed copy trusts the public key it shipped with. Replacing the keypair later means
+installs of earlier versions can no longer update themselves.
 
 ## Cutting a release
 
