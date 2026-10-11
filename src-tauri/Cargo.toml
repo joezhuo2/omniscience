@@ -29,6 +29,9 @@ opt-level = 3
 strip = true
 
 [target.'cfg(windows)'.dependencies]
+# Same versions wry uses, for WebView2 memory-level control.
+webview2-com = "0.39"
+windows-core = "0.62"
 windows-sys = { version = "0.61", features = [
   "Wdk_Graphics_Direct3D",
   "Win32_Foundation",
