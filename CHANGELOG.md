@@ -33,3 +33,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A second launch reveals the running instance instead of starting another.
 - In-app updates: with auto-check on, a launch-time check against GitHub Releases shows "vX available. Update? Yes / No" under the pill; Yes downloads, installs and restarts. Tray > Check for updates now reports when you are up to date.
 - Release workflow that builds Windows installers and a universal macOS dmg on version tags, signs updater artifacts, and drafts a GitHub Release with `latest.json`.
+
+### Changed
+
+- Theme and animations follow islet: a black pill with iOS system colors, amber/red alerts, a clip-path morph (280 ms) with a delayed content fade, and click-through margins with backend hover detection. This replaces the faux-glass look and the Motion spring, and Motion is no longer a dependency.
+- The update prompt opens the island and stays until answered.

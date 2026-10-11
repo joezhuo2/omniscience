@@ -7,8 +7,9 @@ Dynamic Island–style pill and expands into a compact dashboard on hover.
 
 ## Features
 
-- **Pill:** six live rings (CPU, RAM, iGPU, dGPU, Disk, and a download/upload Network ring),
-  colored by load: the metric's accent up to 70%, orange above 70%, pulsing red above 90%.
+- **Pill:** a black Dynamic Island–style pill (styled after [islet](https://github.com/joezhuo2/islet))
+  with six live rings (CPU, RAM, iGPU, dGPU, Disk, and a download/upload Network ring), colored by
+  load: the metric's accent up to 70%, amber above 70%, red above 90%.
 - **Hover to expand** into a dashboard with:
   - top processes grouped by app, with a CPU/RAM sort and a safe two-step "End?" button
     (critical OS processes are refused);
@@ -37,7 +38,8 @@ are in [docs/perf.md](docs/perf.md).
 
 ## Tech stack
 
-Tauri 2, Rust, React 19, TypeScript, Tailwind CSS v4, Motion, Lucide.
+Tauri 2, Rust, React 19, TypeScript, Tailwind CSS v4, Lucide. Theme and morph animation follow
+[islet](https://github.com/joezhuo2/islet).
 
 ## Development
 
@@ -63,6 +65,7 @@ The overlay has no taskbar button. Use the tray icon to show, hide, or quit it.
 
 Performance numbers: [docs/perf.md](docs/perf.md). Manual test checklist:
 [docs/testing.md](docs/testing.md). Releasing and updater keys: [docs/releasing.md](docs/releasing.md).
+`
 
 ## Design
 

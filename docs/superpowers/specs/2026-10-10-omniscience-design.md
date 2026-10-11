@@ -6,6 +6,20 @@
 - **Repository:** [joezhuo2/omniscience](https://github.com/joezhuo2/omniscience)
 - **Bundle identifier:** `io.github.joezhuo2.omniscience`
 
+> **Revision (2026-10-11, maintainer request):** the theme and animations follow islet
+> (https://github.com/joezhuo2/islet). This replaces the faux-glass look, the "cool neon" palette, and the
+> Motion spring morph described below:
+>
+> - **Look:** a solid black pill (260 x 34) drawn inside a fixed 420 x 48 window (400 px panel, 22 px
+>   radius), with iOS system colors. Alerts are amber `#FFB340` (warning) and red `#FF453A` (critical).
+> - **Rings:** 22 px, with no icons in the pill. A critical ring pulses three times, not in a loop.
+> - **Morph:** the shape grows with a `clip-path` transition (280 ms, `cubic-bezier(0.32, 0.72, 0, 1)`),
+>   and content fades in after it. Motion is no longer a dependency.
+> - **Hover:** while collapsed, clicks pass through the window and an 80 ms backend cursor poll detects
+>   hover.
+> - **Hover timing:** unchanged (open after 250 ms, close 400 ms after leaving).
+> - **Update prompt:** it opens the island and keeps it open until answered.
+
 ## 1. Purpose and success criteria
 
 Omniscience is a lightweight, open-source system monitor that lives at the top of the screen as a
