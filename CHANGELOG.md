@@ -21,3 +21,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GPU names, VRAM and temperature via D3DKMT and power via Windows Energy Meter counters, with no admin rights, no drivers and no NVML (a sleeping laptop dGPU is never woken).
 - Guarded `kill_process_group` command that refuses critical OS processes, PIDs 0 and 4, and Omniscience's own process tree.
 - Collapsed pill: six icon rings (CPU, RAM, iGPU, dGPU, Disk, and a concentric download/upload Network ring) with no text, colored by threshold (accent, orange above 70%, pulsing red above 90%) and dashed when a sensor is missing.
+- Expanded dashboard: header with package watts and hottest temperature, labeled metric strip, GPU & Power card (per-GPU usage, VRAM like `5.2 / 8.0 GB`, temperature, APU/CPU/GPU/NPU watts), per-core CPU heatmap with hover tooltips (usage, clock, per-core watts, package temperature), and skeleton loaders until detail data arrives.
+- Top processes grouped by app with a CPU/RAM sort toggle and a two-step "End?" button; rows disappear immediately and come back with a toast if the kill is refused.
