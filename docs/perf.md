@@ -55,3 +55,34 @@ ring's 400 ms `stroke-dashoffset` transition repaints for 40% of every 1 s tick 
 compositing, and the collapsed dashboard may still re-render behind `opacity: 0`. Expanded and
 hidden states were not measured in this run because the island did not expand from a synthetic
 cursor move.
+
+### CPU fix (before tagging 0.1.0)
+
+Two causes, each confirmed by removing it in an otherwise identical build and re-measuring. CPU here
+is from `TotalProcessorTime` deltas over 20 s windows with nothing else polling (`measure.ps1`'s
+once-a-second WMI queries load the machine enough to move the rings, so it inflates CPU now that
+ring cost depends on load changes; use it for memory).
+
+1. **Ring transitions.** Each of the six arcs eased `stroke-dashoffset` over 400 ms on every tick.
+   With software compositing every frame repaints the overlay, so the renderer and GPU process were
+   busy for 40% of each second. Removing the transition took the renderer from ~9% to ~0.35% of one
+   core and the GPU process from ~5% to ~0.3%.
+2. **Hover poll.** Four Tauri window getters every 80 ms, each a round trip through the event loop,
+   woke the main thread ~50 times a second. Calling Win32 directly took the Rust process from ~2.7%
+   to ~0.8% of one core (main thread 1.4% to 0.16%).
+
+Ring animation options tried (collapsed, all cores, hover fix in place):
+
+| Ring animation                                     | Total CPU (%)  |
+| -------------------------------------------------- | -------------- |
+| None                                               | 0.075-0.09     |
+| 400 ms ease, changes under 3 points snap           | 0.13-0.66      |
+| 400 ms `steps(6)`, changes under 3 points snap     | 0.17-0.28      |
+| **240 ms `steps(4)`, changes under 3 points snap** | **0.065-0.13** |
+
+Shipped: the last row, plus arcs rounded to whole percent. Final full release build (LTO), three
+20 s windows while the system was at 12-16% load: **0.15-0.25% total**, of which Rust ~0.04%,
+renderer 0.07-0.12%, GPU process 0.03-0.07%. Memory from `measure.ps1`: 47.4 MB average, 66.7 MB
+peak. The original build measured 0.57-0.74% (up to 2.2%) the same way. Ring cost scales with how
+often load swings by 3+ points, so a quiet machine sits at about the 0.1% budget and a busy one
+above it.
