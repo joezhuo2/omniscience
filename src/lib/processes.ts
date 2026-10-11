@@ -2,6 +2,8 @@ import type { KillReport, ProcessGroup } from '../types/telemetry';
 
 export type ProcessSort = 'cpu' | 'ram';
 
+/** Rows shown by default, and when "Show more" is on. */
+export const COLLAPSED_PROCESSES = 3;
 export const VISIBLE_PROCESSES = 8;
 
 /** How long the red "End?" confirmation stays armed. */
@@ -12,6 +14,7 @@ export function visibleProcesses(
   groups: ProcessGroup[],
   hidden: ReadonlySet<string>,
   sort: ProcessSort,
+  limit: number = VISIBLE_PROCESSES,
 ): ProcessGroup[] {
   return groups
     .filter((g) => !hidden.has(g.key))
@@ -20,7 +23,7 @@ export function visibleProcesses(
         ? b.cpu_pct - a.cpu_pct || b.mem_bytes - a.mem_bytes
         : b.mem_bytes - a.mem_bytes || b.cpu_pct - a.cpu_pct,
     )
-    .slice(0, VISIBLE_PROCESSES);
+    .slice(0, limit);
 }
 
 /**

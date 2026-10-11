@@ -28,7 +28,10 @@ describe('Dashboard', () => {
     act(() => useTelemetryStore.getState().setSnapshot(withDetail));
     render(<Dashboard />);
     expect(screen.getByTestId('value-cpu')).toHaveTextContent('23%');
-    expect(screen.getByTestId('value-ram')).toHaveTextContent('12.4 / 31.1 GB');
+    expect(screen.getByTestId('value-ram')).toHaveTextContent('12/31 GB');
+    expect(screen.getByTestId('value-cpu')).toHaveTextContent('3.2 GHz');
+    expect(screen.getByTestId('value-net')).toHaveTextContent('↓ 1 MB/s');
+    expect(screen.getByTestId('value-net')).toHaveTextContent('↑ 80 KB/s');
     expect(screen.getByTestId('value-dgpu')).toHaveTextContent('--');
     expect(screen.getByText(/5\.2 \/ 8\.0 GB/)).toBeInTheDocument();
     expect(screen.getAllByText('8.2 W').length).toBeGreaterThan(0);
@@ -90,5 +93,26 @@ describe('Dashboard', () => {
     fireEvent.click(screen.getByLabelText('Confirm end Code.exe'));
     await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(/administrator/));
     expect(screen.getByText('Code')).toBeInTheDocument();
+  });
+
+  it('shows the top 3 processes with a toggle for the rest', () => {
+    const many = {
+      ...sampleDetail,
+      processes: Array.from({ length: 6 }, (_, i) => ({
+        key: `p${i}`,
+        name: `p${i}.exe`,
+        pids: [i + 1],
+        cpu_pct: 10 - i,
+        mem_bytes: 1,
+      })),
+    };
+    act(() => useTelemetryStore.getState().setSnapshot({ ...sampleSnapshot, detail: many }));
+    render(<Dashboard />);
+    const rows = () => screen.getByTestId('process-rows').querySelectorAll('li');
+    expect(rows()).toHaveLength(3);
+    fireEvent.click(screen.getByRole('button', { name: /Show 3 more/ }));
+    expect(rows()).toHaveLength(6);
+    fireEvent.click(screen.getByRole('button', { name: /Show less/ }));
+    expect(rows()).toHaveLength(3);
   });
 });

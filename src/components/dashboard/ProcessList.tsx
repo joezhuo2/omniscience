@@ -1,8 +1,14 @@
 import { invoke } from '@tauri-apps/api/core';
-import { X } from 'lucide-react';
+import { ChevronDown, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { formatBytes } from '../../lib/format';
-import { CONFIRM_MS, killFailure, visibleProcesses, type ProcessSort } from '../../lib/processes';
+import {
+  COLLAPSED_PROCESSES,
+  CONFIRM_MS,
+  killFailure,
+  visibleProcesses,
+  type ProcessSort,
+} from '../../lib/processes';
 import { useTelemetryStore } from '../../store';
 import { useToastStore } from '../../toasts';
 import type { KillReport, ProcessGroup } from '../../types/telemetry';
@@ -71,6 +77,7 @@ export function ProcessList() {
   const [sort, setSort] = useState<ProcessSort>('cpu');
   const [armed, setArmed] = useState<string | null>(null);
   const [hidden, setHidden] = useState<ReadonlySet<string>>(new Set());
+  const [showAll, setShowAll] = useState(false);
   const disarm = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => () => clearTimeout(disarm.current ?? undefined), []);
@@ -102,7 +109,8 @@ export function ProcessList() {
     }
   }
 
-  const rows = groups ? visibleProcesses(groups, hidden, sort) : [];
+  const all = groups ? visibleProcesses(groups, hidden, sort) : [];
+  const rows = showAll ? all : all.slice(0, COLLAPSED_PROCESSES);
   return (
     <Card title="Top processes" aside={<SortToggle sort={sort} onChange={setSort} />}>
       {!groups ? (
@@ -112,11 +120,30 @@ export function ProcessList() {
           ))}
         </div>
       ) : (
-        <ul className="-mx-1.5">
-          {rows.map((p) => (
-            <Row key={p.key} p={p} armed={armed === p.key} onKill={onKill} />
-          ))}
-        </ul>
+        <>
+          <ul
+            data-testid="process-rows"
+            className={`-mx-1.5 overscroll-contain ${showAll ? 'max-h-36 overflow-y-auto' : ''}`}
+          >
+            {rows.map((p) => (
+              <Row key={p.key} p={p} armed={armed === p.key} onKill={onKill} />
+            ))}
+          </ul>
+          {all.length > COLLAPSED_PROCESSES && (
+            <button
+              aria-expanded={showAll}
+              onClick={() => setShowAll((v) => !v)}
+              className="mt-1 flex w-full items-center justify-center gap-1 rounded-md py-0.5 text-[10px] text-island-muted hover:bg-island-hover hover:text-island-text"
+            >
+              {showAll ? 'Show less' : `Show ${all.length - COLLAPSED_PROCESSES} more`}
+              <ChevronDown
+                size={11}
+                aria-hidden
+                className={`transition-transform ${showAll ? 'rotate-180' : ''}`}
+              />
+            </button>
+          )}
+        </>
       )}
     </Card>
   );
