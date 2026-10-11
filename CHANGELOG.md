@@ -38,3 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Theme and animations follow islet: a black pill with iOS system colors, amber/red alerts, a clip-path morph (280 ms) with a delayed content fade, and click-through margins with backend hover detection. This replaces the faux-glass look and the Motion spring, and Motion is no longer a dependency.
 - The update prompt opens the island and stays until answered.
+- The island starts collapsing the moment the cursor leaves; coming back mid-collapse reverses it at once.
+- Dashboard: CPU shows its live clock in GHz as a second line, network shows download and upload on two lines with rounded speeds, RAM reads like `15/31 GB`, and single rings are thicker with less empty space inside.
+- Top processes shows 3 rows by default with a "Show more" toggle; the expanded list scrolls.
+- Settings: iOS-style switches, themed step arrows on thresholds, and a segmented update-interval picker instead of native controls; dashboard and settings fade into each other.
