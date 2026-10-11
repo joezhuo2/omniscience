@@ -20,10 +20,10 @@ Dynamic Island–style pill and expands into a compact dashboard on hover.
 
 ## Platforms
 
-| Platform | Status |
-|---|---|
-| Windows 10/11 | Primary, tested |
-| macOS | Experimental. Builds in CI but is untested, and some sensors show `--` |
+| Platform      | Status                                                                 |
+| ------------- | ---------------------------------------------------------------------- |
+| Windows 10/11 | Primary, tested                                                        |
+| macOS         | Experimental. Builds in CI but is untested, and some sensors show `--` |
 
 ## Tech stack
 

@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 html,
 body,
@@ -12,7 +12,12 @@ body,
 
 body {
   font-family:
-    Inter, "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, sans-serif;
+    Inter,
+    'Segoe UI Variable',
+    'Segoe UI',
+    system-ui,
+    -apple-system,
+    sans-serif;
   color: #e2e8f0;
   user-select: none;
   -webkit-font-smoothing: antialiased;

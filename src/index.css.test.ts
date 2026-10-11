@@ -11,6 +11,6 @@ describe('index.css', () => {
   });
 
   it('imports tailwind', () => {
-    expect(css).toContain('@import "tailwindcss"');
+    expect(css).toMatch(/@import ['"]tailwindcss['"]/);
   });
 });
