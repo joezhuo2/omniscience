@@ -65,6 +65,12 @@ export function useIsland() {
 
   const onClosed = useCallback(() => dispatch('closed'), []);
 
+  /** Opens right away (tray "Settings…"); it stays open until hovered and left, or Esc. */
+  const open = useCallback(() => {
+    clearTimeout(collapseTimer.current);
+    dispatch('expand');
+  }, []);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') dispatch('collapse');
@@ -73,5 +79,5 @@ export function useIsland() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  return { phase, onPointerEnter, onPointerLeave, onClosed };
+  return { phase, onPointerEnter, onPointerLeave, onClosed, open };
 }

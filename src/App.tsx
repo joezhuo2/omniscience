@@ -1,11 +1,14 @@
 import { invoke } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
 import { motion } from 'motion/react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Pill } from './components/Pill';
 import { Dashboard } from './components/dashboard/Dashboard';
+import { SettingsView } from './components/settings/SettingsView';
 import { useIsland } from './hooks/useIsland';
 import { useTelemetry } from './hooks/useTelemetry';
 import { isOpen } from './lib/island';
+import { OPEN_SETTINGS_EVENT, subscribeSettings } from './settings';
 
 const SPRING = { type: 'spring', stiffness: 300, damping: 25 } as const;
 const FADE = { duration: 0.18, ease: 'easeOut' } as const;
@@ -31,10 +34,26 @@ function useFitWindow(ref: React.RefObject<HTMLDivElement | null>, active: boole
 
 export default function App() {
   useTelemetry();
-  const { phase, onPointerEnter, onPointerLeave, onClosed } = useIsland();
+  const island = useIsland();
+  const { phase, onPointerEnter, onPointerLeave, onClosed } = island;
   const open = isOpen(phase);
   const contentRef = useRef<HTMLDivElement>(null);
+  const [view, setView] = useState<'dashboard' | 'settings'>('dashboard');
   useFitWindow(contentRef, open);
+
+  useEffect(() => subscribeSettings(), []);
+
+  // Tray "Settings…" opens the settings view directly.
+  const openIsland = island.open;
+  useEffect(() => {
+    const unlisten = listen(OPEN_SETTINGS_EVENT, () => {
+      setView('settings');
+      openIsland();
+    });
+    return () => {
+      unlisten.then((f) => f()).catch(() => {});
+    };
+  }, [openIsland]);
 
   return (
     <div className="flex h-full w-full items-start justify-center">
@@ -48,18 +67,26 @@ export default function App() {
         onAnimationComplete={() => {
           if (phase === 'collapsing') onClosed();
         }}
-        onPointerEnter={onPointerEnter}
+        onPointerEnter={() => {
+          // Every fresh hover-open starts on the dashboard.
+          if (phase === 'collapsed') setView('dashboard');
+          onPointerEnter();
+        }}
         onPointerLeave={onPointerLeave}
       >
         <div ref={contentRef}>
           {open ? (
             <motion.div
-              key="dashboard"
+              key={view}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={FADE}
             >
-              <Dashboard />
+              {view === 'settings' ? (
+                <SettingsView onBack={() => setView('dashboard')} />
+              ) : (
+                <Dashboard onSettings={() => setView('settings')} />
+              )}
             </motion.div>
           ) : (
             <motion.div
