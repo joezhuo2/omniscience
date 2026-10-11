@@ -1,8 +1,11 @@
+import { emit } from '@tauri-apps/api/event';
 import { mockIPC } from '@tauri-apps/api/mocks';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
+import { HOVER_EVENT } from './hooks/useIsland';
 import { COLLAPSE_DELAY_MS, COLLAPSE_FALLBACK_MS, EXPAND_DELAY_MS } from './lib/island';
+import { useUpdaterStore } from './updater';
 
 // jsdom has no ResizeObserver.
 class NoopResizeObserver {
@@ -12,16 +15,21 @@ class NoopResizeObserver {
 }
 
 describe('App', () => {
-  let calls: { cmd: string; args: unknown }[];
+  let expandCalls: unknown[];
 
   beforeEach(() => {
     vi.useFakeTimers();
     vi.stubGlobal('ResizeObserver', NoopResizeObserver);
-    calls = [];
-    mockIPC((cmd, args) => {
-      if (cmd === 'set_expanded') calls.push({ cmd, args });
-      return null;
-    });
+    useUpdaterStore.setState({ banner: null });
+    expandCalls = [];
+    mockIPC(
+      (cmd, args) => {
+        if (cmd === 'set_expanded') expandCalls.push(args);
+        if (cmd === 'get_settings') return { auto_check_updates: false };
+        return null;
+      },
+      { shouldMockEvents: true },
+    );
   });
 
   afterEach(() => {
@@ -35,53 +43,86 @@ describe('App', () => {
       await vi.advanceTimersByTimeAsync(ms);
     });
   };
+  const hover = async (inside: boolean) => {
+    await act(async () => {
+      await emit(HOVER_EVENT, inside);
+    });
+  };
 
-  it('renders the collapsed pill', () => {
+  it('renders the collapsed pill with no panel', async () => {
     render(<App />);
+    await flush(0);
     expect(screen.getByTestId('pill')).toBeInTheDocument();
     expect(island()).toHaveAttribute('data-phase', 'collapsed');
+    expect(island()).not.toHaveClass('expanded');
+    expect(screen.queryByTestId('dashboard')).toBeNull();
   });
 
-  it('does not expand on a brief pass over the pill', async () => {
+  it('does not open on a brief pass over the pill', async () => {
     render(<App />);
-    fireEvent.pointerEnter(island());
+    await flush(0);
+    await hover(true);
     await flush(EXPAND_DELAY_MS - 50);
-    fireEvent.pointerLeave(island());
-    await flush(EXPAND_DELAY_MS);
+    await hover(false);
+    await flush(EXPAND_DELAY_MS + COLLAPSE_DELAY_MS);
     expect(island()).toHaveAttribute('data-phase', 'collapsed');
-    expect(calls).toHaveLength(0);
+    expect(expandCalls).toHaveLength(0);
   });
 
-  it('expands after hovering, snapping the window first', async () => {
+  it('opens after hovering, snapping the window first', async () => {
     render(<App />);
-    fireEvent.pointerEnter(island());
+    await flush(0);
+    await hover(true);
     await flush(EXPAND_DELAY_MS + 10);
-    expect(calls[0]).toEqual({ cmd: 'set_expanded', args: { expanded: true } });
-    expect(island()).toHaveAttribute('data-phase', 'expanded');
+    expect(expandCalls[0]).toEqual({ expanded: true });
+    expect(island()).toHaveClass('expanded');
     expect(screen.getByTestId('dashboard')).toBeInTheDocument();
   });
 
-  it('collapses after the cursor leaves and shrinks the window last', async () => {
+  it('closes after the cursor leaves and shrinks the window last', async () => {
     render(<App />);
-    fireEvent.pointerEnter(island());
+    await flush(0);
+    await hover(true);
     await flush(EXPAND_DELAY_MS + 10);
-    fireEvent.pointerLeave(island());
+    await hover(false);
     await flush(COLLAPSE_DELAY_MS + 10);
     expect(island()).toHaveAttribute('data-phase', 'collapsing');
-    expect(screen.queryByTestId('dashboard')).toBeNull();
+    expect(island()).not.toHaveClass('expanded');
+    // Content stays mounted (fading out) until the shape finishes shrinking.
+    expect(screen.getByTestId('dashboard')).toBeInTheDocument();
     await flush(COLLAPSE_FALLBACK_MS + 10);
     expect(island()).toHaveAttribute('data-phase', 'collapsed');
-    expect(calls.at(-1)).toEqual({ cmd: 'set_expanded', args: { expanded: false } });
+    expect(screen.queryByTestId('dashboard')).toBeNull();
+    expect(expandCalls.at(-1)).toEqual({ expanded: false });
   });
 
   it('stays open when the cursor comes back within the grace period', async () => {
     render(<App />);
-    fireEvent.pointerEnter(island());
+    await flush(0);
+    await hover(true);
     await flush(EXPAND_DELAY_MS + 10);
-    fireEvent.pointerLeave(island());
+    await hover(false);
     await flush(COLLAPSE_DELAY_MS - 100);
-    fireEvent.pointerEnter(island());
+    await hover(true);
     await flush(COLLAPSE_DELAY_MS + 10);
     expect(island()).toHaveAttribute('data-phase', 'expanded');
+  });
+
+  it('opens on its own for an update prompt', async () => {
+    render(<App />);
+    await flush(0);
+    act(() => useUpdaterStore.setState({ banner: { kind: 'available', version: '1.2.0' } }));
+    await flush(10);
+    expect(island()).toHaveAttribute('data-phase', 'expanded');
+    expect(screen.getByTestId('update-banner')).toHaveTextContent('v1.2.0 available');
+    // Moving the cursor across and away does not close it before the user answers.
+    await hover(true);
+    await hover(false);
+    await flush(COLLAPSE_DELAY_MS + COLLAPSE_FALLBACK_MS);
+    expect(island()).toHaveAttribute('data-phase', 'expanded');
+    // Answering "No" closes it.
+    act(() => useUpdaterStore.getState().dismiss());
+    await flush(COLLAPSE_FALLBACK_MS + 10);
+    expect(island()).toHaveAttribute('data-phase', 'collapsed');
   });
 });

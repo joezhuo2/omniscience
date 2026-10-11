@@ -4,7 +4,7 @@ export function Skeleton({ className = '' }: { className?: string }) {
     <div
       data-testid="skeleton"
       aria-hidden
-      className={`animate-pulse rounded-md bg-slate-700/40 ${className}`}
+      className={`animate-pulse rounded-md bg-island-track ${className}`}
     />
   );
 }

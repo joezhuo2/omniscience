@@ -39,10 +39,10 @@ export function MetricStrip() {
             label={r.label}
             icon={<RingIcon metric={r.key} size={15} />}
           />
-          <span className="text-[10px] font-medium text-slate-400">{r.label}</span>
+          <span className="text-[10px] font-medium text-island-muted">{r.label}</span>
           <span
             data-testid={`value-${r.key}`}
-            className="w-full truncate text-center text-[10px] leading-tight text-slate-200 tabular-nums"
+            className="w-full truncate text-center text-[10px] leading-tight text-island-text tabular-nums"
             title={valueText(r.key, core)}
           >
             {valueText(r.key, core)}

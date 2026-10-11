@@ -2,25 +2,25 @@
  * Pill <-> dashboard state machine.
  *
  * - `expanding`: the native window is being snapped to the expanded bounds.
- * - `expanded`: content springs open inside the large window.
- * - `collapsing`: content springs closed; the window shrinks when that animation ends.
+ * - `expanded`: the shape grows to the full panel and content fades in.
+ * - `collapsing`: the shape shrinks back to the pill; the window shrinks when that ends.
  */
 export type Phase = 'collapsed' | 'expanding' | 'expanded' | 'collapsing';
 
 export type IslandEvent =
-  /** Hover intent confirmed (cursor stayed 250 ms). */
+  /** Open intent confirmed (hover held 250 ms, or pinned open). */
   | 'expand'
   /** The native window finished growing. */
   | 'resized'
-  /** Cursor left for 400 ms, or Esc. */
+  /** Hover gone for 400 ms, or Esc. */
   | 'collapse'
   /** The collapse animation finished. */
   | 'closed';
 
 export const EXPAND_DELAY_MS = 250;
 export const COLLAPSE_DELAY_MS = 400;
-/** Upper bound on the collapse animation, in case its completion callback never fires. */
-export const COLLAPSE_FALLBACK_MS = 700;
+/** Upper bound on the collapse animation (`--shape-ms` plus slack), in case `transitionend` is missed. */
+export const COLLAPSE_FALLBACK_MS = 450;
 
 export function nextPhase(phase: Phase, event: IslandEvent): Phase {
   switch (phase) {
@@ -40,8 +40,8 @@ export function nextPhase(phase: Phase, event: IslandEvent): Phase {
   }
 }
 
-/** Whether the dashboard content is open (or opening) for this phase. */
+/** Whether the shape is open (full panel) for this phase. */
 export const isOpen = (phase: Phase) => phase === 'expanded';
 
-/** Whether the dashboard is mounted at all (it unmounts once fully collapsed). */
+/** Whether panel content is mounted (it unmounts once fully collapsed). */
 export const isMounted = (phase: Phase) => phase !== 'collapsed';

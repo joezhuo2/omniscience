@@ -20,14 +20,14 @@ function GpuRow({ gpu }: { gpu: GpuDetail }) {
   return (
     <div className="space-y-1">
       <div className="flex items-baseline justify-between gap-2 text-[11px]">
-        <span className="truncate text-slate-200" title={gpu.name}>
+        <span className="truncate text-island-text" title={gpu.name}>
           {gpu.name}
         </span>
-        <span className="shrink-0 text-slate-400 tabular-nums">
+        <span className="shrink-0 text-island-muted tabular-nums">
           {formatPercent(gpu.usage_pct)} · {memoryText(gpu)} · {formatTemp(gpu.temp_c)}
         </span>
       </div>
-      <div className="h-1 overflow-hidden rounded-full bg-slate-700/60">
+      <div className="h-1 overflow-hidden rounded-full bg-island-track">
         <div
           className="h-full rounded-full transition-[width] duration-500"
           style={{ width: `${Math.min(100, usage)}%`, background: accent }}
@@ -55,7 +55,7 @@ export function GpuPowerCard() {
     <Card
       title="GPU & Power"
       aside={
-        <span className="flex items-center gap-1 text-[11px] text-amber-300 tabular-nums">
+        <span className="flex items-center gap-1 text-[11px] text-island-warn tabular-nums">
           <Zap size={11} aria-hidden />
           {formatWatts(packageWatts)}
         </span>
@@ -68,12 +68,14 @@ export function GpuPowerCard() {
         </div>
       ) : (
         <div className="space-y-2">
-          {detail.gpus.length === 0 && <p className="text-[11px] text-slate-500">No GPU found</p>}
+          {detail.gpus.length === 0 && (
+            <p className="text-[11px] text-island-muted">No GPU found</p>
+          )}
           {detail.gpus.map((gpu) => (
             <GpuRow key={gpu.name} gpu={gpu} />
           ))}
           {parts.length > 0 && (
-            <div className="flex gap-3 pt-0.5 text-[10px] text-slate-400 tabular-nums">
+            <div className="flex gap-3 pt-0.5 text-[10px] text-island-muted tabular-nums">
               {parts.map(([label, w]) => (
                 <span key={label}>
                   {label} {formatWatts(w)}

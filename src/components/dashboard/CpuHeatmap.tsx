@@ -29,7 +29,7 @@ export function CpuHeatmap() {
     <Card
       title="CPU cores"
       aside={
-        <span className="text-[11px] text-slate-400 tabular-nums">
+        <span className="text-[11px] text-island-muted tabular-nums">
           {cores.length ? `${cores.length} threads` : ''}
         </span>
       }
@@ -48,7 +48,7 @@ export function CpuHeatmap() {
                 key={c.id}
                 data-testid="core-cell"
                 aria-label={`Core ${c.id}: ${Math.round(c.usage_pct)}%`}
-                className="relative h-5 rounded-[4px] ring-slate-300/70 hover:ring-1"
+                className="relative h-5 rounded-[4px] ring-island-muted hover:ring-1"
                 onMouseEnter={() => setHovered(c.id)}
               >
                 <div className="absolute inset-0 rounded-[4px]" style={cellStyle(c)} />
@@ -58,7 +58,7 @@ export function CpuHeatmap() {
           {active && (
             <div
               role="tooltip"
-              className="pointer-events-none absolute right-0 bottom-full z-10 mb-1.5 rounded-md border border-slate-600/60 bg-slate-950/95 px-2 py-1.5 text-[10px] leading-relaxed text-slate-200 shadow-lg tabular-nums"
+              className="pointer-events-none absolute right-0 bottom-full z-10 mb-1.5 rounded-md border border-island-faint bg-island-bg px-2 py-1.5 text-[10px] leading-relaxed text-island-text shadow-lg tabular-nums"
             >
               <div className="font-semibold">Core {active.id}</div>
               <div>Usage {active.usage_pct.toFixed(0)}%</div>

@@ -10,19 +10,19 @@ export function UpdateBanner() {
     <div
       role="status"
       data-testid="update-banner"
-      className="flex h-8 items-center gap-2 border-t border-slate-700/50 px-4 text-[11px] text-slate-200"
+      className="flex items-center gap-2 pt-2 text-[12px] text-island-text"
     >
       {banner.kind === 'available' && (
         <>
           <span className="flex-1 truncate">v{banner.version} available. Update?</span>
           <button
-            className="rounded bg-cyan-500 px-2 py-0.5 font-semibold text-slate-950 hover:bg-cyan-400"
+            className="rounded-full bg-allow-bg px-3 py-1 font-semibold text-allow-text hover:opacity-90"
             onClick={() => void install()}
           >
             Yes
           </button>
           <button
-            className="rounded px-2 py-0.5 text-slate-300 hover:bg-slate-700/60"
+            className="rounded-full bg-deny-bg px-3 py-1 text-deny-text hover:opacity-90"
             onClick={dismiss}
           >
             No
@@ -36,7 +36,7 @@ export function UpdateBanner() {
       )}
       {banner.kind === 'up_to_date' && <span className="flex-1">Omniscience is up to date.</span>}
       {banner.kind === 'error' && (
-        <span className="flex-1 truncate text-red-300" title={banner.message}>
+        <span className="flex-1 truncate text-island-crit" title={banner.message}>
           {banner.message}
         </span>
       )}

@@ -9,7 +9,7 @@ const INTERVALS = [500, 1000, 2000, 5000];
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <label className="flex items-center justify-between gap-3 py-1.5 text-[11px] text-slate-300">
+    <label className="flex items-center justify-between gap-3 py-1.5 text-[11px] text-island-text">
       <span>{label}</span>
       {children}
     </label>
@@ -32,7 +32,7 @@ function Toggle({
       aria-label={label}
       onClick={() => onChange(!checked)}
       className={`relative h-4 w-7 rounded-full transition-colors ${
-        checked ? 'bg-cyan-500' : 'bg-slate-600'
+        checked ? 'bg-island-ok' : 'bg-island-track'
       }`}
     >
       <span
@@ -72,7 +72,7 @@ function ThresholdInput({
         onChange={(e) => setDraft(e.target.value)}
         onBlur={commit}
         onKeyDown={(e) => e.key === 'Enter' && commit()}
-        className="w-12 rounded border border-slate-600 bg-slate-900 px-1.5 py-0.5 text-right text-slate-100 tabular-nums"
+        className="w-12 rounded border border-island-faint bg-island-hover px-1.5 py-0.5 text-right text-island-text tabular-nums"
       />
       %
     </span>
@@ -102,8 +102,8 @@ function HotkeyRecorder({ value, onChange }: { value: string; onChange: (v: stri
       onClick={() => setRecording((r) => !r)}
       className={`rounded border px-2 py-0.5 font-mono text-[10px] ${
         recording
-          ? 'border-cyan-400 text-cyan-300'
-          : 'border-slate-600 text-slate-200 hover:border-slate-400'
+          ? 'border-island-text text-island-text'
+          : 'border-island-faint text-island-text hover:border-island-muted'
       }`}
     >
       {recording ? 'Press keys…' : displayAccelerator(value, IS_MAC)}
@@ -125,16 +125,16 @@ export function SettingsView({ onBack }: { onBack: () => void }) {
         <button
           aria-label="Back"
           onClick={onBack}
-          className="rounded-md p-1 text-slate-400 hover:bg-slate-700/50 hover:text-slate-100"
+          className="rounded-md p-1 text-island-muted hover:bg-island-track/50 hover:text-island-text"
         >
           <ArrowLeft size={14} aria-hidden />
         </button>
-        <h1 className="text-xs font-semibold text-slate-200">Settings</h1>
+        <h1 className="text-xs font-semibold text-island-text">Settings</h1>
       </header>
       {!settings ? (
-        <p className="py-4 text-center text-[11px] text-slate-500">Loading…</p>
+        <p className="py-4 text-center text-[11px] text-island-muted">Loading…</p>
       ) : (
-        <div className="divide-y divide-slate-700/50 rounded-xl border border-slate-700/40 bg-slate-800/40 px-3">
+        <div className="divide-y divide-island-faint rounded-xl border border-island-faint bg-island-hover px-3">
           <Row label="Warning above">
             <ThresholdInput
               key={`warn-${settings.warn_threshold}`}
@@ -156,7 +156,7 @@ export function SettingsView({ onBack }: { onBack: () => void }) {
               aria-label="Update interval"
               value={settings.poll_interval_ms}
               onChange={(e) => set({ poll_interval_ms: Number(e.target.value) })}
-              className="rounded border border-slate-600 bg-slate-900 px-1 py-0.5 text-slate-100"
+              className="rounded border border-island-faint bg-island-hover px-1 py-0.5 text-island-text"
             >
               {INTERVALS.map((ms) => (
                 <option key={ms} value={ms}>
@@ -192,14 +192,14 @@ export function SettingsView({ onBack }: { onBack: () => void }) {
           <Row label="Position">
             <button
               onClick={() => void invoke('reset_position').catch(() => {})}
-              className="rounded border border-slate-600 px-2 py-0.5 text-[10px] text-slate-200 hover:border-slate-400"
+              className="rounded border border-island-faint px-2 py-0.5 text-[10px] text-island-text hover:border-island-muted"
             >
               Reset to top center
             </button>
           </Row>
         </div>
       )}
-      {error && <p className="pt-2 text-[11px] text-red-300">{error}</p>}
+      {error && <p className="pt-2 text-[11px] text-island-crit">{error}</p>}
     </div>
   );
 }

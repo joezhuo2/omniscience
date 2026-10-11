@@ -30,7 +30,7 @@ function ArcCircle({ arc, r, c, stroke }: { arc: Arc; r: number; c: number; stro
         cy={c}
         r={r}
         fill="none"
-        stroke="rgb(51 65 85 / 0.7)"
+        stroke="var(--color-island-track)"
         strokeWidth={stroke}
         strokeDasharray={missing ? '2 3' : undefined}
       />
@@ -73,7 +73,7 @@ export function Ring({ outer, inner, size, stroke, label, icon }: RingProps) {
         {inner && <ArcCircle arc={inner} r={rInner} c={c} stroke={stroke} />}
       </svg>
       {icon && (
-        <span className="absolute inset-0 flex items-center justify-center text-slate-300">
+        <span className="absolute inset-0 flex items-center justify-center text-island-muted">
           {icon}
         </span>
       )}

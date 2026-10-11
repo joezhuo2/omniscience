@@ -8,7 +8,7 @@ import { Toasts } from './Toasts';
 /** Expanded view. Mounted on expand and unmounted on collapse. */
 export function Dashboard({ onSettings }: { onSettings?: () => void }) {
   return (
-    <div data-testid="dashboard" className="flex flex-col gap-2 px-2.5 pt-1 pb-2.5">
+    <div data-testid="dashboard" className="flex flex-col gap-2 pt-1">
       <Header onSettings={onSettings} />
       <MetricStrip />
       <GpuPowerCard />

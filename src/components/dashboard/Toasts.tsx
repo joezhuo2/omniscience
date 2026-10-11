@@ -10,7 +10,7 @@ export function Toasts() {
         <button
           key={t.id}
           role="status"
-          className="block w-full rounded-lg border border-red-400/30 bg-red-950/80 px-2.5 py-1.5 text-left text-[11px] text-red-100"
+          className="block w-full rounded-[10px] border-l-[3px] border-island-crit bg-island-hover px-2.5 py-2 text-left text-[12px] text-island-text"
           onClick={() => dismiss(t.id)}
         >
           {t.text}

@@ -1,0 +1,43 @@
+/* Visual theme, following islet (https://github.com/joezhuo2/islet). Every color, dimension and
+   motion value lives here. Geometry must match src-tauri/src/hover.rs and window.rs. */
+
+@theme {
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI Variable Text', 'Segoe UI',
+    system-ui, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, monospace;
+
+  /* Island body */
+  --color-island-bg: #000;
+  --color-island-text: #f2f2f2;
+  --color-island-muted: #8e8e93;
+  --color-island-faint: #3a3a3c;
+  --color-island-track: #2c2c2e;
+  --color-island-hover: #1c1c1e;
+
+  /* Alerts and states */
+  --color-island-warn: #ffb340;
+  --color-island-crit: #ff453a;
+  --color-island-ok: #34c759;
+
+  /* Buttons */
+  --color-allow-bg: #f2f2f2;
+  --color-allow-text: #000;
+  --color-deny-bg: #2c2c2e;
+  --color-deny-text: #f2f2f2;
+}
+
+:root {
+  /* Geometry: window 420 x 48 collapsed (window.rs), pill drawn inside it. */
+  --top-gap: 6px;
+  --pill-w: 260px;
+  --pill-h: 34px;
+  --panel-w: 400px;
+  --panel-radius: 22px;
+  --pad: 14px;
+
+  /* Motion */
+  --shape-ms: 280ms;
+  --fade-ms: 140ms;
+  --ease: cubic-bezier(0.32, 0.72, 0, 1);
+}

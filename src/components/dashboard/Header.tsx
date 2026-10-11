@@ -6,7 +6,7 @@ import { StaleDot } from './StaleDot';
 
 function Badge({ icon, children }: { icon: ReactNode; children: ReactNode }) {
   return (
-    <span className="flex items-center gap-1 rounded-full bg-slate-800/70 px-2 py-0.5 text-[10px] text-slate-300 tabular-nums">
+    <span className="flex items-center gap-1 rounded-full bg-island-hover px-2 py-0.5 text-[10px] text-island-text tabular-nums">
       {icon}
       {children}
     </span>
@@ -26,21 +26,21 @@ export function Header({ onSettings }: { onSettings?: () => void }) {
     <header data-tauri-drag-region className="flex h-9 items-center gap-2 px-1">
       <span
         data-tauri-drag-region
-        className="flex-1 text-xs font-semibold tracking-wide text-slate-200"
+        className="flex-1 text-xs font-semibold tracking-wide text-island-text"
       >
         Omniscience
       </span>
       <StaleDot />
-      <Badge icon={<Zap size={10} aria-hidden className="text-amber-300" />}>
+      <Badge icon={<Zap size={10} aria-hidden className="text-island-warn" />}>
         {formatWatts(watts)}
       </Badge>
-      <Badge icon={<Thermometer size={10} aria-hidden className="text-rose-300" />}>
+      <Badge icon={<Thermometer size={10} aria-hidden className="text-island-crit" />}>
         {formatTemp(hottest)}
       </Badge>
       {onSettings && (
         <button
           aria-label="Settings"
-          className="rounded-md p-1 text-slate-400 hover:bg-slate-700/50 hover:text-slate-100"
+          className="rounded-md p-1 text-island-muted hover:bg-island-track/50 hover:text-island-text"
           onClick={onSettings}
         >
           <Settings size={14} aria-hidden />

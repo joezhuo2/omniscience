@@ -3,10 +3,10 @@ import { ACCENTS, CRITICAL, WARNING, levelColor } from './levels';
 
 describe('levelColor', () => {
   it('uses the accent when normal', () => {
-    expect(levelColor('normal', ACCENTS.cpu)).toBe('#22D3EE');
+    expect(levelColor('normal', ACCENTS.cpu)).toBe('#64D2FF');
   });
 
-  it('switches to orange and red above the thresholds', () => {
+  it('switches to amber and red above the thresholds', () => {
     expect(levelColor('warning', ACCENTS.cpu)).toBe(WARNING);
     expect(levelColor('critical', ACCENTS.ram)).toBe(CRITICAL);
   });

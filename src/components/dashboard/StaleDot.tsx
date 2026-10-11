@@ -18,7 +18,7 @@ export function StaleDot() {
       role="status"
       aria-label="Telemetry stalled"
       title="No data for a few seconds"
-      className="h-1.5 w-1.5 rounded-full bg-amber-400"
+      className="h-1.5 w-1.5 rounded-full bg-island-warn"
     />
   );
 }

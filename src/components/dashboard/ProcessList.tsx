@@ -11,14 +11,16 @@ import { Skeleton } from './Skeleton';
 
 function SortToggle({ sort, onChange }: { sort: ProcessSort; onChange: (s: ProcessSort) => void }) {
   return (
-    <div role="tablist" className="flex rounded-md bg-slate-900/60 p-0.5 text-[10px]">
+    <div role="tablist" className="flex rounded-md bg-island-hover p-0.5 text-[10px]">
       {(['cpu', 'ram'] as const).map((s) => (
         <button
           key={s}
           role="tab"
           aria-selected={sort === s}
           className={`rounded px-2 py-0.5 font-medium uppercase transition-colors ${
-            sort === s ? 'bg-slate-700 text-slate-100' : 'text-slate-400 hover:text-slate-200'
+            sort === s
+              ? 'bg-island-track text-island-text'
+              : 'text-island-muted hover:text-island-text'
           }`}
           onClick={() => onChange(s)}
         >
@@ -39,21 +41,21 @@ function Row({
   onKill: (p: ProcessGroup) => void;
 }) {
   return (
-    <li className="group flex items-center gap-2 rounded-md px-1.5 py-1 text-[11px] hover:bg-slate-700/30">
-      <span className="min-w-0 flex-1 truncate text-slate-200" title={p.name}>
+    <li className="group flex items-center gap-2 rounded-md px-1.5 py-1 text-[11px] hover:bg-island-track/30">
+      <span className="min-w-0 flex-1 truncate text-island-text" title={p.name}>
         {p.name.replace(/\.exe$/i, '')}
-        {p.pids.length > 1 && <span className="ml-1 text-slate-500">×{p.pids.length}</span>}
+        {p.pids.length > 1 && <span className="ml-1 text-island-muted">×{p.pids.length}</span>}
       </span>
-      <span className="w-12 text-right text-slate-300 tabular-nums">{p.cpu_pct.toFixed(1)}%</span>
-      <span className="w-16 text-right text-slate-400 tabular-nums">
+      <span className="w-12 text-right text-island-text tabular-nums">{p.cpu_pct.toFixed(1)}%</span>
+      <span className="w-16 text-right text-island-muted tabular-nums">
         {formatBytes(p.mem_bytes)}
       </span>
       <button
         aria-label={armed ? `Confirm end ${p.name}` : `End ${p.name}`}
         className={`flex h-5 items-center justify-center rounded transition-colors ${
           armed
-            ? 'w-11 bg-red-500 text-[10px] font-semibold text-white'
-            : 'w-5 text-slate-500 hover:bg-red-500/20 hover:text-red-400'
+            ? 'w-11 bg-island-crit text-[10px] font-semibold text-white'
+            : 'w-5 text-island-muted hover:bg-island-crit/20 hover:text-island-crit'
         }`}
         onClick={() => onKill(p)}
       >
