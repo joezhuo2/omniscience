@@ -3,7 +3,7 @@
 - **Date:** 2026-10-10
 - **Status:** Draft, awaiting review
 - **License:** MIT ("Omniscience contributors"), open source
-- **Repository:** `joezhuo2/omniscience` (GitHub, not yet created; local-only until then)
+- **Repository:** [joezhuo2/omniscience](https://github.com/joezhuo2/omniscience)
 - **Bundle identifier:** `io.github.joezhuo2.omniscience`
 
 ## 1. Purpose and success criteria
@@ -306,8 +306,8 @@ suspended (`ICoreWebView2_3::TrySuspend`). It resumes on show.
   are stored as GitHub secrets (`TAURI_SIGNING_PRIVATE_KEY`, `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`), and
   the README documents how to generate them. OS code signing (Authenticode, Apple notarization) is out
   of scope, so the README warns about SmartScreen and Gatekeeper prompts.
-- These workflows only run once the repository is pushed to GitHub. Until then, development is
-  local-only.
+- These workflows run once commits are pushed to GitHub. Pushing is done by the maintainer;
+  development commits stay local until then.
 
 ## 9. Repository workflow
 
