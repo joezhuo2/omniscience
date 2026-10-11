@@ -2,7 +2,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use sysinfo::{ProcessRefreshKind, ProcessesToUpdate, System};
+use sysinfo::{CpuRefreshKind, ProcessRefreshKind, ProcessesToUpdate, System};
 
 use super::types::{KillOutcome, KillReport, KillResult, ProcessGroup};
 
@@ -151,6 +151,23 @@ pub fn read(sys: &System) -> Vec<ProcInfo> {
             mem_bytes: p.memory(),
         })
         .collect()
+}
+
+/// A primed `System` for process sampling, ready to report real CPU% on the next refresh.
+///
+/// - It needs the CPU list: sysinfo scales process CPU time by the number of CPUs.
+/// - On Windows, sysinfo stores a new process's baseline times only if at least
+///   `MINIMUM_CPU_UPDATE_INTERVAL` passed since it first saw the process; otherwise the next
+///   refresh compares against zero and reports a share of all CPU time since boot (near 0%).
+///   So refresh twice, that interval apart. This blocks the collector for about 250 ms, once
+///   per dashboard open.
+pub fn new_system() -> System {
+    let mut sys = System::new();
+    sys.refresh_cpu_list(CpuRefreshKind::nothing());
+    refresh(&mut sys);
+    std::thread::sleep(sysinfo::MINIMUM_CPU_UPDATE_INTERVAL + std::time::Duration::from_millis(50));
+    refresh(&mut sys);
+    sys
 }
 
 pub fn refresh(sys: &mut System) {
@@ -336,6 +353,35 @@ mod tests {
         assert_eq!(
             top.iter().map(|g| g.key.as_str()).collect::<Vec<_>>(),
             ["b", "c"]
+        );
+    }
+
+    /// Regression: a busy process must read close to one full core on the first refresh after
+    /// priming (it used to read about 0.03%).
+    #[test]
+    fn busy_thread_reads_near_one_core_after_priming() {
+        let stop = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let spin = {
+            let stop = stop.clone();
+            std::thread::spawn(move || {
+                while !stop.load(std::sync::atomic::Ordering::Relaxed) {
+                    std::hint::spin_loop();
+                }
+            })
+        };
+        let mut sys = new_system();
+        std::thread::sleep(std::time::Duration::from_millis(600));
+        refresh(&mut sys);
+        stop.store(true, std::sync::atomic::Ordering::Relaxed);
+        spin.join().unwrap();
+        let me = read(&sys)
+            .into_iter()
+            .find(|p| p.pid == std::process::id())
+            .expect("test process listed");
+        assert!(
+            me.cpu_core_pct > 50.0,
+            "read {}% of a core",
+            me.cpu_core_pct
         );
     }
 }
