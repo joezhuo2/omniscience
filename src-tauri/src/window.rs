@@ -6,6 +6,23 @@ use tauri::{LogicalSize, PhysicalPosition, WebviewWindow};
 pub const TOP_MARGIN: f64 = 8.0;
 /// Collapsed overlay size in logical px. Must match `tauri.conf.json`.
 pub const COLLAPSED_SIZE: (f64, f64) = (400.0, 42.0);
+/// Tallest the expanded dashboard may grow (logical px). The frontend fits the window to its
+/// content within this.
+pub const EXPANDED_MAX_HEIGHT: f64 = 560.0;
+
+/// Sets the window height (logical px), clamped to the collapsed and expanded bounds. Width and
+/// the top-left corner never change, so the pill does not move while the window grows or shrinks.
+pub fn set_height(window: &WebviewWindow, height: f64) -> tauri::Result<()> {
+    window.set_size(LogicalSize::new(COLLAPSED_SIZE.0, clamp_height(height)))
+}
+
+pub fn clamp_height(height: f64) -> f64 {
+    if height.is_finite() {
+        height.clamp(COLLAPSED_SIZE.1, EXPANDED_MAX_HEIGHT)
+    } else {
+        COLLAPSED_SIZE.1
+    }
+}
 
 /// Top-left position (physical px) that horizontally centers a window at the top of a monitor
 /// work area, `margin` physical px below its top edge.
@@ -51,6 +68,14 @@ pub fn place_top_center(window: &WebviewWindow) -> tauri::Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn clamps_requested_heights() {
+        assert_eq!(clamp_height(10.0), 42.0);
+        assert_eq!(clamp_height(300.0), 300.0);
+        assert_eq!(clamp_height(5000.0), 560.0);
+        assert_eq!(clamp_height(f64::NAN), 42.0);
+    }
 
     #[test]
     fn centers_on_monitor_at_origin() {
