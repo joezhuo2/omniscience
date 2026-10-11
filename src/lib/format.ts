@@ -19,14 +19,32 @@ export function formatRate(bps: number | null | undefined): string {
   return b === '--' ? b : `${b}/s`;
 }
 
-/** "12.4 / 31.1 GB": used over total, both in GB. */
+/** "15/31 GB": used over total, rounded to whole GB so it fits under a ring. */
 export function formatUsedTotal(
   used: number | null | undefined,
   total: number | null | undefined,
 ): string {
   if (used == null || total == null || total <= 0) return '--';
   const gb = 1024 ** 3;
-  return `${(used / gb).toFixed(1)} / ${(total / gb).toFixed(1)} GB`;
+  return `${Math.round(used / gb)}/${Math.round(total / gb)} GB`;
+}
+
+/** Bytes per second rounded to a whole number in the best unit: "1 MB/s", "80 KB/s". */
+export function formatRateRounded(bps: number | null | undefined): string {
+  if (bps == null || !Number.isFinite(bps) || bps < 0) return '--';
+  let v = bps;
+  let i = 0;
+  while (Math.round(v) >= 1024 && i < UNITS.length - 1) {
+    v /= 1024;
+    i++;
+  }
+  return `${Math.round(v)} ${UNITS[i]}/s`;
+}
+
+/** MHz -> "3.2 GHz". */
+export function formatGhz(mhz: number | null | undefined): string {
+  if (mhz == null || !Number.isFinite(mhz) || mhz <= 0) return '--';
+  return `${(mhz / 1000).toFixed(1)} GHz`;
 }
 
 export function formatPercent(p: number | null | undefined): string {

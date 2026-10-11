@@ -2,6 +2,17 @@ import type { Arc } from '../components/Ring';
 import type { CoreMetrics, Metric } from '../types/telemetry';
 import { ACCENTS, type MetricKey } from './levels';
 
+/**
+ * Ring stroke widths. Single rings are thick with a small hole; the concentric network pair stays
+ * thin so both layers fit.
+ */
+export const RING_STROKE = {
+  pill: 3.6,
+  pillPair: 2.4,
+  strip: 6.5,
+  stripPair: 4,
+} as const;
+
 export interface RingSpec {
   key: MetricKey;
   label: string;

@@ -1,4 +1,4 @@
-import { ringSpecs } from '../lib/metrics';
+import { RING_STROKE, ringSpecs } from '../lib/metrics';
 import { useTelemetryStore } from '../store';
 import { Ring } from './Ring';
 
@@ -12,7 +12,14 @@ export function Pill() {
       style={{ width: 'var(--pill-w)', height: 'var(--pill-h)' }}
     >
       {ringSpecs(core).map((r) => (
-        <Ring key={r.key} outer={r.outer} inner={r.inner} size={22} stroke={2.4} label={r.label} />
+        <Ring
+          key={r.key}
+          outer={r.outer}
+          inner={r.inner}
+          size={22}
+          stroke={r.inner ? RING_STROKE.pillPair : RING_STROKE.pill}
+          label={r.label}
+        />
       ))}
     </div>
   );

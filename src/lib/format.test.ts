@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   formatBytes,
+  formatGhz,
+  formatRateRounded,
   formatPercent,
   formatRate,
   formatTemp,
@@ -34,8 +36,25 @@ describe('format', () => {
     expect(formatTemp(47.6)).toBe('48°C');
   });
 
-  it('formats used over total in GB', () => {
+  it('formats used over total in whole GB with no spaces around the slash', () => {
     const gb = 1024 ** 3;
-    expect(formatUsedTotal(12.4 * gb, 31.1 * gb)).toBe('12.4 / 31.1 GB');
+    expect(formatUsedTotal(15.4 * gb, 31.1 * gb)).toBe('15/31 GB');
+    expect(formatUsedTotal(15.6 * gb, 31.1 * gb)).toBe('16/31 GB');
+  });
+
+  it('formats rounded rates', () => {
+    expect(formatRateRounded(0)).toBe('0 B/s');
+    expect(formatRateRounded(81920)).toBe('80 KB/s');
+    expect(formatRateRounded(1.4 * 1024 * 1024)).toBe('1 MB/s');
+    // 1023.6 KB rounds to 1024 KB, which is shown as 1 MB.
+    expect(formatRateRounded(1023.6 * 1024)).toBe('1 MB/s');
+    expect(formatRateRounded(null)).toBe('--');
+  });
+
+  it('formats clock speed in GHz to one decimal', () => {
+    expect(formatGhz(3249)).toBe('3.2 GHz');
+    expect(formatGhz(2000)).toBe('2.0 GHz');
+    expect(formatGhz(null)).toBe('--');
+    expect(formatGhz(0)).toBe('--');
   });
 });
