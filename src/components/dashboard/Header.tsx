@@ -2,6 +2,7 @@ import { Settings, Thermometer, Zap } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { formatTemp, formatWatts } from '../../lib/format';
 import { useTelemetryStore } from '../../store';
+import { StaleDot } from './StaleDot';
 
 function Badge({ icon, children }: { icon: ReactNode; children: ReactNode }) {
   return (
@@ -29,6 +30,7 @@ export function Header({ onSettings }: { onSettings?: () => void }) {
       >
         Omniscience
       </span>
+      <StaleDot />
       <Badge icon={<Zap size={10} aria-hidden className="text-amber-300" />}>
         {formatWatts(watts)}
       </Badge>
