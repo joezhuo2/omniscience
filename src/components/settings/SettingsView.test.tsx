@@ -58,6 +58,21 @@ describe('SettingsView', () => {
     expect(saved).toHaveLength(1);
   });
 
+  it('steps a threshold with the themed arrows', async () => {
+    render(<SettingsView onBack={() => {}} />);
+    fireEvent.click(await screen.findByLabelText('Increase Warning threshold'));
+    await waitFor(() => expect(saved.at(-1)?.warn_threshold).toBe(71));
+  });
+
+  it('picks the update interval from a segmented control', async () => {
+    render(<SettingsView onBack={() => {}} />);
+    fireEvent.click(await screen.findByRole('radio', { name: '2 s' }));
+    await waitFor(() => expect(saved.at(-1)?.poll_interval_ms).toBe(2000));
+    await waitFor(() =>
+      expect(screen.getByRole('radio', { name: '2 s' })).toHaveAttribute('aria-checked', 'true'),
+    );
+  });
+
   it('records a new hotkey', async () => {
     render(<SettingsView onBack={() => {}} />);
     fireEvent.click(await screen.findByLabelText('Show/hide hotkey'));

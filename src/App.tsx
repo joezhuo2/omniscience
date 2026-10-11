@@ -11,6 +11,9 @@ import { isMounted, isOpen } from './lib/island';
 import { OPEN_SETTINGS_EVENT, subscribeSettings, type Settings } from './settings';
 import { CHECK_UPDATE_EVENT, useUpdaterStore } from './updater';
 
+/** Matches `--fade-ms`: how long the outgoing view takes to fade before the swap. */
+const VIEW_FADE_MS = 140;
+
 /** Window height beyond the island: top gap plus a little room, as in islet. */
 const WINDOW_EXTRA = 16;
 
@@ -38,6 +41,16 @@ export default function App() {
   const checkNow = useUpdaterStore((s) => s.checkNow);
   const [settingsPinned, setSettingsPinned] = useState(false);
   const [view, setView] = useState<'dashboard' | 'settings'>('dashboard');
+  const [fading, setFading] = useState(false);
+  const fadeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const switchView = (next: 'dashboard' | 'settings') => {
+    clearTimeout(fadeTimer.current);
+    setFading(true);
+    fadeTimer.current = setTimeout(() => {
+      setView(next);
+      setFading(false);
+    }, VIEW_FADE_MS);
+  };
   const { phase, onClosed } = useIsland(settingsPinned, banner != null, () =>
     setSettingsPinned(false),
   );
@@ -74,9 +87,9 @@ export default function App() {
   const panel = banner ? (
     <UpdateBanner />
   ) : view === 'settings' ? (
-    <SettingsView onBack={() => setView('dashboard')} />
+    <SettingsView onBack={() => switchView('dashboard')} />
   ) : (
-    <Dashboard onSettings={() => setView('settings')} />
+    <Dashboard onSettings={() => switchView('settings')} />
   );
 
   return (
@@ -93,7 +106,13 @@ export default function App() {
       }}
     >
       <Pill />
-      {isMounted(phase) && <div className="panel">{panel}</div>}
+      {isMounted(phase) && (
+        <div className="panel">
+          <div className="view-fade" data-fading={fading}>
+            {panel}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

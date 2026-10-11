@@ -11,6 +11,39 @@ body,
   overflow: hidden;
 }
 
+/* Native scrollbars and form parts render dark. */
+:root {
+  color-scheme: dark;
+}
+
+/* Threshold fields use themed step arrows instead of the native spinner. */
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type='number'] {
+  appearance: textfield;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-island-faint);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.view-fade {
+  transition: opacity var(--fade-ms) ease-out;
+}
+.view-fade[data-fading='true'] {
+  opacity: 0;
+}
+
 body {
   font-family: var(--font-sans);
   color: var(--color-island-text);

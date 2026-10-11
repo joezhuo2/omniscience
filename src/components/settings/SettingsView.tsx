@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
 import { acceleratorFromEvent, displayAccelerator } from '../../lib/hotkey';
 import { useSettingsStore, type Settings } from '../../settings';
@@ -9,12 +9,15 @@ const INTERVALS = [500, 1000, 2000, 5000];
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <label className="flex items-center justify-between gap-3 py-1.5 text-[11px] text-island-text">
+    <div className="flex min-h-9 items-center justify-between gap-3 py-1.5 text-[11px] text-island-text">
       <span>{label}</span>
       {children}
-    </label>
+    </div>
   );
 }
+
+/** iOS-style switch. Sizes are explicit so the knob always stays inside the track. */
+const SWITCH = { w: 34, h: 20, knob: 16, pad: 2 };
 
 function Toggle({
   checked,
@@ -31,14 +34,20 @@ function Toggle({
       aria-checked={checked}
       aria-label={label}
       onClick={() => onChange(!checked)}
-      className={`relative h-4 w-7 rounded-full transition-colors ${
+      className={`relative shrink-0 overflow-hidden rounded-full p-0 transition-colors duration-200 ${
         checked ? 'bg-island-ok' : 'bg-island-track'
       }`}
+      style={{ width: SWITCH.w, height: SWITCH.h }}
     >
       <span
-        className={`absolute top-0.5 h-3 w-3 rounded-full bg-white transition-transform ${
-          checked ? 'translate-x-3.5' : 'translate-x-0.5'
-        }`}
+        aria-hidden
+        className="absolute block rounded-full bg-white shadow transition-[left] duration-200 ease-out"
+        style={{
+          top: SWITCH.pad,
+          width: SWITCH.knob,
+          height: SWITCH.knob,
+          left: checked ? SWITCH.w - SWITCH.knob - SWITCH.pad : SWITCH.pad,
+        }}
       />
     </button>
   );
@@ -61,8 +70,22 @@ function ThresholdInput({
     if (Number.isFinite(n) && n !== value) onCommit(n);
     else setDraft(String(value));
   };
+  const step = (delta: number) => {
+    const n = Math.min(99, Math.max(1, value + delta));
+    if (n !== value) onCommit(n);
+  };
+  const stepButton =
+    'flex h-2.5 w-4 items-center justify-center text-island-muted hover:text-island-text';
   return (
     <span className="flex items-center gap-1">
+      <span className="flex flex-col">
+        <button aria-label={`Increase ${label}`} className={stepButton} onClick={() => step(1)}>
+          <ChevronUp size={10} aria-hidden />
+        </button>
+        <button aria-label={`Decrease ${label}`} className={stepButton} onClick={() => step(-1)}>
+          <ChevronDown size={10} aria-hidden />
+        </button>
+      </span>
       <input
         aria-label={label}
         type="number"
@@ -152,18 +175,30 @@ export function SettingsView({ onBack }: { onBack: () => void }) {
             />
           </Row>
           <Row label="Update every">
-            <select
+            <div
+              role="radiogroup"
               aria-label="Update interval"
-              value={settings.poll_interval_ms}
-              onChange={(e) => set({ poll_interval_ms: Number(e.target.value) })}
-              className="rounded border border-island-faint bg-island-hover px-1 py-0.5 text-island-text"
+              className="flex rounded-md bg-island-track p-0.5 text-[10px]"
             >
-              {INTERVALS.map((ms) => (
-                <option key={ms} value={ms}>
-                  {ms / 1000} s
-                </option>
-              ))}
-            </select>
+              {INTERVALS.map((ms) => {
+                const active = settings.poll_interval_ms === ms;
+                return (
+                  <button
+                    key={ms}
+                    role="radio"
+                    aria-checked={active}
+                    onClick={() => set({ poll_interval_ms: ms })}
+                    className={`rounded px-2 py-0.5 tabular-nums transition-colors ${
+                      active
+                        ? 'bg-island-faint text-island-text'
+                        : 'text-island-muted hover:text-island-text'
+                    }`}
+                  >
+                    {ms / 1000} s
+                  </button>
+                );
+              })}
+            </div>
           </Row>
           <Row label="Show/hide hotkey">
             <HotkeyRecorder value={settings.hotkey} onChange={(hotkey) => set({ hotkey })} />
