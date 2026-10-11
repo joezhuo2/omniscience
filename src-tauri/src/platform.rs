@@ -1,11 +1,14 @@
 //! Platform-specific window tweaks.
 
 /// `WS_EX_TOOLWINDOW`: no taskbar button and no Alt+Tab entry.
+#[cfg(any(windows, test))]
 pub const WS_EX_TOOLWINDOW: isize = 0x0000_0080;
 /// `WS_EX_APPWINDOW`: forces a taskbar button. It must be cleared or it wins over TOOLWINDOW.
+#[cfg(any(windows, test))]
 pub const WS_EX_APPWINDOW: isize = 0x0004_0000;
 
 /// Extended window style for the overlay.
+#[cfg(any(windows, test))]
 pub fn tool_window_ex_style(ex_style: isize) -> isize {
     (ex_style | WS_EX_TOOLWINDOW) & !WS_EX_APPWINDOW
 }
