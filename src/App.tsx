@@ -3,12 +3,14 @@ import { listen } from '@tauri-apps/api/event';
 import { motion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import { Pill } from './components/Pill';
+import { UpdateBanner } from './components/UpdateBanner';
 import { Dashboard } from './components/dashboard/Dashboard';
 import { SettingsView } from './components/settings/SettingsView';
 import { useIsland } from './hooks/useIsland';
 import { useTelemetry } from './hooks/useTelemetry';
 import { isOpen } from './lib/island';
-import { OPEN_SETTINGS_EVENT, subscribeSettings } from './settings';
+import { OPEN_SETTINGS_EVENT, subscribeSettings, type Settings } from './settings';
+import { CHECK_UPDATE_EVENT, useUpdaterStore } from './updater';
 
 const SPRING = { type: 'spring', stiffness: 300, damping: 25 } as const;
 const FADE = { duration: 0.18, ease: 'easeOut' } as const;
@@ -39,7 +41,31 @@ export default function App() {
   const open = isOpen(phase);
   const contentRef = useRef<HTMLDivElement>(null);
   const [view, setView] = useState<'dashboard' | 'settings'>('dashboard');
-  useFitWindow(contentRef, open);
+  const banner = useUpdaterStore((s) => s.banner);
+  const checkNow = useUpdaterStore((s) => s.checkNow);
+  // The collapsed pill grows a strip for the update banner.
+  const tall = open || (banner != null && phase === 'collapsed');
+  useFitWindow(contentRef, tall);
+
+  // Back to the bare pill once the banner goes away.
+  useEffect(() => {
+    if (phase === 'collapsed' && !banner) {
+      invoke('set_overlay_height', { height: PILL_HEIGHT }).catch(() => {});
+    }
+  }, [phase, banner]);
+
+  // Launch-time update check (if enabled) and tray "Check for updates now".
+  useEffect(() => {
+    invoke<Settings>('get_settings')
+      .then((s) => {
+        if (s.auto_check_updates) void checkNow(false);
+      })
+      .catch(() => {});
+    const unlisten = listen(CHECK_UPDATE_EVENT, () => void checkNow(true));
+    return () => {
+      unlisten.then((f) => f()).catch(() => {});
+    };
+  }, [checkNow]);
 
   useEffect(() => subscribeSettings(), []);
 
@@ -62,12 +88,14 @@ export default function App() {
         data-phase={phase}
         className="glass w-full overflow-hidden"
         initial={false}
-        animate={{ height: open ? 'auto' : PILL_HEIGHT, borderRadius: open ? 18 : 21 }}
+        animate={{ height: tall ? 'auto' : PILL_HEIGHT, borderRadius: open ? 18 : 21 }}
         transition={SPRING}
         onAnimationComplete={() => {
           if (phase === 'collapsing') onClosed();
         }}
         onPointerEnter={() => {
+          // While the update banner asks Yes/No, hovering must not expand over it.
+          if (phase === 'collapsed' && banner) return;
           // Every fresh hover-open starts on the dashboard.
           if (phase === 'collapsed') setView('dashboard');
           onPointerEnter();
@@ -96,6 +124,7 @@ export default function App() {
               transition={FADE}
             >
               <Pill />
+              <UpdateBanner />
             </motion.div>
           )}
         </div>
