@@ -15,7 +15,7 @@ most resources.
   <img alt="Tauri 2" src="https://img.shields.io/badge/Tauri-2-24C8DB?logo=tauri&logoColor=white">
   <img alt="Rust" src="https://img.shields.io/badge/Rust-stable-000000?logo=rust&logoColor=white">
   <img alt="React 19" src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black">
-  <img alt="Idle RAM budget 50 MB" src="https://img.shields.io/badge/idle%20RAM-%E2%89%A450%20MB-brightgreen">
+  <img alt="Idle RAM about 41 MB" src="https://img.shields.io/badge/idle%20RAM-~41%20MB-brightgreen">
   <img alt="No admin required" src="https://img.shields.io/badge/admin-not%20required-brightgreen">
   <img alt="No telemetry" src="https://img.shields.io/badge/telemetry-none-brightgreen">
   <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-yellow"></a>
@@ -214,7 +214,9 @@ collapsed and idle. To get there, the WebView runs with software compositing and
 target, detail sampling only runs while the dashboard is open, and telemetry pauses entirely while
 the overlay is hidden.
 
-Measured numbers, the method, and the reference machine are in [docs/perf.md](docs/perf.md).
+In v0.1.0 the collapsed pill averages about 41 MB, within the memory budget, but uses about 0.8%
+CPU, which is over the CPU budget and still being worked on. Measured numbers, the method, and the
+reference machine are in [docs/perf.md](docs/perf.md).
 
 ## Privacy and permissions
 
