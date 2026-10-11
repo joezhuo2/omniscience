@@ -4,7 +4,7 @@ import { act, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 import { HOVER_EVENT } from './hooks/useIsland';
-import { COLLAPSE_FALLBACK_MS, EXPAND_DELAY_MS } from './lib/island';
+import { COLLAPSE_FALLBACK_MS } from './lib/island';
 import { useUpdaterStore } from './updater';
 
 // jsdom has no ResizeObserver.
@@ -58,22 +58,11 @@ describe('App', () => {
     expect(screen.queryByTestId('dashboard')).toBeNull();
   });
 
-  it('does not open on a brief pass over the pill', async () => {
+  it('opens as soon as the cursor reaches the pill, snapping the window first', async () => {
     render(<App />);
     await flush(0);
     await hover(true);
-    await flush(EXPAND_DELAY_MS - 50);
-    await hover(false);
-    await flush(EXPAND_DELAY_MS * 2);
-    expect(island()).toHaveAttribute('data-phase', 'collapsed');
-    expect(expandCalls).toHaveLength(0);
-  });
-
-  it('opens after hovering, snapping the window first', async () => {
-    render(<App />);
     await flush(0);
-    await hover(true);
-    await flush(EXPAND_DELAY_MS + 10);
     expect(expandCalls[0]).toEqual({ expanded: true });
     expect(island()).toHaveClass('expanded');
     expect(screen.getByTestId('dashboard')).toBeInTheDocument();
@@ -83,7 +72,7 @@ describe('App', () => {
     render(<App />);
     await flush(0);
     await hover(true);
-    await flush(EXPAND_DELAY_MS + 10);
+    await flush(0);
     await hover(false);
     expect(island()).toHaveAttribute('data-phase', 'collapsing');
     expect(island()).not.toHaveClass('expanded');
@@ -99,7 +88,7 @@ describe('App', () => {
     render(<App />);
     await flush(0);
     await hover(true);
-    await flush(EXPAND_DELAY_MS + 10);
+    await flush(0);
     await hover(false);
     await flush(100);
     await hover(true);

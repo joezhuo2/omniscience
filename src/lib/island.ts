@@ -8,7 +8,7 @@
 export type Phase = 'collapsed' | 'expanding' | 'expanded' | 'collapsing';
 
 export type IslandEvent =
-  /** Open intent confirmed (hover held 250 ms, or pinned open). */
+  /** Cursor reached the pill, or pinned open. */
   | 'expand'
   /** The native window finished growing. */
   | 'resized'
@@ -17,7 +17,6 @@ export type IslandEvent =
   /** The collapse animation finished. */
   | 'closed';
 
-export const EXPAND_DELAY_MS = 250;
 /** Upper bound on the collapse animation (`--shape-ms` plus slack), in case `transitionend` is missed. */
 export const COLLAPSE_FALLBACK_MS = 450;
 
