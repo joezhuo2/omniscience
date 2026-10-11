@@ -8,7 +8,7 @@ small rings show CPU, RAM, GPU, disk and network load at a glance. Move the curs
 it morphs into a dashboard with per-core usage, GPU power and temperature, and the apps using the
 most resources.
 
-<p>
+<p align="center">
   <a href="https://github.com/joezhuo2/omniscience/releases/latest"><img alt="version" src="https://img.shields.io/badge/version-v0.1.0-blue"></a>
   <img alt="Windows 10/11" src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?logo=windows&logoColor=white">
   <img alt="macOS experimental" src="https://img.shields.io/badge/macOS-experimental-lightgrey?logo=apple&logoColor=white">
