@@ -31,3 +31,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Settings view (gear in the dashboard header or tray > Settings…): warning/critical thresholds, update interval (0.5-5 s), show/hide hotkey recorder (default Ctrl+Shift+O), the tray toggles, and Reset position. Settings are saved to the app config folder.
 - The overlay hides itself while a fullscreen app covers its monitor and comes back afterwards; telemetry pauses and WebView2 memory is trimmed whenever the overlay is hidden.
 - A second launch reveals the running instance instead of starting another.
+- In-app updates: with auto-check on, a launch-time check against GitHub Releases shows "vX available. Update? Yes / No" under the pill; Yes downloads, installs and restarts. Tray > Check for updates now reports when you are up to date.
+- Release workflow that builds Windows installers and a universal macOS dmg on version tags, signs updater artifacts, and drafts a GitHub Release with `latest.json`.
