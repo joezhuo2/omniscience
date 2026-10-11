@@ -15,21 +15,21 @@ Reference machine: Ryzen AI 9 HX 370, Radeon 890M + RTX 5060 Laptop, 32 GB RAM, 
 
 ## Results
 
-| Branch | State | Processes | Mem avg (MB) | Mem peak (MB) | CPU avg (%) | Notes |
-|---|---|---|---|---|---|---|
-| feat/scaffold | static pill, no telemetry | 7 | 88.5 | 89.1 | 0.00 | Bare Tauri + WebView2 baseline, Tauri default browser args |
-| feat/scaffold | static pill, no telemetry | 7 | 59.2 | 60.0 | 0.02 | Experiment only (not shipped): `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS` adds `--disable-gpu` |
+| Branch        | State                     | Processes | Mem avg (MB) | Mem peak (MB) | CPU avg (%) | Notes                                                                                       |
+| ------------- | ------------------------- | --------- | ------------ | ------------- | ----------- | ------------------------------------------------------------------------------------------- |
+| feat/scaffold | static pill, no telemetry | 7         | 88.5         | 89.1          | 0.00        | Bare Tauri + WebView2 baseline, Tauri default browser args                                  |
+| feat/scaffold | static pill, no telemetry | 7         | 59.2         | 60.0          | 0.02        | Experiment only (not shipped): `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS` adds `--disable-gpu` |
 
 ### Baseline breakdown (default args)
 
-| Process | Private WS (MB) |
-|---|---|
-| omniscience.exe (Rust) | 4.3 |
-| WebView2 browser | 23.3 |
-| WebView2 GPU process | 35.5 |
-| WebView2 renderer | 12.9 |
-| WebView2 utility x2 | 8.7 |
-| WebView2 crashpad | 1.8 |
+| Process                | Private WS (MB) |
+| ---------------------- | --------------- |
+| omniscience.exe (Rust) | 4.3             |
+| WebView2 browser       | 23.3            |
+| WebView2 GPU process   | 35.5            |
+| WebView2 renderer      | 12.9            |
+| WebView2 utility x2    | 8.7             |
+| WebView2 crashpad      | 1.8             |
 
 The GPU process is the largest single cost. `--disable-gpu` (software compositing) removes most of
 it. Whether to ship that flag depends on how smooth the spring morph stays without GPU compositing,
