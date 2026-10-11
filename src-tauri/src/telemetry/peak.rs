@@ -24,7 +24,11 @@ impl RollingPeak {
         if self.samples.len() == self.window {
             self.samples.pop_front();
         }
-        let value = if value.is_finite() { value.max(0.0) } else { 0.0 };
+        let value = if value.is_finite() {
+            value.max(0.0)
+        } else {
+            0.0
+        };
         self.samples.push_back(value);
         (value / self.peak() * 100.0).clamp(0.0, 100.0) as f32
     }

@@ -239,7 +239,10 @@ mod tests {
 
     #[test]
     fn level_serializes_snake_case() {
-        assert_eq!(serde_json::to_string(&Level::Critical).unwrap(), "\"critical\"");
+        assert_eq!(
+            serde_json::to_string(&Level::Critical).unwrap(),
+            "\"critical\""
+        );
         assert_eq!(
             serde_json::to_string(&KillOutcome::AccessDenied).unwrap(),
             "\"access_denied\""

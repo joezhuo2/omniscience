@@ -8,8 +8,8 @@ use sysinfo::{Networks, System};
 use super::peak::RollingPeak;
 use super::processes;
 use super::types::{
-    CoreMetrics, CoreSample, DetailMetrics, MemoryMetric, Metric, NetMetric, Snapshot,
-    Thresholds, classify,
+    CoreMetrics, CoreSample, DetailMetrics, MemoryMetric, Metric, NetMetric, Snapshot, Thresholds,
+    classify,
 };
 
 /// Network rings are scaled to the busiest second of the last minute, never below 1 MB/s.
@@ -275,9 +275,10 @@ mod win {
                     energy: EnergyReadings::default(),
                 };
             };
-            let disk_pct = q
-                .items(DISK_IDLE)
-                .and_then(|v| v.first().map(|(_, idle)| (100.0 - idle).clamp(0.0, 100.0) as f32));
+            let disk_pct = q.items(DISK_IDLE).and_then(|v| {
+                v.first()
+                    .map(|(_, idle)| (100.0 - idle).clamp(0.0, 100.0) as f32)
+            });
             let gpu_usage = q
                 .items(GPU_ENGINE)
                 .map(|v| parse::gpu_usage_by_adapter(&v))

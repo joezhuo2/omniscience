@@ -52,7 +52,10 @@ const PROTECTED_PIDS: &[u32] = &[0, 4];
 /// Group key: lowercase, trimmed, without a trailing `.exe`.
 pub fn normalize(name: &str) -> String {
     let lower = name.trim().to_lowercase();
-    lower.strip_suffix(".exe").map(str::to_string).unwrap_or(lower)
+    lower
+        .strip_suffix(".exe")
+        .map(str::to_string)
+        .unwrap_or(lower)
 }
 
 pub fn is_protected(key: &str, pid: u32, own_tree: &HashSet<u32>) -> bool {
@@ -162,11 +165,7 @@ pub fn refresh(sys: &mut System) {
 pub fn kill_group(key: &str) -> KillReport {
     let key = normalize(key);
     let mut sys = System::new();
-    sys.refresh_processes_specifics(
-        ProcessesToUpdate::All,
-        true,
-        ProcessRefreshKind::nothing(),
-    );
+    sys.refresh_processes_specifics(ProcessesToUpdate::All, true, ProcessRefreshKind::nothing());
     let procs = read(&sys);
     let own = descendants(&procs, std::process::id());
     let results = procs
@@ -276,7 +275,14 @@ mod tests {
     #[test]
     fn blocks_critical_names_case_insensitively() {
         let own = HashSet::new();
-        for name in ["explorer.exe", "CSRSS.EXE", "csrss", "lsass.exe", "kernel_task", "launchd"] {
+        for name in [
+            "explorer.exe",
+            "CSRSS.EXE",
+            "csrss",
+            "lsass.exe",
+            "kernel_task",
+            "launchd",
+        ] {
             assert!(is_protected(name, 1234, &own), "{name}");
         }
         assert!(!is_protected("chrome.exe", 1234, &own));
@@ -327,6 +333,9 @@ mod tests {
             p(3, None, "c.exe", 1.0, 20),
         ];
         let top = top_groups(&procs, 1, true, 2);
-        assert_eq!(top.iter().map(|g| g.key.as_str()).collect::<Vec<_>>(), ["b", "c"]);
+        assert_eq!(
+            top.iter().map(|g| g.key.as_str()).collect::<Vec<_>>(),
+            ["b", "c"]
+        );
     }
 }

@@ -24,7 +24,10 @@ pub fn plausible_temp(c: f64) -> Option<f32> {
 /// ACPI zone instance (`\_TZ.THRM`) to a display label (`ACPI THRM`).
 pub fn zone_label(instance: &str) -> String {
     let name = instance.rsplit('.').next().unwrap_or(instance);
-    format!("ACPI {}", name.trim_matches(|c: char| !c.is_ascii_alphanumeric()))
+    format!(
+        "ACPI {}",
+        name.trim_matches(|c: char| !c.is_ascii_alphanumeric())
+    )
 }
 
 /// Lowercase LUID key (`0x00000000_0x00012980`) from a GPU counter instance name such as
@@ -35,7 +38,9 @@ pub fn luid_key(instance: &str) -> Option<String> {
     let rest = &lower[lower.find("luid_")? + 5..];
     let mut parts = rest.splitn(3, '_');
     let (high, low) = (parts.next()?, parts.next()?);
-    let is_hex = |s: &str| s.starts_with("0x") && s.len() > 2 && s[2..].chars().all(|c| c.is_ascii_hexdigit());
+    let is_hex = |s: &str| {
+        s.starts_with("0x") && s.len() > 2 && s[2..].chars().all(|c| c.is_ascii_hexdigit())
+    };
     (is_hex(high) && is_hex(low)).then(|| format!("{high}_{low}"))
 }
 
@@ -159,10 +164,22 @@ mod tests {
     #[test]
     fn gpu_usage_takes_busiest_engine_type_per_adapter() {
         let v = items(&[
-            ("pid_1_luid_0x00000000_0x0000AAAA_phys_0_eng_0_engtype_3D", 20.0),
-            ("pid_2_luid_0x00000000_0x0000AAAA_phys_0_eng_0_engtype_3D", 15.0),
-            ("pid_2_luid_0x00000000_0x0000AAAA_phys_0_eng_5_engtype_VideoDecode", 30.0),
-            ("pid_3_luid_0x00000000_0x0000BBBB_phys_0_eng_0_engtype_3D", 250.0),
+            (
+                "pid_1_luid_0x00000000_0x0000AAAA_phys_0_eng_0_engtype_3D",
+                20.0,
+            ),
+            (
+                "pid_2_luid_0x00000000_0x0000AAAA_phys_0_eng_0_engtype_3D",
+                15.0,
+            ),
+            (
+                "pid_2_luid_0x00000000_0x0000AAAA_phys_0_eng_5_engtype_VideoDecode",
+                30.0,
+            ),
+            (
+                "pid_3_luid_0x00000000_0x0000BBBB_phys_0_eng_0_engtype_3D",
+                250.0,
+            ),
         ]);
         let u = gpu_usage_by_adapter(&v);
         assert_eq!(u["0x00000000_0x0000aaaa"], 35.0);
@@ -197,7 +214,10 @@ mod tests {
 
     #[test]
     fn package_falls_back_to_rapl_then_cpu_plus_gpu() {
-        let rapl = parse_energy(&items(&[("RAPL_Package0_PKG", 15000.0), ("CPU Power", 1000.0)]));
+        let rapl = parse_energy(&items(&[
+            ("RAPL_Package0_PKG", 15000.0),
+            ("CPU Power", 1000.0),
+        ]));
         assert_eq!(rapl.package_watts, Some(15.0));
         let sum = parse_energy(&items(&[("CPU Power", 1000.0), ("GPU Power", 2000.0)]));
         assert_eq!(sum.package_watts, Some(3.0));
