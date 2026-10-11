@@ -8,35 +8,35 @@ small rings show CPU, RAM, GPU, disk and network load at a glance. Move the curs
 it morphs into a dashboard with per-core usage, GPU power and temperature, and the apps using the
 most resources.
 
-> **Status:** pre-alpha. All v1 features are implemented; no release has been published yet.
+<p>
+  <a href="https://github.com/joezhuo2/omniscience/releases/latest"><img alt="version" src="https://img.shields.io/badge/version-v0.1.0-blue"></a>
+  <img alt="Windows 10/11" src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?logo=windows&logoColor=white">
+  <img alt="macOS experimental" src="https://img.shields.io/badge/macOS-experimental-lightgrey?logo=apple&logoColor=white">
+  <img alt="Tauri 2" src="https://img.shields.io/badge/Tauri-2-24C8DB?logo=tauri&logoColor=white">
+  <img alt="Rust" src="https://img.shields.io/badge/Rust-stable-000000?logo=rust&logoColor=white">
+  <img alt="React 19" src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black">
+  <img alt="Idle RAM budget 50 MB" src="https://img.shields.io/badge/idle%20RAM-%E2%89%A450%20MB-brightgreen">
+  <img alt="No admin required" src="https://img.shields.io/badge/admin-not%20required-brightgreen">
+  <img alt="No telemetry" src="https://img.shields.io/badge/telemetry-none-brightgreen">
+  <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-yellow"></a>
+</p>
 
-## Contents
-
-- [Features](#features)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Configuration](#configuration)
-- [Platform support](#platform-support)
-- [Performance](#performance)
-- [Privacy and permissions](#privacy-and-permissions)
-- [Troubleshooting](#troubleshooting)
-- [Development](#development)
-- [Releasing](#releasing)
-- [Contributing](#contributing)
-- [Acknowledgements](#acknowledgements)
-- [License](#license)
+**Jump to:** [✨ Features](#features) · [📦 Installation](#installation) · [🖱️ Usage](#usage) ·
+[⚙️ Configuration](#configuration) · [💻 Platform support](#platform-support) ·
+[⏱️ Performance](#performance) · [🔒 Privacy](#privacy-and-permissions) ·
+[🩺 Troubleshooting](#troubleshooting) · [🛠️ Development](#development) · [🚀 Releasing](#releasing) ·
+[🤝 Contributing](#contributing) · [🙏 Acknowledgements](#acknowledgements) · [📄 License](#license)
 
 ## Features
 
 ### The pill
 
-- A black, Dynamic Island–style pill pinned to the top-center of your screen, styled after
-  [islet](https://github.com/joezhuo2/islet).
-- Six live rings with icons and no text: **CPU**, **RAM**, **iGPU**, **dGPU**, **Disk** (active
+- 💊 A black, Dynamic Island–style pill pinned to the top-center of your screen.
+- ⭕ Six live rings with icons and no text: **CPU**, **RAM**, **iGPU**, **dGPU**, **Disk** (active
   time), and a concentric **Network** ring with download outside and upload inside.
-- Rings are colored by load: the metric's own accent color normally, amber above the warning
+- 🚦 Rings are colored by load: the metric's own accent color normally, amber above the warning
   threshold (default 70%), and pulsing red above the critical threshold (default 90%).
-- A ring is drawn dashed when its sensor is missing on your machine, instead of showing a fake 0%.
+- ➖ A ring is drawn dashed when its sensor is missing on your machine, instead of showing a fake 0%.
 
 ### The dashboard
 
@@ -44,17 +44,17 @@ Hover the pill and it expands in place with a 280 ms clip-path morph. It opens t
 arrives and collapses the moment it leaves; coming back mid-collapse reverses it. Press **Esc** to
 close it.
 
-- **Header:** total package power in watts and the hottest temperature reported, plus an amber
+- ⚡ **Header:** total package power in watts and the hottest temperature reported, plus an amber
   indicator if telemetry stops arriving.
-- **Metric strip:** labeled values for each ring, such as CPU usage with its live clock in GHz,
+- 📊 **Metric strip:** labeled values for each ring, such as CPU usage with its live clock in GHz,
   RAM as `15/31 GB`, and download/upload speeds on two lines.
-- **GPU & Power card:** usage, VRAM (`5.2 / 8.0 GB`) and temperature for each GPU, and package
+- 🎮 **GPU & Power card:** usage, VRAM (`5.2 / 8.0 GB`) and temperature for each GPU, and package
   watts broken down into APU, CPU, GPU and NPU where the hardware reports them.
-- **CPU heatmap:** one cell per logical core. Hover a cell for its usage, clock, per-core watts and
+- 🔥 **CPU heatmap:** one cell per logical core. Hover a cell for its usage, clock, per-core watts and
   the package temperature.
-- **Top processes:** grouped by app (so 30 browser processes show as one row), sortable by CPU or
+- 📋 **Top processes:** grouped by app (so 30 browser processes show as one row), sortable by CPU or
   RAM. Three rows by default, with "Show more" for a scrollable list.
-- **End process:** a two-step "End?" button. Critical OS processes, PIDs 0 and 4, and Omniscience
+- 🛑 **End process:** a two-step "End?" button. Critical OS processes, PIDs 0 and 4, and Omniscience
   itself are refused; the row comes back with a toast explaining why.
 
 Per-core, per-GPU and per-process data is only sampled while the dashboard is open, so the
@@ -62,22 +62,22 @@ collapsed pill costs almost nothing.
 
 ### Lives in the tray
 
-- No taskbar button and no Alt+Tab entry. Everything else is in the tray menu: **Show / Hide**,
+- 🫥 No taskbar button and no Alt+Tab entry. Everything else is in the tray menu: **Show / Hide**,
   **Launch at startup**, **Auto-check for updates**, **Hide over fullscreen apps**, **Check for
   updates now**, **Settings…**, and **Quit**.
-- A global show/hide hotkey, `Ctrl+Shift+O` by default (`Cmd+Shift+O` on macOS).
-- Drag the dashboard header to move the overlay. The position is remembered per monitor layout and
+- ⌨️ A global show/hide hotkey, `Ctrl+Shift+O` by default (`Cmd+Shift+O` on macOS).
+- 🖐️ Drag the dashboard header to move the overlay. The position is remembered per monitor layout and
   never restored off-screen.
-- Hides automatically while a fullscreen game, video or presentation covers its monitor, and comes
+- 🎬 Hides automatically while a fullscreen game, video or presentation covers its monitor, and comes
   back when it ends. Telemetry pauses while hidden.
-- Launching it a second time reveals the running copy instead of starting another.
+- 1️⃣ Launching it a second time reveals the running copy instead of starting another.
 
 ### No extra software
 
-- No admin rights, kernel drivers, or third-party tools such as HWiNFO or LibreHardwareMonitor.
-- On Windows, sensors come from built-in performance counters, the Energy Meter counters and
+- 🔓 No admin rights, kernel drivers, or third-party tools such as HWiNFO or LibreHardwareMonitor.
+- 🧩 On Windows, sensors come from built-in performance counters, the Energy Meter counters and
   D3DKMT. NVIDIA's NVML is not used, so a sleeping laptop dGPU is never woken just to be measured.
-- Missing sensors show `--`.
+- ❔ Missing sensors show `--`.
 
 ### Updates
 
@@ -86,8 +86,6 @@ island opens with "vX available. Update? Yes / No". **Yes** downloads, installs 
 Updates are signature-checked before they are installed.
 
 ## Installation
-
-> No release has been published yet. Until then, [build from source](#build-from-source).
 
 Download the latest build from the
 [Releases page](https://github.com/joezhuo2/omniscience/releases/latest).
@@ -124,9 +122,9 @@ See [Platform support](#platform-support) for what works on macOS.
 
 Prerequisites:
 
-- [Node.js 24+](https://nodejs.org)
-- [Rust (stable)](https://rustup.rs)
-- The [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/) for your OS: the MSVC build
+- 🟢 [Node.js 24+](https://nodejs.org)
+- 🦀 [Rust (stable)](https://rustup.rs)
+- 🛠️ The [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/) for your OS: the MSVC build
   tools on Windows, or the Xcode command-line tools on macOS.
 
 ```bash
@@ -141,8 +139,8 @@ Installers end up in `src-tauri/target/release/bundle/`. To build only the execu
 
 ### Uninstalling
 
-- **Windows:** Settings > Apps > Installed apps > Omniscience > Uninstall.
-- **macOS:** quit from the tray, then move `Omniscience.app` to the Trash.
+- 🪟 **Windows:** Settings > Apps > Installed apps > Omniscience > Uninstall.
+- 🍎 **macOS:** quit from the tray, then move `Omniscience.app` to the Trash.
 
 Settings are kept after uninstalling. Delete the [settings file](#configuration) to remove them.
 
@@ -181,8 +179,8 @@ Open **Settings** from the gear icon in the dashboard header or from the tray.
 
 Settings are saved as JSON in the app config folder:
 
-- **Windows:** `%APPDATA%\io.github.joezhuo2.omniscience\settings.json`
-- **macOS:** `~/Library/Application Support/io.github.joezhuo2.omniscience/settings.json`
+- 🪟 **Windows:** `%APPDATA%\io.github.joezhuo2.omniscience\settings.json`
+- 🍎 **macOS:** `~/Library/Application Support/io.github.joezhuo2.omniscience/settings.json`
 
 Missing keys fall back to their defaults and out-of-range values are clamped, so a hand-edited or
 older file still loads.
@@ -220,10 +218,10 @@ Measured numbers, the method, and the reference machine are in [docs/perf.md](do
 
 ## Privacy and permissions
 
-- Omniscience reads system counters locally. It sends no telemetry, analytics or crash reports.
-- The only network request is the update check against this repository's GitHub Releases. Turn off
+- 🏠 Omniscience reads system counters locally. It sends no telemetry, analytics or crash reports.
+- 🌐 The only network request is the update check against this repository's GitHub Releases. Turn off
   **Auto-check for updates** to stop it entirely.
-- It needs no admin rights. Ending a process that belongs to another user or an elevated app fails
+- 🛡️ It needs no admin rights. Ending a process that belongs to another user or an elevated app fails
   with an "access denied" toast rather than prompting for elevation.
 
 ## Troubleshooting
@@ -296,10 +294,10 @@ docs/                   Performance log, test checklist, release guide, design s
 
 ### Further reading
 
-- [Design spec](docs/superpowers/specs/2026-10-10-omniscience-design.md)
-- [Manual test checklist](docs/testing.md)
-- [Performance log](docs/perf.md)
-- [Changelog](CHANGELOG.md)
+- 📐 [Design spec](docs/superpowers/specs/2026-10-10-omniscience-design.md)
+- ✅ [Manual test checklist](docs/testing.md)
+- ⏱️ [Performance log](docs/perf.md)
+- 📝 [Changelog](CHANGELOG.md)
 
 ## Releasing
 
@@ -323,8 +321,8 @@ helpful.
 
 ## Acknowledgements
 
-- [islet](https://github.com/joezhuo2/islet) for the pill design, theme and morph animation.
-- [Tauri](https://tauri.app), [sysinfo](https://github.com/GuillaumeGomez/sysinfo) and
+- 🏝️ [islet](https://github.com/joezhuo2/islet) for the pill design, theme and morph animation.
+- 🙏 [Tauri](https://tauri.app), [sysinfo](https://github.com/GuillaumeGomez/sysinfo) and
   [Lucide](https://lucide.dev).
 
 ## License
