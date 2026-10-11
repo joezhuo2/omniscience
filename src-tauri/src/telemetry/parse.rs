@@ -130,6 +130,41 @@ pub fn core_watts(cores: &HashMap<u32, f32>, logical: u32, logical_count: usize)
     cores.get(&physical).copied()
 }
 
+/// Logical CPU index from a `Processor Information` instance (`0,5` -> 5, `1,3` -> 67). Totals
+/// (`_Total`, `0,_Total`) return `None`.
+fn processor_index(instance: &str) -> Option<u32> {
+    let (group, cpu) = instance.split_once(',')?;
+    Some(group.parse::<u32>().ok()? * 64 + cpu.parse::<u32>().ok()?)
+}
+
+/// Live clock speeds, like Task Manager: base frequency x `% Processor Performance` (which goes
+/// above 100% when boosting). Returns the overall clock and per-logical-CPU clocks in MHz.
+pub fn clock_mhz(
+    perf: &[(String, f64)],
+    base: &[(String, f64)],
+) -> (Option<u64>, HashMap<u32, u64>) {
+    let base_of = |name: &str| {
+        base.iter()
+            .find(|(n, _)| n == name)
+            .or_else(|| base.iter().find(|(n, _)| n == "_Total"))
+            .map(|(_, mhz)| *mhz)
+            .filter(|mhz| *mhz > 0.0)
+    };
+    let mut total = None;
+    let mut cores = HashMap::new();
+    for (name, pct) in perf {
+        let Some(mhz) = base_of(name).map(|b| (b * pct / 100.0).round().max(0.0) as u64) else {
+            continue;
+        };
+        if name == "_Total" {
+            total = Some(mhz);
+        } else if let Some(i) = processor_index(name) {
+            cores.insert(i, mhz);
+        }
+    }
+    (total, cores)
+}
+
 /// `rapl_package0_core12_core` -> 12.
 fn rapl_core_index(lower: &str) -> Option<u32> {
     let rest = lower.strip_prefix("rapl_")?;
@@ -224,6 +259,24 @@ mod tests {
         assert_eq!(r.cores[&0], 0.5);
         assert_eq!(r.cores[&11], 0.25);
         assert_eq!(r.cores.len(), 2);
+    }
+
+    #[test]
+    fn computes_live_clock_from_base_and_performance() {
+        let perf = items(&[
+            ("_Total", 150.0),
+            ("0,_Total", 150.0),
+            ("0,0", 100.0),
+            ("0,5", 225.0),
+        ]);
+        let base = items(&[("_Total", 2000.0), ("0,0", 2000.0), ("0,5", 2000.0)]);
+        let (total, cores) = clock_mhz(&perf, &base);
+        assert_eq!(total, Some(3000));
+        assert_eq!(cores[&0], 2000);
+        assert_eq!(cores[&5], 4500);
+        assert_eq!(cores.len(), 2);
+        assert_eq!(clock_mhz(&perf, &[]), (None, HashMap::new()));
+        assert_eq!(processor_index("1,3"), Some(67));
     }
 
     #[test]

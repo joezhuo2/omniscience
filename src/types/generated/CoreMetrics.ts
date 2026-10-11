@@ -3,4 +3,8 @@ import type { MemoryMetric } from "./MemoryMetric";
 import type { Metric } from "./Metric";
 import type { NetMetric } from "./NetMetric";
 
-export type CoreMetrics = { cpu: Metric, ram: MemoryMetric, disk: Metric | null, net: NetMetric, igpu: Metric | null, dgpu: Metric | null, package_watts: number | null, };
+export type CoreMetrics = { cpu: Metric, 
+/**
+ * Current average clock in MHz (live on Windows, nominal elsewhere).
+ */
+cpu_mhz: number | null, ram: MemoryMetric, disk: Metric | null, net: NetMetric, igpu: Metric | null, dgpu: Metric | null, package_watts: number | null, };

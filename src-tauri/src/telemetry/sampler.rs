@@ -89,8 +89,19 @@ impl Sampler {
         #[cfg(not(windows))]
         let (disk, igpu, dgpu, package_watts) = (None, None, None, None);
 
+        #[cfg(windows)]
+        let cpu_mhz = win.cpu_mhz;
+        #[cfg(not(windows))]
+        let cpu_mhz = {
+            let cpus = self.sys.cpus();
+            (!cpus.is_empty())
+                .then(|| cpus.iter().map(|c| c.frequency()).sum::<u64>() / cpus.len() as u64)
+                .filter(|mhz| *mhz > 0)
+        };
+
         let core = CoreMetrics {
             cpu: Metric::new(round1(self.sys.global_cpu_usage()), t),
+            cpu_mhz,
             ram: MemoryMetric {
                 used_bytes: used,
                 total_bytes: total,
@@ -178,6 +189,13 @@ impl Sampler {
             .map(|(i, c)| CoreSample {
                 id: i as u32,
                 usage_pct: round1(c.cpu_usage()),
+                #[cfg(windows)]
+                freq_mhz: win
+                    .core_mhz
+                    .get(&(i as u32))
+                    .copied()
+                    .unwrap_or(c.frequency()),
+                #[cfg(not(windows))]
                 freq_mhz: c.frequency(),
                 #[cfg(windows)]
                 watts: super::parse::core_watts(&win.energy.cores, i as u32, n_logical).map(round1),
@@ -228,10 +246,14 @@ mod win {
     const DISK_IDLE: usize = 0;
     const GPU_ENGINE: usize = 1;
     const ENERGY: usize = 2;
-    const CORE_COUNTERS: [&str; 3] = [
+    const CPU_PERF: usize = 3;
+    const CPU_BASE: usize = 4;
+    const CORE_COUNTERS: [&str; 5] = [
         r"\PhysicalDisk(_Total)\% Idle Time",
         r"\GPU Engine(*)\Utilization Percentage",
         r"\Energy Meter(*)\Power",
+        r"\Processor Information(*)\% Processor Performance",
+        r"\Processor Information(*)\Processor Frequency",
     ];
 
     const THERMAL: usize = 0;
@@ -258,6 +280,8 @@ mod win {
         pub dgpu_pct: Option<f32>,
         pub gpu_usage: HashMap<String, f32>,
         pub energy: EnergyReadings,
+        pub cpu_mhz: Option<u64>,
+        pub core_mhz: HashMap<u32, u64>,
     }
 
     impl Core {
@@ -276,6 +300,8 @@ mod win {
                     dgpu_pct: None,
                     gpu_usage: HashMap::new(),
                     energy: EnergyReadings::default(),
+                    cpu_mhz: None,
+                    core_mhz: HashMap::new(),
                 };
             };
             let disk_pct = q.items(DISK_IDLE).and_then(|v| {
@@ -290,6 +316,10 @@ mod win {
                 .items(ENERGY)
                 .map(|v| parse::parse_energy(&v))
                 .unwrap_or_default();
+            let (cpu_mhz, core_mhz) = match (q.items(CPU_PERF), q.items(CPU_BASE)) {
+                (Some(perf), Some(base)) => parse::clock_mhz(&perf, &base),
+                _ => (None, HashMap::new()),
+            };
             // An adapter with no engine instances (asleep) reads 0%.
             let busiest = |kind: GpuKind| {
                 self.adapters
@@ -304,6 +334,8 @@ mod win {
                 dgpu_pct: busiest(GpuKind::Discrete),
                 gpu_usage,
                 energy,
+                cpu_mhz,
+                core_mhz,
             }
         }
     }

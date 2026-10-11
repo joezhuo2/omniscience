@@ -84,6 +84,9 @@ pub struct NetMetric {
 #[ts(export)]
 pub struct CoreMetrics {
     pub cpu: Metric,
+    /// Current average clock in MHz (live on Windows, nominal elsewhere).
+    #[ts(type = "number | null")]
+    pub cpu_mhz: Option<u64>,
     pub ram: MemoryMetric,
     pub disk: Option<Metric>,
     pub net: NetMetric,
