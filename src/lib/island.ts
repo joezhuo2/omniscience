@@ -12,13 +12,12 @@ export type IslandEvent =
   | 'expand'
   /** The native window finished growing. */
   | 'resized'
-  /** Hover gone for 400 ms, or Esc. */
+  /** Cursor left (collapse starts immediately), or Esc. */
   | 'collapse'
   /** The collapse animation finished. */
   | 'closed';
 
 export const EXPAND_DELAY_MS = 250;
-export const COLLAPSE_DELAY_MS = 400;
 /** Upper bound on the collapse animation (`--shape-ms` plus slack), in case `transitionend` is missed. */
 export const COLLAPSE_FALLBACK_MS = 450;
 

@@ -4,7 +4,7 @@ import { act, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 import { HOVER_EVENT } from './hooks/useIsland';
-import { COLLAPSE_DELAY_MS, COLLAPSE_FALLBACK_MS, EXPAND_DELAY_MS } from './lib/island';
+import { COLLAPSE_FALLBACK_MS, EXPAND_DELAY_MS } from './lib/island';
 import { useUpdaterStore } from './updater';
 
 // jsdom has no ResizeObserver.
@@ -64,7 +64,7 @@ describe('App', () => {
     await hover(true);
     await flush(EXPAND_DELAY_MS - 50);
     await hover(false);
-    await flush(EXPAND_DELAY_MS + COLLAPSE_DELAY_MS);
+    await flush(EXPAND_DELAY_MS * 2);
     expect(island()).toHaveAttribute('data-phase', 'collapsed');
     expect(expandCalls).toHaveLength(0);
   });
@@ -79,13 +79,12 @@ describe('App', () => {
     expect(screen.getByTestId('dashboard')).toBeInTheDocument();
   });
 
-  it('closes after the cursor leaves and shrinks the window last', async () => {
+  it('starts closing the moment the cursor leaves and shrinks the window last', async () => {
     render(<App />);
     await flush(0);
     await hover(true);
     await flush(EXPAND_DELAY_MS + 10);
     await hover(false);
-    await flush(COLLAPSE_DELAY_MS + 10);
     expect(island()).toHaveAttribute('data-phase', 'collapsing');
     expect(island()).not.toHaveClass('expanded');
     // Content stays mounted (fading out) until the shape finishes shrinking.
@@ -96,15 +95,14 @@ describe('App', () => {
     expect(expandCalls.at(-1)).toEqual({ expanded: false });
   });
 
-  it('stays open when the cursor comes back within the grace period', async () => {
+  it('reverses immediately when the cursor comes back mid-collapse', async () => {
     render(<App />);
     await flush(0);
     await hover(true);
     await flush(EXPAND_DELAY_MS + 10);
     await hover(false);
-    await flush(COLLAPSE_DELAY_MS - 100);
+    await flush(100);
     await hover(true);
-    await flush(COLLAPSE_DELAY_MS + 10);
     expect(island()).toHaveAttribute('data-phase', 'expanded');
   });
 
@@ -118,7 +116,7 @@ describe('App', () => {
     // Moving the cursor across and away does not close it before the user answers.
     await hover(true);
     await hover(false);
-    await flush(COLLAPSE_DELAY_MS + COLLAPSE_FALLBACK_MS);
+    await flush(COLLAPSE_FALLBACK_MS * 2);
     expect(island()).toHaveAttribute('data-phase', 'expanded');
     // Answering "No" closes it.
     act(() => useUpdaterStore.getState().dismiss());
