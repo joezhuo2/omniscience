@@ -17,7 +17,8 @@
 >   and content fades in after it. Motion is no longer a dependency.
 > - **Hover:** while collapsed, clicks pass through the window and an 80 ms backend cursor poll detects
 >   hover.
-> - **Hover timing:** unchanged (open after 250 ms, close 400 ms after leaving).
+> - **Hover timing:** no delays. The island opens when the cursor reaches the pill and starts closing
+>   when it leaves (maintainer follow-up).
 > - **Update prompt:** it opens the island and keeps it open until answered.
 
 ## 1. Purpose and success criteria
