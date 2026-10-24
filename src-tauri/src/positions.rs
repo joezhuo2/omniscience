@@ -3,7 +3,7 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Mutex;
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicI32, AtomicU64, Ordering};
 use std::time::Duration;
 
 use serde::{Deserialize, Serialize};
@@ -141,6 +141,13 @@ pub fn settle(pos: (i32, i32), width: u32, height: u32, screens: &[Screen]) -> O
     Some(snap(inside, width, height, s.work, distance))
 }
 
+/// Top edge for a `height` tall window whose collapsed top is `base_y`: lifted just enough to keep
+/// its bottom inside `work` (left, top, right, bottom), but never above the work-area top and
+/// never lower than `base_y`.
+pub fn lifted_top(base_y: i32, height: u32, work: (i32, i32, i32, i32)) -> i32 {
+    base_y.min((work.3 - height as i32).max(work.1))
+}
+
 #[derive(Debug, Default, Serialize, Deserialize)]
 #[serde(default)]
 struct Saved {
@@ -184,6 +191,8 @@ pub struct Positions {
     generation: AtomicU64,
     /// Moves are recorded only after startup placement, so programmatic placement is not saved.
     tracking: AtomicBool,
+    /// How far (physical px) the window is currently lifted to fit the expanded dashboard.
+    lift: AtomicI32,
 }
 
 impl Positions {
@@ -203,6 +212,7 @@ impl Positions {
             saved: Mutex::new(saved),
             generation: AtomicU64::new(0),
             tracking: AtomicBool::new(false),
+            lift: AtomicI32::new(0),
         }
     }
 
@@ -236,6 +246,8 @@ impl Positions {
         if !self.tracking.load(Ordering::SeqCst) {
             return;
         }
+        let lift = self.lift.load(Ordering::SeqCst);
+        let pos = PhysicalPosition::new(pos.x, pos.y + lift);
         let screens = Self::screens(window);
         let size = window.outer_size().unwrap_or_default();
         if let Ok(mut saved) = self.saved.lock() {
@@ -260,7 +272,8 @@ impl Positions {
             if !current() {
                 return;
             }
-            if let Some((x, y)) = Self::resting_spot(&window)
+            if lift == 0
+                && let Some((x, y)) = Self::resting_spot(&window)
                 && (x, y) != (pos.x, pos.y)
             {
                 // The snap is itself a move, recorded and written like any other.
@@ -269,6 +282,26 @@ impl Positions {
             }
             this.write();
         });
+    }
+
+    /// Moves the window up just enough that a `height` (logical px) tall dashboard stays on
+    /// screen, or back down to its collapsed spot as `height` shrinks.
+    pub fn keep_on_screen(&self, window: &WebviewWindow, height: f64) -> tauri::Result<()> {
+        let pos = window.outer_position()?;
+        let width = window.outer_size()?.width;
+        let scale = window.scale_factor()?;
+        let base_y = pos.y + self.lift.load(Ordering::SeqCst);
+        let pill = (crate::window::COLLAPSED_SIZE.1 * scale).round() as u32;
+        let screens = Self::screens(window);
+        let Some(s) = screen_for((pos.x, base_y), width, pill, &screens) else {
+            return Ok(());
+        };
+        let top = lifted_top(base_y, (height * scale).round() as u32, s.work);
+        self.lift.store(base_y - top, Ordering::SeqCst);
+        if top != pos.y {
+            window.set_position(PhysicalPosition::new(pos.x, top))?;
+        }
+        Ok(())
     }
 
     /// Where the collapsed overlay should settle after a drag.
@@ -451,5 +484,21 @@ mod tests {
         // 30 px from the top is past 24 px at 1x but within 36 px at 1.5x.
         assert_eq!(settle((800, 30), 420, 48, &[A]), Some((800, 30)));
         assert_eq!(settle((-1500, 30), 630, 72, &[B]), Some((-1500, 0)));
+    }
+
+    #[test]
+    fn lifts_a_tall_window_off_the_bottom_edge() {
+        assert_eq!(lifted_top(900, 640, A.work), 400);
+    }
+
+    #[test]
+    fn does_not_lift_a_window_that_fits() {
+        assert_eq!(lifted_top(8, 640, A.work), 8);
+        assert_eq!(lifted_top(900, 48, A.work), 900);
+    }
+
+    #[test]
+    fn never_lifts_above_the_work_area() {
+        assert_eq!(lifted_top(900, 2000, A.work), 0);
     }
 }
