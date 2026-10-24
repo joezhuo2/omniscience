@@ -55,8 +55,9 @@ close it.
   the package temperature. A Throttled chip shows how far power or thermal limits hold the CPU back.
 - 🌐 **Network card:** each active adapter with its IPv4 address and live rates, ping latency to a
   host you choose (1.1.1.1 by default), and optionally your public IP.
-- 📋 **Top processes:** grouped by app (so 30 browser processes show as one row), sortable by CPU or
-  RAM. Three rows by default, with "Show more" for a scrollable list.
+- 📋 **Top processes:** grouped by app (so 30 browser processes show as one row), sortable by CPU,
+  RAM or GPU. The GPU tab shows each app's GPU usage and GPU memory. Three rows by default, with
+  "Show more" for a scrollable list.
 - 🛑 **End process:** a two-step "End?" button. Critical OS processes, PIDs 0 and 4, and Omniscience
   itself are refused; the row comes back with a toast explaining why.
 
