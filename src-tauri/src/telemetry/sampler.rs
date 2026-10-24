@@ -242,7 +242,7 @@ mod win {
 
     use super::super::parse::{self, EnergyReadings};
     use super::super::types::{GpuDetail, GpuKind, PowerBreakdown, TempSample};
-    use super::super::windows::{Adapter, Query, adapter_temp, adapters};
+    use super::super::windows::{Adapter, AdapterPerf, Query, adapter_perf, adapters};
 
     const DISK_IDLE: usize = 0;
     const GPU_ENGINE: usize = 1;
@@ -266,8 +266,7 @@ mod win {
         r"\GPU Adapter Memory(*)\Shared Usage",
     ];
 
-    /// A dGPU below this usage is treated as asleep: no D3DKMT temperature query, which could
-    /// wake it.
+    /// A dGPU below this usage is treated as asleep: no D3DKMT sensor query, which could wake it.
     const DGPU_ACTIVE_PCT: f32 = 0.5;
 
     pub struct Core {
@@ -373,10 +372,10 @@ mod win {
             .map(|a| {
                 let usage = core.gpu_usage.get(&a.luid_key).copied().unwrap_or(0.0);
                 let discrete = a.kind == GpuKind::Discrete;
-                let temp_c = if !discrete || usage >= DGPU_ACTIVE_PCT {
-                    adapter_temp(a.luid)
+                let perf = if !discrete || usage >= DGPU_ACTIVE_PCT {
+                    adapter_perf(a.luid)
                 } else {
-                    None
+                    AdapterPerf::default()
                 };
                 GpuDetail {
                     name: a.name.clone(),
@@ -388,7 +387,7 @@ mod win {
                         shared.get(&a.luid_key).copied()
                     },
                     mem_total_bytes: discrete.then_some(a.dedicated_bytes),
-                    temp_c,
+                    temp_c: perf.temp_c,
                 }
             })
             .collect();

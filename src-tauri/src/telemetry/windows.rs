@@ -198,8 +198,14 @@ pub fn adapters() -> Vec<Adapter> {
     out
 }
 
-/// Driver-reported temperature (°C) of the adapter with `luid`, the value Task Manager shows.
-pub fn adapter_temp(luid: (i32, u32)) -> Option<f32> {
+/// Driver-reported sensors of one adapter, the values Task Manager shows.
+#[derive(Debug, Default, Clone, Copy, PartialEq)]
+pub struct AdapterPerf {
+    pub temp_c: Option<f32>,
+}
+
+/// Reads the sensors of the adapter with `luid`.
+pub fn adapter_perf(luid: (i32, u32)) -> AdapterPerf {
     use windows_sys::Wdk::Graphics::Direct3D::{
         D3DKMT_ADAPTER_PERFDATA, D3DKMT_CLOSEADAPTER, D3DKMT_OPENADAPTERFROMLUID,
         D3DKMT_QUERYADAPTERINFO, D3DKMTCloseAdapter, D3DKMTOpenAdapterFromLuid,
@@ -216,7 +222,7 @@ pub fn adapter_temp(luid: (i32, u32)) -> Option<f32> {
             hAdapter: 0,
         };
         if D3DKMTOpenAdapterFromLuid(&mut open) != 0 {
-            return None;
+            return AdapterPerf::default();
         }
         let mut perf: D3DKMT_ADAPTER_PERFDATA = std::mem::zeroed();
         let mut q = D3DKMT_QUERYADAPTERINFO {
@@ -229,10 +235,15 @@ pub fn adapter_temp(luid: (i32, u32)) -> Option<f32> {
         D3DKMTCloseAdapter(&D3DKMT_CLOSEADAPTER {
             hAdapter: open.hAdapter,
         });
-        // Deci-Celsius; adapters without a sensor report 0.
-        (ok && perf.Temperature > 0)
-            .then(|| super::parse::plausible_temp(perf.Temperature as f64 / 10.0))
-            .flatten()
+        if !ok {
+            return AdapterPerf::default();
+        }
+        AdapterPerf {
+            // Deci-Celsius; adapters without a sensor report 0.
+            temp_c: (perf.Temperature > 0)
+                .then(|| super::parse::plausible_temp(perf.Temperature as f64 / 10.0))
+                .flatten(),
+        }
     }
 }
 
@@ -252,7 +263,7 @@ mod tests {
     #[ignore]
     fn adapters_live() {
         for a in adapters() {
-            println!("{a:?} temp={:?}", adapter_temp(a.luid));
+            println!("{a:?} {:?}", adapter_perf(a.luid));
         }
     }
 }
