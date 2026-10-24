@@ -2,12 +2,14 @@ import { describe, expect, it } from 'vitest';
 import type { KillReport, ProcessGroup } from '../types/telemetry';
 import { killFailure, visibleProcesses } from './processes';
 
-const g = (key: string, cpu: number, mem: number): ProcessGroup => ({
+const g = (key: string, cpu: number, mem: number, gpu = 0): ProcessGroup => ({
   key,
   name: `${key}.exe`,
   pids: [1],
   cpu_pct: cpu,
   mem_bytes: mem,
+  gpu_pct: gpu,
+  gpu_mem_bytes: 0,
 });
 
 describe('visibleProcesses', () => {

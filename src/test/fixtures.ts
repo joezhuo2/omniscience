@@ -44,8 +44,24 @@ export const sampleDetail: DetailMetrics = {
     { name: 'vEthernet (WSL)', down_bps: 0, up_bps: 0, ipv4: '172.20.0.1' },
   ],
   processes: [
-    { key: 'chrome', name: 'chrome.exe', pids: [10, 11], cpu_pct: 6, mem_bytes: 2 * GB },
-    { key: 'code', name: 'Code.exe', pids: [20], cpu_pct: 3, mem_bytes: 3 * GB },
+    {
+      key: 'chrome',
+      name: 'chrome.exe',
+      pids: [10, 11],
+      cpu_pct: 6,
+      mem_bytes: 2 * GB,
+      gpu_pct: 2,
+      gpu_mem_bytes: 0.3 * GB,
+    },
+    {
+      key: 'code',
+      name: 'Code.exe',
+      pids: [20],
+      cpu_pct: 3,
+      mem_bytes: 3 * GB,
+      gpu_pct: 0,
+      gpu_mem_bytes: 0,
+    },
   ],
 };
 

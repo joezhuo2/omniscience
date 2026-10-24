@@ -135,6 +135,8 @@ describe('Dashboard', () => {
         pids: [i + 1],
         cpu_pct: 10 - i,
         mem_bytes: 1,
+        gpu_pct: 0,
+        gpu_mem_bytes: 0,
       })),
     };
     act(() => useTelemetryStore.getState().setSnapshot({ ...sampleSnapshot, detail: many }));

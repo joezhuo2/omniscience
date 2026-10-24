@@ -73,6 +73,10 @@ pub struct ProcInfo {
     /// Percent of one core, as sysinfo reports it.
     pub cpu_core_pct: f32,
     pub mem_bytes: u64,
+    /// Utilization of its busiest GPU engine, in percent.
+    pub gpu_pct: f32,
+    /// GPU memory in use (dedicated, all adapters).
+    pub gpu_mem_bytes: u64,
 }
 
 /// `root` and all of its descendants.
@@ -115,15 +119,20 @@ pub fn top_groups(
             pids: Vec::new(),
             cpu_pct: 0.0,
             mem_bytes: 0,
+            gpu_pct: 0.0,
+            gpu_mem_bytes: 0,
         });
         g.pids.push(p.pid);
         g.cpu_pct += p.cpu_core_pct / cpus;
         g.mem_bytes += p.mem_bytes;
+        g.gpu_pct += p.gpu_pct;
+        g.gpu_mem_bytes += p.gpu_mem_bytes;
     }
     let mut list: Vec<ProcessGroup> = groups.into_values().collect();
     for g in &mut list {
         g.pids.sort_unstable();
         g.cpu_pct = (g.cpu_pct * 10.0).round() / 10.0;
+        g.gpu_pct = (g.gpu_pct.min(100.0) * 10.0).round() / 10.0;
     }
     if by_memory {
         list.sort_by(|a, b| b.mem_bytes.cmp(&a.mem_bytes).then(a.key.cmp(&b.key)));
@@ -149,6 +158,8 @@ pub fn read(sys: &System) -> Vec<ProcInfo> {
             name: p.name().to_string_lossy().into_owned(),
             cpu_core_pct: p.cpu_usage(),
             mem_bytes: p.memory(),
+            gpu_pct: 0.0,
+            gpu_mem_bytes: 0,
         })
         .collect()
 }
@@ -279,6 +290,8 @@ mod tests {
             name: name.into(),
             cpu_core_pct: cpu,
             mem_bytes: mem,
+            gpu_pct: 0.0,
+            gpu_mem_bytes: 0,
         }
     }
 
@@ -340,6 +353,18 @@ mod tests {
         assert_eq!(top[0].cpu_pct, 6.0);
         assert_eq!(top[0].mem_bytes, 300);
         assert_eq!(top[1].key, "code");
+    }
+
+    #[test]
+    fn sums_gpu_usage_and_memory_per_group() {
+        let gpu = |pid, pct, mem| ProcInfo {
+            gpu_pct: pct,
+            gpu_mem_bytes: mem,
+            ..p(pid, None, "game.exe", 0.0, 0)
+        };
+        let top = top_groups(&[gpu(1, 70.0, 300), gpu(2, 45.0, 100)], 8, false, 8);
+        assert_eq!(top[0].gpu_pct, 100.0);
+        assert_eq!(top[0].gpu_mem_bytes, 400);
     }
 
     #[test]
