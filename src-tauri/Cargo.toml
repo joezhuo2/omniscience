@@ -1,6 +1,6 @@
 [package]
 name = "omniscience"
-version = "0.1.0"
+version = "0.1.1"
 description = "Dynamic Island-style system monitor overlay"
 authors = ["Omniscience contributors"]
 license = "MIT"
@@ -44,6 +44,7 @@ windows-sys = { version = "0.61", features = [
   "Win32_System_Performance",
   "Win32_System_Threading",
   "Win32_UI_HiDpi",
+  "Win32_UI_Input_KeyboardAndMouse",
   "Win32_UI_Shell",
   "Win32_UI_WindowsAndMessaging",
 ] }

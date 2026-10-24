@@ -66,8 +66,9 @@ collapsed pill costs almost nothing.
   **Launch at startup**, **Auto-check for updates**, **Hide over fullscreen apps**, **Check for
   updates now**, **Settings…**, and **Quit**.
 - ⌨️ A global show/hide hotkey, `Ctrl+Shift+O` by default (`Cmd+Shift+O` on macOS).
-- 🖐️ Drag the pill (the row of rings) to move the overlay. The position is remembered per monitor layout and
-  never restored off-screen.
+- 🖐️ Drag the pill (the row of rings) to move the overlay. It snaps to nearby screen edges and the
+  top-center, never stays partly off-screen, and its spot is remembered per monitor layout and per
+  monitor. Near the bottom of a screen, the dashboard opens upward far enough to fit.
 - 🎬 Hides automatically while a fullscreen game, video or presentation covers its monitor, and comes
   back when it ends. Telemetry pauses while hidden.
 - 1️⃣ Launching it a second time reveals the running copy instead of starting another.
@@ -233,7 +234,8 @@ fullscreen apps** is on, it also hides while a fullscreen window covers its moni
 borderless games and video players.
 
 **The overlay is off-screen after unplugging a monitor.** Positions are saved per monitor layout and
-never restored off-screen, but if it still looks wrong, use Settings > Reset position.
+per monitor, and are always pulled fully on screen when restored, but if it still looks wrong, use
+Settings > Reset position.
 
 **A ring is dashed or a value shows `--`.** That sensor is not available on your hardware or
 platform. See [Platform support](#platform-support).
@@ -283,7 +285,7 @@ src-tauri/src/          Rust backend
   telemetry/            Sampler thread, Windows counters, process list
   shell.rs, tray.rs     Tray menu, hotkey, fullscreen auto-hide
   settings.rs           Persisted settings
-  positions.rs          Per-monitor-layout window positions
+  positions.rs          Saved positions, edge snapping, dashboard lift
 scripts/                Performance measurement and window-style probes
 docs/                   Performance log, test checklist, release guide, design spec
 ```

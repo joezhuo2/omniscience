@@ -59,6 +59,19 @@ unsafe extern "system" fn enforce_tool_window(
     unsafe { DefSubclassProc(hwnd, msg, wparam, lparam) }
 }
 
+/// Whether the primary mouse button is held, e.g. mid-drag.
+#[cfg(windows)]
+pub fn mouse_down() -> bool {
+    use windows_sys::Win32::UI::Input::KeyboardAndMouse::{GetAsyncKeyState, VK_LBUTTON};
+    // SAFETY: GetAsyncKeyState only reads global input state.
+    unsafe { GetAsyncKeyState(VK_LBUTTON as i32) < 0 }
+}
+
+#[cfg(not(windows))]
+pub fn mouse_down() -> bool {
+    false
+}
+
 #[cfg(not(windows))]
 pub fn prepare_overlay(_window: &tauri::WebviewWindow) {}
 

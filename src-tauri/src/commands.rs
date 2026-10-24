@@ -19,6 +19,7 @@ pub fn set_expanded(
     expanded: bool,
     window: WebviewWindow,
     telemetry: State<'_, Arc<Telemetry>>,
+    positions: State<'_, Arc<Positions>>,
 ) -> Result<(), String> {
     telemetry.update(|c| c.expanded = expanded);
     let height = if expanded {
@@ -27,6 +28,9 @@ pub fn set_expanded(
         window::COLLAPSED_SIZE.1
     };
     window::set_height(&window, height).map_err(|e| e.to_string())?;
+    positions
+        .keep_on_screen(&window, height)
+        .map_err(|e| e.to_string())?;
     // Collapsed, clicks pass through the transparent margins around the pill.
     window
         .set_ignore_cursor_events(!expanded)
@@ -37,8 +41,15 @@ pub fn set_expanded(
 
 /// Fits the expanded window to the dashboard content height (logical px).
 #[tauri::command]
-pub fn set_overlay_height(height: f64, window: WebviewWindow) -> Result<(), String> {
-    window::set_height(&window, height).map_err(|e| e.to_string())
+pub fn set_overlay_height(
+    height: f64,
+    window: WebviewWindow,
+    positions: State<'_, Arc<Positions>>,
+) -> Result<(), String> {
+    window::set_height(&window, height).map_err(|e| e.to_string())?;
+    positions
+        .keep_on_screen(&window, window::clamp_height(height))
+        .map_err(|e| e.to_string())
 }
 
 /// Ends every process in the group `key`, refusing protected ones.
