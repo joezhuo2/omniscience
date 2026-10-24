@@ -172,6 +172,9 @@ pub struct DetailMetrics {
     pub temps: Vec<TempSample>,
     pub gpus: Vec<GpuDetail>,
     pub power: Option<PowerBreakdown>,
+    /// How far power or thermal limits hold the CPU below its rated speed, in percent (0 when
+    /// unthrottled).
+    pub cpu_limit_pct: Option<f32>,
     pub processes: Vec<ProcessGroup>,
 }
 

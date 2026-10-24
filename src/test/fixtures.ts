@@ -36,6 +36,7 @@ export const sampleDetail: DetailMetrics = {
     },
   ],
   power: { apu: 8.2, cpu: 2.8, gpu: 3.2, npu: null },
+  cpu_limit_pct: 0,
   processes: [
     { key: 'chrome', name: 'chrome.exe', pids: [10, 11], cpu_pct: 6, mem_bytes: 2 * GB },
     { key: 'code', name: 'Code.exe', pids: [20], cpu_pct: 3, mem_bytes: 3 * GB },

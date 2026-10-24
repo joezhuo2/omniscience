@@ -5,4 +5,9 @@ import type { PowerBreakdown } from "./PowerBreakdown";
 import type { ProcessGroup } from "./ProcessGroup";
 import type { TempSample } from "./TempSample";
 
-export type DetailMetrics = { cores: Array<CoreSample>, temps: Array<TempSample>, gpus: Array<GpuDetail>, power: PowerBreakdown | null, processes: Array<ProcessGroup>, };
+export type DetailMetrics = { cores: Array<CoreSample>, temps: Array<TempSample>, gpus: Array<GpuDetail>, power: PowerBreakdown | null, 
+/**
+ * How far power or thermal limits hold the CPU below its rated speed, in percent (0 when
+ * unthrottled).
+ */
+cpu_limit_pct: number | null, processes: Array<ProcessGroup>, };

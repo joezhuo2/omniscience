@@ -216,15 +216,17 @@ impl Sampler {
         }
 
         #[cfg(windows)]
-        let (temps, gpus, power) = win::detail(detail.win.as_mut(), win, &self.win.adapters);
+        let (temps, gpus, power, cpu_limit) =
+            win::detail(detail.win.as_mut(), win, &self.win.adapters);
         #[cfg(not(windows))]
-        let (temps, gpus, power) = (Vec::new(), Vec::new(), None);
+        let (temps, gpus, power, cpu_limit) = (Vec::new(), Vec::new(), None, None);
 
         Some(DetailMetrics {
             cores,
             temps,
             gpus,
             power,
+            cpu_limit_pct: cpu_limit.map(round1),
             processes: groups,
         })
     }
@@ -260,10 +262,12 @@ mod win {
     const THERMAL: usize = 0;
     const GPU_DEDICATED: usize = 1;
     const GPU_SHARED: usize = 2;
-    pub const DETAIL_COUNTERS: [&str; 3] = [
+    const CPU_LIMIT: usize = 3;
+    pub const DETAIL_COUNTERS: [&str; 4] = [
         r"\Thermal Zone Information(*)\High Precision Temperature",
         r"\GPU Adapter Memory(*)\Dedicated Usage",
         r"\GPU Adapter Memory(*)\Shared Usage",
+        r"\Processor Information(_Total)\% Performance Limit",
     ];
 
     /// A dGPU below this usage is treated as asleep: no D3DKMT sensor query, which could wake it.
@@ -344,8 +348,14 @@ mod win {
         query: Option<&mut Query>,
         core: &CoreSample,
         adapters: &[Adapter],
-    ) -> (Vec<TempSample>, Vec<GpuDetail>, Option<PowerBreakdown>) {
+    ) -> (
+        Vec<TempSample>,
+        Vec<GpuDetail>,
+        Option<PowerBreakdown>,
+        Option<f32>,
+    ) {
         let (mut temps, mut dedicated, mut shared) = (Vec::new(), HashMap::new(), HashMap::new());
+        let mut cpu_limit = None;
         if let Some(q) = query.filter(|q| q.collect_ok()) {
             temps = q
                 .items(THERMAL)
@@ -366,6 +376,9 @@ mod win {
                 .items(GPU_SHARED)
                 .map(|v| parse::sum_by_adapter(&v))
                 .unwrap_or_default();
+            cpu_limit = q
+                .items(CPU_LIMIT)
+                .and_then(|v| v.first().map(|(_, pct)| pct.clamp(0.0, 100.0) as f32));
         }
         let gpus = adapters
             .iter()
@@ -396,7 +409,7 @@ mod win {
         let b = &core.energy.breakdown;
         let power = (b.apu.is_some() || b.cpu.is_some() || b.gpu.is_some() || b.npu.is_some())
             .then(|| b.clone());
-        (temps, gpus, power)
+        (temps, gpus, power, cpu_limit)
     }
 }
 
