@@ -136,6 +136,8 @@ pub struct GpuDetail {
     #[ts(type = "number | null")]
     pub mem_total_bytes: Option<u64>,
     pub temp_c: Option<f32>,
+    /// Fan speed, when the driver reports one and the fan is spinning.
+    pub fan_rpm: Option<u32>,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Serialize, TS)]

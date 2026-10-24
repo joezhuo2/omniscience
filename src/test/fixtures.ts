@@ -21,6 +21,7 @@ export const sampleDetail: DetailMetrics = {
       mem_used_bytes: 0.6 * GB,
       mem_total_bytes: null,
       temp_c: 45,
+      fan_rpm: null,
     },
     {
       name: 'NVIDIA GeForce RTX 5060 Laptop GPU',
@@ -29,6 +30,7 @@ export const sampleDetail: DetailMetrics = {
       mem_used_bytes: 5.2 * GB,
       mem_total_bytes: 8 * GB,
       temp_c: null,
+      fan_rpm: 2100,
     },
   ],
   power: { apu: 8.2, cpu: 2.8, gpu: 3.2, npu: null },

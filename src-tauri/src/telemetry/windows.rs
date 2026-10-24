@@ -202,6 +202,7 @@ pub fn adapters() -> Vec<Adapter> {
 #[derive(Debug, Default, Clone, Copy, PartialEq)]
 pub struct AdapterPerf {
     pub temp_c: Option<f32>,
+    pub fan_rpm: Option<u32>,
 }
 
 /// Reads the sensors of the adapter with `luid`.
@@ -243,6 +244,8 @@ pub fn adapter_perf(luid: (i32, u32)) -> AdapterPerf {
             temp_c: (perf.Temperature > 0)
                 .then(|| super::parse::plausible_temp(perf.Temperature as f64 / 10.0))
                 .flatten(),
+            // Integrated GPUs and fanless (or stopped) fans report 0.
+            fan_rpm: (perf.FanRPM > 0).then_some(perf.FanRPM),
         }
     }
 }
