@@ -1,6 +1,6 @@
 import type { KillReport, ProcessGroup } from '../types/telemetry';
 
-export type ProcessSort = 'cpu' | 'ram';
+export type ProcessSort = 'cpu' | 'ram' | 'gpu';
 
 /** Rows shown by default, and when "Show more" is on. */
 export const COLLAPSED_PROCESSES = 3;
@@ -18,11 +18,16 @@ export function visibleProcesses(
 ): ProcessGroup[] {
   return groups
     .filter((g) => !hidden.has(g.key))
-    .sort((a, b) =>
-      sort === 'cpu'
-        ? b.cpu_pct - a.cpu_pct || b.mem_bytes - a.mem_bytes
-        : b.mem_bytes - a.mem_bytes || b.cpu_pct - a.cpu_pct,
-    )
+    .sort((a, b) => {
+      switch (sort) {
+        case 'cpu':
+          return b.cpu_pct - a.cpu_pct || b.mem_bytes - a.mem_bytes;
+        case 'ram':
+          return b.mem_bytes - a.mem_bytes || b.cpu_pct - a.cpu_pct;
+        case 'gpu':
+          return b.gpu_pct - a.gpu_pct || b.gpu_mem_bytes - a.gpu_mem_bytes;
+      }
+    })
     .slice(0, limit);
 }
 
