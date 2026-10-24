@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-10-24
+
+### Added
+
+- GPU tab in Top processes: each app's GPU usage (its busiest engine, as in Task Manager) and dedicated GPU memory, sortable like CPU and RAM ([#3](https://github.com/joezhuo2/omniscience/issues/3)).
+
 ## [0.1.2] - 2026-10-24
 
 ### Added
@@ -55,7 +61,8 @@ First public release.
 - GitHub Actions CI for Windows and macOS (lint, format check, tests, clippy, release build).
 - MIT license, README, design spec, manual test checklist, and performance measurement scripts.
 
-[Unreleased]: https://github.com/joezhuo2/omniscience/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/joezhuo2/omniscience/compare/v0.1.3...HEAD
+[0.1.3]: https://github.com/joezhuo2/omniscience/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/joezhuo2/omniscience/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/joezhuo2/omniscience/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/joezhuo2/omniscience/releases/tag/v0.1.0
