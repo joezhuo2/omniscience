@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   formatBytes,
   formatGhz,
+  formatLatency,
+  formatRpm,
   formatRateRounded,
   formatPercent,
   formatRate,
@@ -56,5 +58,17 @@ describe('format', () => {
     expect(formatGhz(2000)).toBe('2.0 GHz');
     expect(formatGhz(null)).toBe('--');
     expect(formatGhz(0)).toBe('--');
+  });
+
+  it('formats fan speed', () => {
+    expect(formatRpm(2104.4)).toBe('2104 rpm');
+    expect(formatRpm(0)).toBe('--');
+    expect(formatRpm(null)).toBe('--');
+  });
+
+  it('formats latency', () => {
+    expect(formatLatency(14.2)).toBe('14 ms');
+    expect(formatLatency(0)).toBe('<1 ms');
+    expect(formatLatency(null)).toBe('--');
   });
 });

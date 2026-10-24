@@ -61,3 +61,14 @@ export function formatTemp(c: number | null | undefined): string {
   if (c == null || !Number.isFinite(c)) return '--';
   return `${Math.round(c)}°C`;
 }
+
+export function formatRpm(rpm: number | null | undefined): string {
+  if (rpm == null || !Number.isFinite(rpm) || rpm <= 0) return '--';
+  return `${Math.round(rpm)} rpm`;
+}
+
+/** Round trip in ms; sub-millisecond replies (ICMP reports whole ms) read "<1 ms". */
+export function formatLatency(ms: number | null | undefined): string {
+  if (ms == null || !Number.isFinite(ms)) return '--';
+  return ms < 1 ? '<1 ms' : `${Math.round(ms)} ms`;
+}
