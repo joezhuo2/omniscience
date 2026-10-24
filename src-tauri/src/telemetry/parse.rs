@@ -108,6 +108,17 @@ pub fn sum_by_adapter(items: &[(String, f64)]) -> HashMap<String, u64> {
     out
 }
 
+/// Sums counter values per process (e.g. `GPU Process Memory` usage across adapters).
+pub fn sum_by_pid(items: &[(String, f64)]) -> HashMap<u32, u64> {
+    let mut out: HashMap<u32, u64> = HashMap::new();
+    for (name, value) in items {
+        if let Some(pid) = pid_of(name) {
+            *out.entry(pid).or_default() += value.max(0.0) as u64;
+        }
+    }
+    out
+}
+
 /// Readings from `\Energy Meter(*)\Power`.
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct EnergyReadings {
@@ -354,5 +365,19 @@ mod tests {
         let by_pid = gpu_usage_by_pid(&items);
         assert_eq!(by_pid.get(&7), Some(&35.0));
         assert_eq!(by_pid.get(&9), Some(&2.5));
+    }
+
+    #[test]
+    fn sums_memory_per_pid_across_adapters() {
+        let items = vec![
+            ("pid_7_luid_0x00000000_0x00012980_phys_0".to_string(), 100.0),
+            ("pid_7_luid_0x00000000_0x0001a000_phys_0".to_string(), 50.0),
+            ("pid_8_luid_0x00000000_0x00012980_phys_0".to_string(), 10.0),
+            ("luid_0x00000000_0x00012980_phys_0".to_string(), 999.0),
+        ];
+        let by_pid = sum_by_pid(&items);
+        assert_eq!(by_pid.get(&7), Some(&150));
+        assert_eq!(by_pid.get(&8), Some(&10));
+        assert_eq!(by_pid.len(), 2);
     }
 }
