@@ -1,6 +1,7 @@
 import { mockIPC } from '@tauri-apps/api/mocks';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { useSettingsStore, type Settings } from '../../settings';
 import { useTelemetryStore } from '../../store';
 import { sampleDetail, sampleSnapshot } from '../../test/fixtures';
 import { useToastStore } from '../../toasts';
@@ -35,6 +36,36 @@ describe('Dashboard', () => {
     expect(screen.getByTestId('value-dgpu')).toHaveTextContent('--');
     expect(screen.getByText(/5\.2 \/ 8\.0 GB/)).toBeInTheDocument();
     expect(screen.getAllByText('8.2 W').length).toBeGreaterThan(0);
+  });
+
+  it('shows GPU fan speed and throttling', () => {
+    act(() => useTelemetryStore.getState().setSnapshot(withDetail));
+    render(<Dashboard />);
+    expect(screen.getByText(/2100 rpm/)).toBeInTheDocument();
+    expect(screen.getAllByText('Throttling')).toHaveLength(1);
+  });
+
+  it('flags CPU throttling only past the noise floor', () => {
+    const limited = { ...sampleDetail, cpu_limit_pct: 22.4 };
+    act(() => useTelemetryStore.getState().setSnapshot({ ...sampleSnapshot, detail: limited }));
+    const { unmount } = render(<Dashboard />);
+    expect(screen.getByText('Throttled −22%')).toBeInTheDocument();
+    unmount();
+    const jitter = { ...sampleDetail, cpu_limit_pct: 3 };
+    act(() => useTelemetryStore.getState().setSnapshot({ ...sampleSnapshot, detail: jitter }));
+    render(<Dashboard />);
+    expect(screen.queryByText(/Throttled/)).not.toBeInTheDocument();
+  });
+
+  it('lists network adapters, ping and public IP', () => {
+    useSettingsStore.setState({ settings: { ping_target: '1.1.1.1' } as Settings });
+    const detail = { ...sampleDetail, public_ip: '203.0.113.9' };
+    act(() => useTelemetryStore.getState().setSnapshot({ ...sampleSnapshot, detail }));
+    render(<Dashboard />);
+    expect(screen.getByText('Wi-Fi')).toBeInTheDocument();
+    expect(screen.getByText('192.168.1.20')).toBeInTheDocument();
+    expect(screen.getByTestId('ping')).toHaveTextContent('14 ms');
+    expect(screen.getByText('203.0.113.9')).toBeInTheDocument();
   });
 
   it('shows a tooltip for a hovered core', () => {
