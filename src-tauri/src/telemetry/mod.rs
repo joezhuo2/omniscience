@@ -4,6 +4,7 @@
 #[cfg(any(windows, test))]
 mod parse;
 mod peak;
+mod ping;
 pub mod processes;
 mod sampler;
 pub mod types;
