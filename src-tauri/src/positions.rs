@@ -171,6 +171,14 @@ impl Saved {
             .unwrap_or_default()
     }
 
+    fn forget(&mut self, screens: &[Screen]) {
+        self.layouts.remove(&layout_key(screens));
+        for s in screens {
+            self.monitors.remove(&monitor_key(s));
+        }
+        self.last_monitor = None;
+    }
+
     /// The spot for `screens`: this exact layout's, else the last monitor's relative spot if
     /// that monitor is still connected.
     fn lookup(&self, screens: &[Screen]) -> Option<(i32, i32)> {
@@ -318,11 +326,11 @@ impl Positions {
         )
     }
 
-    /// Forgets the position for the current layout (used by "Reset position").
+    /// Forgets the position for the current layout and its monitors (used by "Reset position").
     pub fn forget(&self, window: &WebviewWindow) {
-        let key = layout_key(&Self::screens(window));
+        let screens = Self::screens(window);
         if let Ok(mut saved) = self.saved.lock() {
-            saved.layouts.remove(&key);
+            saved.forget(&screens);
         }
         self.lift.store(0, Ordering::SeqCst);
         self.write();
@@ -501,5 +509,17 @@ mod tests {
     #[test]
     fn never_lifts_above_the_work_area() {
         assert_eq!(lifted_top(900, 2000, A.work), 0);
+    }
+
+    #[test]
+    fn forget_clears_the_layout_and_its_monitors() {
+        let mut saved = Saved::default();
+        saved.layouts.insert(layout_key(&[A]), (100, 8));
+        saved.monitors.insert(monitor_key(&A), (100, 8));
+        saved.monitors.insert(monitor_key(&B), (5, 5));
+        saved.last_monitor = Some(monitor_key(&A));
+        saved.forget(&[A]);
+        assert_eq!(saved.lookup(&[A]), None);
+        assert!(saved.monitors.contains_key(&monitor_key(&B)));
     }
 }
