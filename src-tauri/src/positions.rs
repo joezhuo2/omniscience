@@ -133,7 +133,21 @@ pub fn snap(
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
-struct Saved(HashMap<String, (i32, i32)>);
+#[serde(default)]
+struct Saved {
+    /// Absolute position per monitor layout.
+    layouts: HashMap<String, (i32, i32)>,
+}
+
+impl Saved {
+    /// Reads `positions.json`, including the 0.1.0 format (a bare layout map).
+    fn parse(json: &str) -> Self {
+        serde_json::from_str::<HashMap<String, (i32, i32)>>(json)
+            .map(|layouts| Self { layouts })
+            .or_else(|_| serde_json::from_str(json))
+            .unwrap_or_default()
+    }
+}
 
 pub struct Positions {
     path: Option<PathBuf>,
@@ -154,7 +168,7 @@ impl Positions {
         let saved = path
             .as_ref()
             .and_then(|p| std::fs::read_to_string(p).ok())
-            .and_then(|s| serde_json::from_str(&s).ok())
+            .map(|s| Saved::parse(&s))
             .unwrap_or_default();
         Self {
             path,
@@ -178,7 +192,7 @@ impl Positions {
         let screens = Self::screens(window);
         let size = window.outer_size().ok()?;
         let saved = self.saved.lock().ok()?;
-        let pos = *saved.0.get(&layout_key(&screens))?;
+        let pos = *saved.layouts.get(&layout_key(&screens))?;
         is_visible(pos, size.width, size.height, &screens)
             .then(|| PhysicalPosition::new(pos.0, pos.1))
     }
@@ -195,7 +209,7 @@ impl Positions {
         }
         let key = layout_key(&Self::screens(window));
         if let Ok(mut saved) = self.saved.lock() {
-            saved.0.insert(key, (pos.x, pos.y));
+            saved.layouts.insert(key, (pos.x, pos.y));
         }
         let generation = self.generation.fetch_add(1, Ordering::SeqCst) + 1;
         let this = std::sync::Arc::clone(self);
@@ -211,7 +225,7 @@ impl Positions {
     pub fn forget(&self, window: &WebviewWindow) {
         let key = layout_key(&Self::screens(window));
         if let Ok(mut saved) = self.saved.lock() {
-            saved.0.remove(&key);
+            saved.layouts.remove(&key);
         }
         self.write();
     }
@@ -324,5 +338,24 @@ mod tests {
         assert_eq!(screen_for((5000, 8), 420, 48, &[A, B]), Some(&A));
         assert_eq!(screen_for((-9000, 8), 420, 48, &[A, B]), Some(&B));
         assert_eq!(screen_for((0, 0), 420, 48, &[]), None);
+    }
+
+    #[test]
+    fn reads_the_old_bare_layout_map() {
+        let saved = Saved::parse(r#"{"0,0,1920x1080@1": [760, 8]}"#);
+        assert_eq!(saved.layouts.get("0,0,1920x1080@1"), Some(&(760, 8)));
+    }
+
+    #[test]
+    fn round_trips_the_current_format() {
+        let mut saved = Saved::default();
+        saved.layouts.insert("k".into(), (1, 2));
+        let json = serde_json::to_string(&saved).unwrap();
+        assert_eq!(Saved::parse(&json).layouts.get("k"), Some(&(1, 2)));
+    }
+
+    #[test]
+    fn garbage_parses_to_empty() {
+        assert!(Saved::parse("not json").layouts.is_empty());
     }
 }
