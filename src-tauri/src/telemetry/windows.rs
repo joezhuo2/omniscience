@@ -203,14 +203,22 @@ pub fn adapters() -> Vec<Adapter> {
 pub struct AdapterPerf {
     pub temp_c: Option<f32>,
     pub fan_rpm: Option<u32>,
+    /// At or past the driver's temperature warning point, where the GPU slows itself down.
+    pub throttling: bool,
+}
+
+/// Whether a temperature has reached the warning point (both deci-Celsius; 0 = not reported).
+pub fn at_thermal_limit(temp: u32, warning: u32) -> bool {
+    temp > 0 && warning > 0 && temp >= warning
 }
 
 /// Reads the sensors of the adapter with `luid`.
 pub fn adapter_perf(luid: (i32, u32)) -> AdapterPerf {
     use windows_sys::Wdk::Graphics::Direct3D::{
-        D3DKMT_ADAPTER_PERFDATA, D3DKMT_CLOSEADAPTER, D3DKMT_OPENADAPTERFROMLUID,
-        D3DKMT_QUERYADAPTERINFO, D3DKMTCloseAdapter, D3DKMTOpenAdapterFromLuid,
-        D3DKMTQueryAdapterInfo, KMTQAITYPE_ADAPTERPERFDATA,
+        D3DKMT_ADAPTER_PERFDATA, D3DKMT_ADAPTER_PERFDATACAPS, D3DKMT_CLOSEADAPTER,
+        D3DKMT_OPENADAPTERFROMLUID, D3DKMT_QUERYADAPTERINFO, D3DKMTCloseAdapter,
+        D3DKMTOpenAdapterFromLuid, D3DKMTQueryAdapterInfo, KMTQAITYPE_ADAPTERPERFDATA,
+        KMTQAITYPE_ADAPTERPERFDATA_CAPS,
     };
     use windows_sys::Win32::Foundation::LUID;
     // SAFETY: the opened adapter handle is closed before returning.
@@ -233,6 +241,18 @@ pub fn adapter_perf(luid: (i32, u32)) -> AdapterPerf {
             PrivateDriverDataSize: std::mem::size_of::<D3DKMT_ADAPTER_PERFDATA>() as u32,
         };
         let ok = D3DKMTQueryAdapterInfo(&mut q) == 0;
+        let mut caps: D3DKMT_ADAPTER_PERFDATACAPS = std::mem::zeroed();
+        let mut q = D3DKMT_QUERYADAPTERINFO {
+            hAdapter: open.hAdapter,
+            Type: KMTQAITYPE_ADAPTERPERFDATA_CAPS,
+            pPrivateDriverData: (&mut caps as *mut D3DKMT_ADAPTER_PERFDATACAPS).cast(),
+            PrivateDriverDataSize: std::mem::size_of::<D3DKMT_ADAPTER_PERFDATACAPS>() as u32,
+        };
+        let warning = if D3DKMTQueryAdapterInfo(&mut q) == 0 {
+            caps.TemperatureWarning
+        } else {
+            0
+        };
         D3DKMTCloseAdapter(&D3DKMT_CLOSEADAPTER {
             hAdapter: open.hAdapter,
         });
@@ -246,6 +266,7 @@ pub fn adapter_perf(luid: (i32, u32)) -> AdapterPerf {
                 .flatten(),
             // Integrated GPUs and fanless (or stopped) fans report 0.
             fan_rpm: (perf.FanRPM > 0).then_some(perf.FanRPM),
+            throttling: at_thermal_limit(perf.Temperature, warning),
         }
     }
 }
@@ -259,6 +280,14 @@ mod tests {
         assert_eq!(kind_for(512 * 1024 * 1024), GpuKind::Integrated);
         assert_eq!(kind_for(0), GpuKind::Integrated);
         assert_eq!(kind_for(8 * 1024 * 1024 * 1024), GpuKind::Discrete);
+    }
+
+    #[test]
+    fn thermal_limit_needs_both_readings() {
+        assert!(at_thermal_limit(870, 870));
+        assert!(!at_thermal_limit(860, 870));
+        assert!(!at_thermal_limit(900, 0));
+        assert!(!at_thermal_limit(0, 870));
     }
 
     /// Machine-dependent: `cargo test adapters_live -- --ignored --nocapture`.

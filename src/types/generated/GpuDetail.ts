@@ -13,4 +13,8 @@ mem_total_bytes: number | null, temp_c: number | null,
 /**
  * Fan speed, when the driver reports one and the fan is spinning.
  */
-fan_rpm: number | null, };
+fan_rpm: number | null, 
+/**
+ * Hot enough that the GPU is slowing itself down (thermal throttling).
+ */
+throttling: boolean, };

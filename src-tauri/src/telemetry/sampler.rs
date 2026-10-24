@@ -389,6 +389,7 @@ mod win {
                     mem_total_bytes: discrete.then_some(a.dedicated_bytes),
                     temp_c: perf.temp_c,
                     fan_rpm: perf.fan_rpm,
+                    throttling: perf.throttling,
                 }
             })
             .collect();

@@ -138,6 +138,8 @@ pub struct GpuDetail {
     pub temp_c: Option<f32>,
     /// Fan speed, when the driver reports one and the fan is spinning.
     pub fan_rpm: Option<u32>,
+    /// Hot enough that the GPU is slowing itself down (thermal throttling).
+    pub throttling: bool,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Serialize, TS)]
