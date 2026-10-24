@@ -8,8 +8,8 @@ use sysinfo::{Networks, System};
 use super::peak::RollingPeak;
 use super::processes;
 use super::types::{
-    CoreMetrics, CoreSample, DetailMetrics, MemoryMetric, Metric, NetMetric, Snapshot, Thresholds,
-    classify,
+    CoreMetrics, CoreSample, DetailMetrics, MemoryMetric, Metric, NetAdapter, NetMetric, Snapshot,
+    Thresholds, classify,
 };
 
 /// Network rings are scaled to the busiest second of the last minute, never below 1 MB/s.
@@ -28,6 +28,8 @@ pub struct Sampler {
     last_net: Instant,
     peak_down: RollingPeak,
     peak_up: RollingPeak,
+    /// Per-interface rates from the last network sample.
+    net_adapters: Vec<NetAdapter>,
     #[cfg(windows)]
     win: win::Core,
     detail: Option<Detail>,
@@ -53,6 +55,7 @@ impl Sampler {
             last_net: Instant::now(),
             peak_down: RollingPeak::new(NET_WINDOW, NET_FLOOR_BPS),
             peak_up: RollingPeak::new(NET_WINDOW, NET_FLOOR_BPS),
+            net_adapters: Vec::new(),
             #[cfg(windows)]
             win: win::Core::new(),
             detail: None,
@@ -139,6 +142,7 @@ impl Sampler {
         let elapsed = self.last_net.elapsed().as_secs_f64().max(0.001);
         self.last_net = Instant::now();
         let (mut down, mut up) = (0u64, 0u64);
+        self.net_adapters.clear();
         for (name, data) in &self.networks {
             let lower = name.to_ascii_lowercase();
             if lower == "lo" || lower.contains("loopback") {
@@ -146,7 +150,21 @@ impl Sampler {
             }
             down += data.received();
             up += data.transmitted();
+            if data.total_received() + data.total_transmitted() > 0 {
+                self.net_adapters.push(NetAdapter {
+                    name: name.clone(),
+                    down_bps: (data.received() as f64 / elapsed).round(),
+                    up_bps: (data.transmitted() as f64 / elapsed).round(),
+                    ipv4: data
+                        .ip_networks()
+                        .iter()
+                        .find(|n| n.addr.is_ipv4())
+                        .map(|n| n.addr.to_string()),
+                });
+            }
         }
+        self.net_adapters
+            .sort_by(|a, b| (b.down_bps + b.up_bps).total_cmp(&(a.down_bps + a.up_bps)));
         let down_bps = down as f64 / elapsed;
         let up_bps = up as f64 / elapsed;
         let down_pct = round1(self.peak_down.push(down_bps));
@@ -227,6 +245,7 @@ impl Sampler {
             gpus,
             power,
             cpu_limit_pct: cpu_limit.map(round1),
+            net_adapters: self.net_adapters.clone(),
             processes: groups,
         })
     }

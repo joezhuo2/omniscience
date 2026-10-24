@@ -80,6 +80,17 @@ pub struct NetMetric {
     pub level: Level,
 }
 
+/// One network interface's throughput.
+#[derive(Debug, Clone, PartialEq, Serialize, TS)]
+#[ts(export)]
+pub struct NetAdapter {
+    pub name: String,
+    pub down_bps: f64,
+    pub up_bps: f64,
+    /// First IPv4 address, if any.
+    pub ipv4: Option<String>,
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, TS)]
 #[ts(export)]
 pub struct CoreMetrics {
@@ -175,6 +186,8 @@ pub struct DetailMetrics {
     /// How far power or thermal limits hold the CPU below its rated speed, in percent (0 when
     /// unthrottled).
     pub cpu_limit_pct: Option<f32>,
+    /// Interfaces that have carried traffic, busiest first.
+    pub net_adapters: Vec<NetAdapter>,
     pub processes: Vec<ProcessGroup>,
 }
 
