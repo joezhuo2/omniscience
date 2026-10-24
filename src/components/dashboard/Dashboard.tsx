@@ -2,6 +2,7 @@ import { CpuHeatmap } from './CpuHeatmap';
 import { GpuPowerCard } from './GpuPowerCard';
 import { Header } from './Header';
 import { MetricStrip } from './MetricStrip';
+import { NetworkCard } from './NetworkCard';
 import { ProcessList } from './ProcessList';
 import { Toasts } from './Toasts';
 
@@ -13,6 +14,7 @@ export function Dashboard({ onSettings }: { onSettings?: () => void }) {
       <MetricStrip />
       <GpuPowerCard />
       <CpuHeatmap />
+      <NetworkCard />
       <ProcessList />
       <Toasts />
     </div>
