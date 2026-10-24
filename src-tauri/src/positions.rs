@@ -77,6 +77,33 @@ pub fn clamp_into(
     )
 }
 
+/// The screen a window at `pos` belongs to: the one it overlaps most, or else the one whose work
+/// area is nearest its center.
+pub fn screen_for(pos: (i32, i32), width: u32, height: u32, screens: &[Screen]) -> Option<&Screen> {
+    let (x, y, w, h) = (pos.0 as i64, pos.1 as i64, width as i64, height as i64);
+    let (cx, cy) = (x + w / 2, y + h / 2);
+    let overlap = |s: &Screen| {
+        let (l, t, r, b) = (
+            s.x as i64,
+            s.y as i64,
+            s.x as i64 + s.width as i64,
+            s.y as i64 + s.height as i64,
+        );
+        (r.min(x + w) - l.max(x)).max(0) * (b.min(y + h) - t.max(y)).max(0)
+    };
+    let distance = |s: &Screen| {
+        let (l, t, r, b) = s.work;
+        let dx = (cx - cx.clamp(l as i64, r as i64)).abs();
+        let dy = (cy - cy.clamp(t as i64, b as i64)).abs();
+        dx * dx + dy * dy
+    };
+    screens
+        .iter()
+        .max_by_key(|s| overlap(s))
+        .filter(|s| overlap(s) > 0)
+        .or_else(|| screens.iter().min_by_key(|s| distance(s)))
+}
+
 /// How close (logical px) the window must be to an edge, or to the top-center, to snap to it.
 pub const SNAP_DISTANCE: f64 = 24.0;
 
@@ -284,5 +311,18 @@ mod tests {
     #[test]
     fn snaps_on_a_screen_left_of_the_origin() {
         assert_eq!(snap((-2550, 10), 420, 48, B.work, 24), (-2560, 0));
+    }
+
+    #[test]
+    fn picks_the_screen_with_most_overlap() {
+        assert_eq!(screen_for((-200, 8), 420, 48, &[A, B]), Some(&A));
+        assert_eq!(screen_for((-300, 8), 420, 48, &[A, B]), Some(&B));
+    }
+
+    #[test]
+    fn picks_the_nearest_screen_when_off_all_of_them() {
+        assert_eq!(screen_for((5000, 8), 420, 48, &[A, B]), Some(&A));
+        assert_eq!(screen_for((-9000, 8), 420, 48, &[A, B]), Some(&B));
+        assert_eq!(screen_for((0, 0), 420, 48, &[]), None);
     }
 }
