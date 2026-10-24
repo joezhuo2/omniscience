@@ -18,7 +18,7 @@ import { Skeleton } from './Skeleton';
 function SortToggle({ sort, onChange }: { sort: ProcessSort; onChange: (s: ProcessSort) => void }) {
   return (
     <div role="tablist" className="flex rounded-md bg-island-hover p-0.5 text-[10px]">
-      {(['cpu', 'ram'] as const).map((s) => (
+      {(['cpu', 'ram', 'gpu'] as const).map((s) => (
         <button
           key={s}
           role="tab"
@@ -39,22 +39,31 @@ function SortToggle({ sort, onChange }: { sort: ProcessSort; onChange: (s: Proce
 
 function Row({
   p,
+  sort,
   armed,
   onKill,
 }: {
   p: ProcessGroup;
+  sort: ProcessSort;
   armed: boolean;
   onKill: (p: ProcessGroup) => void;
 }) {
+  // The GPU view swaps both columns for GPU usage and GPU memory.
+  const gpu = sort === 'gpu';
   return (
     <li className="group flex items-center gap-2 rounded-md px-1.5 py-1 text-[11px] hover:bg-island-track/30">
       <span className="min-w-0 flex-1 truncate text-island-text" title={p.name}>
         {p.name.replace(/\.exe$/i, '')}
         {p.pids.length > 1 && <span className="ml-1 text-island-muted">×{p.pids.length}</span>}
       </span>
-      <span className="w-12 text-right text-island-text tabular-nums">{p.cpu_pct.toFixed(1)}%</span>
-      <span className="w-16 text-right text-island-muted tabular-nums">
-        {formatBytes(p.mem_bytes)}
+      <span className="w-12 text-right text-island-text tabular-nums">
+        {(gpu ? p.gpu_pct : p.cpu_pct).toFixed(1)}%
+      </span>
+      <span
+        className="w-16 text-right text-island-muted tabular-nums"
+        title={gpu ? 'GPU memory' : 'Memory'}
+      >
+        {formatBytes(gpu ? p.gpu_mem_bytes : p.mem_bytes)}
       </span>
       <button
         aria-label={armed ? `Confirm end ${p.name}` : `End ${p.name}`}
@@ -126,7 +135,7 @@ export function ProcessList() {
             className={`-mx-1.5 overscroll-contain ${showAll ? 'max-h-36 overflow-y-auto' : ''}`}
           >
             {rows.map((p) => (
-              <Row key={p.key} p={p} armed={armed === p.key} onKill={onKill} />
+              <Row key={p.key} p={p} sort={sort} armed={armed === p.key} onKill={onKill} />
             ))}
           </ul>
           {all.length > COLLAPSED_PROCESSES && (

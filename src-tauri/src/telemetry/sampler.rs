@@ -8,17 +8,17 @@ use sysinfo::{Networks, System};
 
 use super::peak::RollingPeak;
 use super::ping::Pinger;
-use super::processes;
+use super::processes::{self, Sort};
 use super::public_ip::PublicIp;
 use super::types::{
-    CoreMetrics, CoreSample, DetailMetrics, MemoryMetric, Metric, NetAdapter, NetMetric, Snapshot,
-    Thresholds, classify,
+    CoreMetrics, CoreSample, DetailMetrics, MemoryMetric, Metric, NetAdapter, NetMetric,
+    ProcessGroup, Snapshot, Thresholds, classify,
 };
 
 /// Network rings are scaled to the busiest second of the last minute, never below 1 MB/s.
 const NET_WINDOW: usize = 60;
 const NET_FLOOR_BPS: f64 = 1_000_000.0;
-/// Top process groups sent per sort order (CPU and RAM); the frontend shows 8 of the union.
+/// Top process groups sent per sort order (CPU, RAM and GPU); the frontend shows 8 of the union.
 const TOP_PROCESSES: usize = 8;
 
 fn round1(v: f32) -> f32 {
@@ -250,20 +250,31 @@ impl Sampler {
             ip.refresh();
         }
 
-        let procs = processes::read(&detail.procs);
-        let n = self.sys.cpus().len();
-        let mut groups = processes::top_groups(&procs, n, false, TOP_PROCESSES);
-        for g in processes::top_groups(&procs, n, true, TOP_PROCESSES) {
-            if !groups.iter().any(|x| x.key == g.key) {
-                groups.push(g);
-            }
-        }
-
         #[cfg(windows)]
         let (temps, gpus, power, cpu_limit) =
             win::detail(detail.win.as_mut(), win, &self.win.adapters);
         #[cfg(not(windows))]
         let (temps, gpus, power, cpu_limit) = (Vec::new(), Vec::new(), None, None);
+
+        #[cfg_attr(not(windows), allow(unused_mut))]
+        let mut procs = processes::read(&detail.procs);
+        #[cfg(windows)]
+        {
+            let (usage, mem) = win::process_gpu(detail.win.as_ref(), win);
+            for p in &mut procs {
+                p.gpu_pct = usage.get(&p.pid).copied().unwrap_or(0.0);
+                p.gpu_mem_bytes = mem.get(&p.pid).copied().unwrap_or(0);
+            }
+        }
+        let n = self.sys.cpus().len();
+        let mut groups = Vec::new();
+        for sort in [Sort::Cpu, Sort::Memory, Sort::Gpu] {
+            for g in processes::top_groups(&procs, n, sort, TOP_PROCESSES) {
+                if !groups.iter().any(|x: &ProcessGroup| x.key == g.key) {
+                    groups.push(g);
+                }
+            }
+        }
 
         Some(DetailMetrics {
             cores,
@@ -314,11 +325,13 @@ mod win {
     const GPU_DEDICATED: usize = 1;
     const GPU_SHARED: usize = 2;
     const CPU_LIMIT: usize = 3;
-    pub const DETAIL_COUNTERS: [&str; 4] = [
+    const GPU_PROCESS_MEM: usize = 4;
+    pub const DETAIL_COUNTERS: [&str; 5] = [
         r"\Thermal Zone Information(*)\High Precision Temperature",
         r"\GPU Adapter Memory(*)\Dedicated Usage",
         r"\GPU Adapter Memory(*)\Shared Usage",
         r"\Processor Information(_Total)\% Performance Limit",
+        r"\GPU Process Memory(*)\Dedicated Usage",
     ];
 
     /// A dGPU below this usage is treated as asleep: no D3DKMT sensor query, which could wake it.
@@ -334,6 +347,8 @@ mod win {
         pub igpu_pct: Option<f32>,
         pub dgpu_pct: Option<f32>,
         pub gpu_usage: HashMap<String, f32>,
+        /// Raw `GPU Engine` instances, kept for the per-process breakdown.
+        pub gpu_engines: Vec<(String, f64)>,
         pub energy: EnergyReadings,
         pub cpu_mhz: Option<u64>,
         pub core_mhz: HashMap<u32, u64>,
@@ -354,6 +369,7 @@ mod win {
                     igpu_pct: None,
                     dgpu_pct: None,
                     gpu_usage: HashMap::new(),
+                    gpu_engines: Vec::new(),
                     energy: EnergyReadings::default(),
                     cpu_mhz: None,
                     core_mhz: HashMap::new(),
@@ -363,10 +379,8 @@ mod win {
                 v.first()
                     .map(|(_, idle)| (100.0 - idle).clamp(0.0, 100.0) as f32)
             });
-            let gpu_usage = q
-                .items(GPU_ENGINE)
-                .map(|v| parse::gpu_usage_by_adapter(&v))
-                .unwrap_or_default();
+            let gpu_engines = q.items(GPU_ENGINE).unwrap_or_default();
+            let gpu_usage = parse::gpu_usage_by_adapter(&gpu_engines);
             let energy = q
                 .items(ENERGY)
                 .map(|v| parse::parse_energy(&v))
@@ -388,11 +402,26 @@ mod win {
                 igpu_pct: busiest(GpuKind::Integrated),
                 dgpu_pct: busiest(GpuKind::Discrete),
                 gpu_usage,
+                gpu_engines,
                 energy,
                 cpu_mhz,
                 core_mhz,
             }
         }
+    }
+
+    /// Per-process GPU utilization and dedicated memory. `query` must have been collected this
+    /// tick (by [`detail`]).
+    pub fn process_gpu(
+        query: Option<&Query>,
+        core: &CoreSample,
+    ) -> (HashMap<u32, f32>, HashMap<u32, u64>) {
+        let usage = parse::gpu_usage_by_pid(&core.gpu_engines);
+        let mem = query
+            .and_then(|q| q.items(GPU_PROCESS_MEM))
+            .map(|v| parse::sum_by_pid(&v))
+            .unwrap_or_default();
+        (usage, mem)
     }
 
     pub fn detail(

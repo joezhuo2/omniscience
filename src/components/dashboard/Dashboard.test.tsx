@@ -126,6 +126,19 @@ describe('Dashboard', () => {
     expect(screen.getByText('Code')).toBeInTheDocument();
   });
 
+  it('switches process columns to GPU usage and memory on the GPU tab', () => {
+    act(() => useTelemetryStore.getState().setSnapshot(withDetail));
+    render(<Dashboard />);
+    const rows = () => screen.getByTestId('process-rows').querySelectorAll('li');
+    expect(rows()[0]).toHaveTextContent('chrome');
+    expect(rows()[0]).toHaveTextContent('6.0%');
+    fireEvent.click(screen.getByRole('tab', { name: 'gpu' }));
+    expect(screen.getByRole('tab', { name: 'gpu' })).toHaveAttribute('aria-selected', 'true');
+    expect(rows()[0]).toHaveTextContent('chrome');
+    expect(rows()[0]).toHaveTextContent('2.0%');
+    expect(rows()[0]).toHaveTextContent('307 MB');
+  });
+
   it('shows the top 3 processes with a toggle for the rest', () => {
     const many = {
       ...sampleDetail,
@@ -135,6 +148,8 @@ describe('Dashboard', () => {
         pids: [i + 1],
         cpu_pct: 10 - i,
         mem_bytes: 1,
+        gpu_pct: 0,
+        gpu_mem_bytes: 0,
       })),
     };
     act(() => useTelemetryStore.getState().setSnapshot({ ...sampleSnapshot, detail: many }));

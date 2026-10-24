@@ -174,6 +174,11 @@ pub struct ProcessGroup {
     pub cpu_pct: f32,
     #[ts(type = "number")]
     pub mem_bytes: u64,
+    /// Utilization of the group's busiest GPU engines, in percent (capped at 100).
+    pub gpu_pct: f32,
+    /// Dedicated GPU memory in use across adapters.
+    #[ts(type = "number")]
+    pub gpu_mem_bytes: u64,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, TS)]

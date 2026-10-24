@@ -2,12 +2,14 @@ import { describe, expect, it } from 'vitest';
 import type { KillReport, ProcessGroup } from '../types/telemetry';
 import { killFailure, visibleProcesses } from './processes';
 
-const g = (key: string, cpu: number, mem: number): ProcessGroup => ({
+const g = (key: string, cpu: number, mem: number, gpu = 0, vram = 0): ProcessGroup => ({
   key,
   name: `${key}.exe`,
   pids: [1],
   cpu_pct: cpu,
   mem_bytes: mem,
+  gpu_pct: gpu,
+  gpu_mem_bytes: vram,
 });
 
 describe('visibleProcesses', () => {
@@ -16,6 +18,11 @@ describe('visibleProcesses', () => {
   it('sorts by cpu or ram', () => {
     expect(visibleProcesses(groups, new Set(), 'cpu').map((p) => p.key)).toEqual(['b', 'c', 'a']);
     expect(visibleProcesses(groups, new Set(), 'ram').map((p) => p.key)).toEqual(['a', 'c', 'b']);
+  });
+
+  it('sorts by gpu usage, then gpu memory', () => {
+    const gpu = [g('a', 9, 9, 0, 50), g('b', 1, 1, 30, 0), g('c', 5, 5, 0, 200)];
+    expect(visibleProcesses(gpu, new Set(), 'gpu').map((p) => p.key)).toEqual(['b', 'c', 'a']);
   });
 
   it('drops hidden rows and caps at 8', () => {

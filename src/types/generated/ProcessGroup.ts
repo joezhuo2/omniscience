@@ -12,4 +12,12 @@ name: string, pids: Array<number>,
 /**
  * Percent of total CPU (all logical processors), like Task Manager.
  */
-cpu_pct: number, mem_bytes: number, };
+cpu_pct: number, mem_bytes: number, 
+/**
+ * Utilization of the group's busiest GPU engines, in percent (capped at 100).
+ */
+gpu_pct: number, 
+/**
+ * Dedicated GPU memory in use across adapters.
+ */
+gpu_mem_bytes: number, };
