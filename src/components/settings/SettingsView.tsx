@@ -54,6 +54,36 @@ function Toggle({
 }
 
 /** Number input that commits on blur or Enter, so typing "85" does not apply "8" first. */
+/** Free-text field committed on blur or Enter. Remount (via `key`) to reset the draft. */
+function TextInput({
+  value,
+  label,
+  placeholder,
+  onCommit,
+}: {
+  value: string;
+  label: string;
+  placeholder?: string;
+  onCommit: (v: string) => void;
+}) {
+  const [draft, setDraft] = useState(value);
+  const commit = () => {
+    if (draft.trim() !== value) onCommit(draft.trim());
+  };
+  return (
+    <input
+      aria-label={label}
+      value={draft}
+      placeholder={placeholder}
+      spellCheck={false}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => e.key === 'Enter' && commit()}
+      className="w-32 rounded border border-island-faint bg-island-hover px-1.5 py-0.5 text-right text-island-text"
+    />
+  );
+}
+
 function ThresholdInput({
   value,
   label,
@@ -222,6 +252,22 @@ export function SettingsView({ onBack }: { onBack: () => void }) {
               label="Hide over fullscreen apps"
               checked={settings.hide_over_fullscreen}
               onChange={(v) => set({ hide_over_fullscreen: v })}
+            />
+          </Row>
+          <Row label="Ping target">
+            <TextInput
+              key={`ping-${settings.ping_target}`}
+              label="Ping target"
+              placeholder="Off"
+              value={settings.ping_target}
+              onCommit={(v) => set({ ping_target: v })}
+            />
+          </Row>
+          <Row label="Show public IP (asks OpenDNS)">
+            <Toggle
+              label="Show public IP"
+              checked={settings.show_public_ip}
+              onChange={(v) => set({ show_public_ip: v })}
             />
           </Row>
           <Row label="Position">
