@@ -44,6 +44,10 @@ Helpers:
 - [ ] End? then confirm on a harmless app (e.g. Notepad) closes it.
 - [ ] End on a critical process (e.g. `csrss`, `System`) or on Omniscience itself is refused: the row comes back with a toast.
 - [ ] Dragging the pill (row of rings) moves the overlay; the dashboard header no longer drags. After restarting the app, it reopens at the new position.
+- [ ] Dropping the pill half off a screen edge pulls it fully back on screen once the mouse is released.
+- [ ] Dropping it within about 24 px of an edge, or of the top-center, snaps it exactly there.
+- [ ] With the pill near the bottom of a monitor, hovering lifts the window so the whole dashboard is visible; it drops back on collapse.
+- [ ] On a second monitor, unplugging and replugging another monitor (a new layout) still brings the pill back to its spot on that monitor.
 
 ## Settings
 
