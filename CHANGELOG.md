@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-10-24
+
+### Added
+
+- GPU fan speed in the GPU & Power card, read from the driver like temperature ([#4](https://github.com/joezhuo2/omniscience/issues/4)).
+- Throttle indicators: a Throttling chip on a GPU at its thermal limit, and a "Throttled −N%" chip on the CPU cores card when power or thermal limits hold the CPU back.
+- Network card: each active adapter with its IPv4 address and live download/upload rates.
+- Ping latency to a configurable target (Settings > Ping target, `1.1.1.1` by default, empty turns it off), measured only while the dashboard is open.
+- Optional public IP (Settings > Show public IP, off by default), looked up with one DNS query to OpenDNS at most every ten minutes.
+
 ## [0.1.1] - 2026-10-24
 
 ### Added
@@ -45,6 +55,7 @@ First public release.
 - GitHub Actions CI for Windows and macOS (lint, format check, tests, clippy, release build).
 - MIT license, README, design spec, manual test checklist, and performance measurement scripts.
 
-[Unreleased]: https://github.com/joezhuo2/omniscience/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/joezhuo2/omniscience/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/joezhuo2/omniscience/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/joezhuo2/omniscience/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/joezhuo2/omniscience/releases/tag/v0.1.0
