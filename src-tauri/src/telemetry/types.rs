@@ -219,6 +219,8 @@ pub struct DetailMetrics {
     pub ping_ms: Option<f32>,
     /// Public IPv4 address, when lookups are on and one has succeeded.
     pub public_ip: Option<String>,
+    /// `None` on machines without a battery.
+    pub battery: Option<Battery>,
     pub processes: Vec<ProcessGroup>,
 }
 

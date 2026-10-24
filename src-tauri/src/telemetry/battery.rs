@@ -289,7 +289,10 @@ mod tests {
     #[ignore]
     fn battery_live() {
         let r = read();
-        println!("{r:?}
-{:?}", estimate(&r));
+        println!(
+            "{r:?}
+{:?}",
+            estimate(&r)
+        );
     }
 }
