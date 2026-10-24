@@ -17,6 +17,36 @@ pub struct Reading {
     pub rate_mw: Option<i32>,
 }
 
+/// Charge, AC and Windows' time estimate from `GetSystemPowerStatus`.
+#[cfg(windows)]
+pub fn read() -> Reading {
+    use windows_sys::Win32::System::Power::{GetSystemPowerStatus, SYSTEM_POWER_STATUS};
+    const NO_BATTERY: u8 = 128;
+    const CHARGING: u8 = 8;
+    const UNKNOWN: u8 = 255;
+    let mut s: SYSTEM_POWER_STATUS = unsafe { std::mem::zeroed() };
+    // SAFETY: plain query into a valid out pointer.
+    if unsafe { GetSystemPowerStatus(&mut s) } == 0
+        || s.BatteryFlag == UNKNOWN
+        || s.BatteryFlag & NO_BATTERY != 0
+        || s.BatteryLifePercent == UNKNOWN
+    {
+        return Reading::default();
+    }
+    Reading {
+        percent: Some(f32::from(s.BatteryLifePercent)),
+        on_ac: s.ACLineStatus == 1,
+        charging: s.BatteryFlag & CHARGING != 0,
+        os_secs_left: (s.BatteryLifeTime != u32::MAX).then_some(u64::from(s.BatteryLifeTime)),
+        ..Reading::default()
+    }
+}
+
+#[cfg(not(windows))]
+pub fn read() -> Reading {
+    Reading::default()
+}
+
 /// Turns a reading into what the dashboard shows. `None` without a battery.
 pub fn estimate(r: &Reading) -> Option<Battery> {
     let percent = r.percent?;
