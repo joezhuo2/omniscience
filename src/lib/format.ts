@@ -72,3 +72,12 @@ export function formatLatency(ms: number | null | undefined): string {
   if (ms == null || !Number.isFinite(ms)) return '--';
   return ms < 1 ? '<1 ms' : `${Math.round(ms)} ms`;
 }
+
+/** Seconds -> "2h 05m", or "45m" under an hour. */
+export function formatDuration(secs: number | null | undefined): string {
+  if (secs == null || !Number.isFinite(secs) || secs < 0) return '--';
+  const minutes = Math.round(secs / 60);
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return h > 0 ? `${h}h ${String(m).padStart(2, '0')}m` : `${m}m`;
+}

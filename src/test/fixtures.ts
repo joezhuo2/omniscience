@@ -39,6 +39,7 @@ export const sampleDetail: DetailMetrics = {
   cpu_limit_pct: 0,
   ping_ms: 14,
   public_ip: null,
+  battery: { percent: 78, state: 'discharging', watts: 12.4, secs_remaining: 9000 },
   net_adapters: [
     { name: 'Wi-Fi', down_bps: 1258291, up_bps: 81920, ipv4: '192.168.1.20' },
     { name: 'vEthernet (WSL)', down_bps: 0, up_bps: 0, ipv4: '172.20.0.1' },

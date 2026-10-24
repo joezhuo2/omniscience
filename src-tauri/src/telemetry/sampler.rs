@@ -6,6 +6,7 @@ use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
 use sysinfo::{Networks, System};
 
+use super::battery;
 use super::peak::RollingPeak;
 use super::ping::Pinger;
 use super::processes::{self, Sort};
@@ -289,6 +290,7 @@ impl Sampler {
                 .as_ref()
                 .and_then(PublicIp::latest)
                 .map(|ip| ip.to_string()),
+            battery: battery::estimate(&battery::read()),
             processes: groups,
         })
     }

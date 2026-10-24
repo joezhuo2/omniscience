@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-10-24
+
+### Added
+
+- Battery card for laptops: charge, charging or draining with the rate in watts, and time left or time to full, read from the battery driver with no admin rights. Hidden on machines without a battery ([#2](https://github.com/joezhuo2/omniscience/issues/2)).
+
+### Fixed
+
+- A tall dashboard (for example with Show more open) now scrolls inside the window instead of being cut off at the bottom.
+
 ## [0.1.3] - 2026-10-24
 
 ### Added
@@ -61,7 +71,8 @@ First public release.
 - GitHub Actions CI for Windows and macOS (lint, format check, tests, clippy, release build).
 - MIT license, README, design spec, manual test checklist, and performance measurement scripts.
 
-[Unreleased]: https://github.com/joezhuo2/omniscience/compare/v0.1.3...HEAD
+[Unreleased]: https://github.com/joezhuo2/omniscience/compare/v0.1.4...HEAD
+[0.1.4]: https://github.com/joezhuo2/omniscience/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/joezhuo2/omniscience/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/joezhuo2/omniscience/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/joezhuo2/omniscience/compare/v0.1.0...v0.1.1

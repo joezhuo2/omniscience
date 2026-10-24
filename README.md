@@ -51,6 +51,8 @@ close it.
 - 🎮 **GPU & Power card:** usage, VRAM (`5.2 / 8.0 GB`), temperature and fan speed for each GPU, a
   Throttling chip when a GPU reaches its thermal limit, and package watts broken down into APU, CPU,
   GPU and NPU where the hardware reports them.
+- 🔋 **Battery card** (laptops): charge, charging or draining with the rate in watts, and time left or
+  time to full, read from the battery driver.
 - 🔥 **CPU heatmap:** one cell per logical core. Hover a cell for its usage, clock, per-core watts and
   the package temperature. A Throttled chip shows how far power or thermal limits hold the CPU back.
 - 🌐 **Network card:** each active adapter with its IPv4 address and live rates, ping latency to a

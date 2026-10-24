@@ -1,3 +1,4 @@
+import { BatteryCard } from './BatteryCard';
 import { CpuHeatmap } from './CpuHeatmap';
 import { GpuPowerCard } from './GpuPowerCard';
 import { Header } from './Header';
@@ -13,6 +14,7 @@ export function Dashboard({ onSettings }: { onSettings?: () => void }) {
       <Header onSettings={onSettings} />
       <MetricStrip />
       <GpuPowerCard />
+      <BatteryCard />
       <CpuHeatmap />
       <NetworkCard />
       <ProcessList />

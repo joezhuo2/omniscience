@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   formatBytes,
+  formatDuration,
   formatGhz,
   formatLatency,
   formatRpm,
@@ -64,6 +65,13 @@ describe('format', () => {
     expect(formatRpm(2104.4)).toBe('2104 rpm');
     expect(formatRpm(0)).toBe('--');
     expect(formatRpm(null)).toBe('--');
+  });
+
+  it('formats durations', () => {
+    expect(formatDuration(9000)).toBe('2h 30m');
+    expect(formatDuration(3900)).toBe('1h 05m');
+    expect(formatDuration(1790)).toBe('30m');
+    expect(formatDuration(null)).toBe('--');
   });
 
   it('formats latency', () => {

@@ -10,6 +10,10 @@ describe('index.css', () => {
     expect(css).toMatch(/html,\s*body,\s*#root\s*\{[^}]*background:\s*transparent/);
   });
 
+  it('lets the panel scroll inside the window height cap', () => {
+    expect(css).toMatch(/\.panel\s*\{[^}]*max-height:[^}]*overflow-y:\s*auto/);
+  });
+
   it('imports tailwind', () => {
     expect(css).toMatch(/@import ['"]tailwindcss['"]/);
   });

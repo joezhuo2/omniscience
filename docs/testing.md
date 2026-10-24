@@ -39,6 +39,8 @@ Helpers:
 - [ ] Metric strip: CPU % with GHz on a second line, RAM like `15/31 GB`, download/upload on two lines.
 - [ ] GPU & Power card lists each GPU with usage, VRAM and temperature, and the watt breakdown.
 - [ ] A dGPU under load shows its fan speed in rpm (if its driver reports one); a GPU at its thermal limit shows a red Throttling chip.
+- [ ] On a laptop, the Battery card shows the charge and, on battery, the drain in watts and time left (close to the Windows battery flyout); charging shows the charge rate and time to full; plugged in at a charge limit shows "Plugged in, not charging". On a desktop the card is absent.
+- [ ] With Show more open, the dashboard scrolls inside the window instead of being cut off at the bottom.
 - [ ] CPU heatmap has one cell per logical core. Hovering a cell shows usage, clock, watts and temperature.
 - [ ] On battery or under a long all-core load, the CPU cores card shows "Throttled −N%" when the CPU is held back; it is absent when idle on AC.
 - [ ] Network card lists active adapters with IPv4 and live rates, and the ping round trip to the target (`--` with the network unplugged).

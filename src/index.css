@@ -76,6 +76,12 @@ body {
 
 .panel {
   padding: 0 var(--pad) var(--pad);
+  /* Past the window's height cap the dashboard scrolls instead of being cut off. 16px is
+     WINDOW_EXTRA in App.tsx. */
+  max-height: calc(var(--window-max-h) - var(--top-gap) - var(--pill-h) - 16px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
   opacity: 0;
   transition: opacity var(--fade-ms) ease-out;
 }
