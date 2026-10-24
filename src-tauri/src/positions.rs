@@ -160,6 +160,18 @@ impl Saved {
             .or_else(|_| serde_json::from_str(json))
             .unwrap_or_default()
     }
+
+    /// The spot for `screens`: this exact layout's, else the last monitor's relative spot if
+    /// that monitor is still connected.
+    fn lookup(&self, screens: &[Screen]) -> Option<(i32, i32)> {
+        if let Some(&pos) = self.layouts.get(&layout_key(screens)) {
+            return Some(pos);
+        }
+        let key = self.last_monitor.as_ref()?;
+        let (dx, dy) = *self.monitors.get(key)?;
+        let s = screens.iter().find(|s| &monitor_key(s) == key)?;
+        Some((s.x + dx, s.y + dy))
+    }
 }
 
 pub struct Positions {
@@ -205,7 +217,7 @@ impl Positions {
         let screens = Self::screens(window);
         let size = window.outer_size().ok()?;
         let saved = self.saved.lock().ok()?;
-        let pos = *saved.layouts.get(&layout_key(&screens))?;
+        let pos = saved.lookup(&screens)?;
         is_visible(pos, size.width, size.height, &screens)
             .then(|| PhysicalPosition::new(pos.0, pos.1))
     }
@@ -384,5 +396,24 @@ mod tests {
     #[test]
     fn garbage_parses_to_empty() {
         assert!(Saved::parse("not json").layouts.is_empty());
+    }
+
+    #[test]
+    fn lookup_prefers_the_exact_layout() {
+        let mut saved = Saved::default();
+        saved.layouts.insert(layout_key(&[A, B]), (100, 8));
+        saved.monitors.insert(monitor_key(&A), (500, 8));
+        saved.last_monitor = Some(monitor_key(&A));
+        assert_eq!(saved.lookup(&[A, B]), Some((100, 8)));
+    }
+
+    #[test]
+    fn lookup_falls_back_to_the_last_monitor_wherever_it_moved() {
+        let mut saved = Saved::default();
+        saved.monitors.insert(monitor_key(&B), (300, 20));
+        saved.last_monitor = Some(monitor_key(&B));
+        let moved = Screen { x: 1920, ..B };
+        assert_eq!(saved.lookup(&[A, moved]), Some((2220, 20)));
+        assert_eq!(saved.lookup(&[A]), None);
     }
 }
