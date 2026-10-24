@@ -67,6 +67,36 @@ pub fn gpu_usage_by_adapter(items: &[(String, f64)]) -> HashMap<String, f32> {
     out
 }
 
+/// Process id from a per-process GPU counter instance such as
+/// `pid_12_luid_0x00000000_0x00012980_phys_0_eng_3_engtype_3D`.
+pub fn pid_of(instance: &str) -> Option<u32> {
+    instance
+        .strip_prefix("pid_")?
+        .split('_')
+        .next()?
+        .parse()
+        .ok()
+}
+
+/// GPU utilization per process, like Task Manager's GPU column: per engine (adapter and engine
+/// type), sum the process's instances, then take its busiest engine.
+pub fn gpu_usage_by_pid(items: &[(String, f64)]) -> HashMap<u32, f32> {
+    let mut per_engine: HashMap<(u32, String, &str), f64> = HashMap::new();
+    for (name, value) in items {
+        let (Some(pid), Some(luid)) = (pid_of(name), luid_key(name)) else {
+            continue;
+        };
+        let engtype = name.rsplit_once("engtype_").map_or("other", |(_, t)| t);
+        *per_engine.entry((pid, luid, engtype)).or_default() += value.max(0.0);
+    }
+    let mut out: HashMap<u32, f32> = HashMap::new();
+    for ((pid, _, _), sum) in per_engine {
+        let slot = out.entry(pid).or_insert(0.0);
+        *slot = slot.max(sum.min(100.0) as f32);
+    }
+    out
+}
+
 /// Sums counter values per adapter (e.g. `GPU Adapter Memory` usage across `phys_N`).
 pub fn sum_by_adapter(items: &[(String, f64)]) -> HashMap<String, u64> {
     let mut out: HashMap<String, u64> = HashMap::new();
@@ -300,5 +330,29 @@ mod tests {
         let sum = parse_energy(&items(&[("CPU Power", 1000.0), ("GPU Power", 2000.0)]));
         assert_eq!(sum.package_watts, Some(3.0));
         assert_eq!(parse_energy(&[]).package_watts, None);
+    }
+
+    #[test]
+    fn reads_the_pid_of_a_process_instance() {
+        assert_eq!(
+            pid_of("pid_1234_luid_0x00000000_0x00012980_phys_0_eng_3_engtype_3D"),
+            Some(1234)
+        );
+        assert_eq!(pid_of("luid_0x00000000_0x00012980_phys_0"), None);
+        assert_eq!(pid_of("pid_x_luid"), None);
+    }
+
+    #[test]
+    fn gpu_usage_per_pid_takes_the_busiest_engine() {
+        let l = "luid_0x00000000_0x00012980_phys_0";
+        let items = vec![
+            (format!("pid_7_{l}_eng_0_engtype_3D"), 20.0),
+            (format!("pid_7_{l}_eng_1_engtype_3D"), 15.0),
+            (format!("pid_7_{l}_eng_5_engtype_VideoDecode"), 30.0),
+            (format!("pid_9_{l}_eng_0_engtype_3D"), 2.5),
+        ];
+        let by_pid = gpu_usage_by_pid(&items);
+        assert_eq!(by_pid.get(&7), Some(&35.0));
+        assert_eq!(by_pid.get(&9), Some(&2.5));
     }
 }
