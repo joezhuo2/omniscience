@@ -43,7 +43,8 @@ Helpers:
 - [ ] On battery or under a long all-core load, the CPU cores card shows "Throttled −N%" when the CPU is held back; it is absent when idle on AC.
 - [ ] Network card lists active adapters with IPv4 and live rates, and the ping round trip to the target (`--` with the network unplugged).
 - [ ] Skeletons show briefly on first open, then real data.
-- [ ] Top processes are grouped by app. The CPU/RAM toggle re-sorts. 3 rows by default; "Show more" expands a scrollable list.
+- [ ] Top processes are grouped by app. The CPU/RAM/GPU toggle re-sorts. 3 rows by default; "Show more" expands a scrollable list.
+- [ ] On the GPU tab, a game or video player leads the list with GPU usage close to Task Manager's GPU column and its GPU memory.
 - [ ] End? then confirm on a harmless app (e.g. Notepad) closes it.
 - [ ] End on a critical process (e.g. `csrss`, `System`) or on Omniscience itself is refused: the row comes back with a toast.
 - [ ] Dragging the pill (row of rings) moves the overlay; the dashboard header no longer drags. After restarting the app, it reopens at the new position.
