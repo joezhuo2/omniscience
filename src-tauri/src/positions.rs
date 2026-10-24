@@ -17,16 +17,25 @@ pub struct Screen {
     pub width: u32,
     pub height: u32,
     pub scale: f64,
+    /// Work area (monitor minus taskbars) as left, top, right, bottom edges.
+    pub work: (i32, i32, i32, i32),
 }
 
 impl From<&Monitor> for Screen {
     fn from(m: &Monitor) -> Self {
+        let area = m.work_area();
         Self {
             x: m.position().x,
             y: m.position().y,
             width: m.size().width,
             height: m.size().height,
             scale: m.scale_factor(),
+            work: (
+                area.position.x,
+                area.position.y,
+                area.position.x + area.size.width as i32,
+                area.position.y + area.size.height as i32,
+            ),
         }
     }
 }
@@ -160,6 +169,7 @@ mod tests {
         width: 1920,
         height: 1080,
         scale: 1.0,
+        work: (0, 0, 1920, 1040),
     };
     const B: Screen = Screen {
         x: -2560,
@@ -167,6 +177,7 @@ mod tests {
         width: 2560,
         height: 1440,
         scale: 1.5,
+        work: (-2560, 0, 0, 1380),
     };
 
     #[test]
