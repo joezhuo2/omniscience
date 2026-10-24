@@ -77,6 +77,34 @@ pub fn clamp_into(
     )
 }
 
+/// How close (logical px) the window must be to an edge, or to the top-center, to snap to it.
+pub const SNAP_DISTANCE: f64 = 24.0;
+
+/// Snaps each axis of a window at `pos` to the nearest work-area edge (or the horizontal center)
+/// within `distance` physical px. Axes with nothing close enough are left alone.
+pub fn snap(
+    pos: (i32, i32),
+    width: u32,
+    height: u32,
+    area: (i32, i32, i32, i32),
+    distance: i32,
+) -> (i32, i32) {
+    let (left, top, right, bottom) = area;
+    let (w, h) = (width as i32, height as i32);
+    let nearest = |v: i32, targets: &[i32]| {
+        targets
+            .iter()
+            .copied()
+            .filter(|t| (v - t).abs() <= distance)
+            .min_by_key(|t| (v - t).abs())
+            .unwrap_or(v)
+    };
+    (
+        nearest(pos.0, &[left, left + (right - left - w) / 2, right - w]),
+        nearest(pos.1, &[top, bottom - h]),
+    )
+}
+
 #[derive(Debug, Default, Serialize, Deserialize)]
 struct Saved(HashMap<String, (i32, i32)>);
 
@@ -235,5 +263,26 @@ mod tests {
     #[test]
     fn clamp_keeps_an_oversized_window_at_the_top_left() {
         assert_eq!(clamp_into((50, 50), 3000, 2000, A.work), (0, 0));
+    }
+
+    #[test]
+    fn snaps_to_nearby_edges() {
+        assert_eq!(snap((15, 1000), 420, 48, A.work, 24), (0, 992));
+        assert_eq!(snap((1490, 20), 420, 48, A.work, 24), (1500, 0));
+    }
+
+    #[test]
+    fn snaps_to_the_horizontal_center() {
+        assert_eq!(snap((770, 300), 420, 48, A.work, 24), (750, 300));
+    }
+
+    #[test]
+    fn leaves_far_positions_alone() {
+        assert_eq!(snap((400, 300), 420, 48, A.work, 24), (400, 300));
+    }
+
+    #[test]
+    fn snaps_on_a_screen_left_of_the_origin() {
+        assert_eq!(snap((-2550, 10), 420, 48, B.work, 24), (-2560, 0));
     }
 }
