@@ -324,6 +324,7 @@ impl Positions {
         if let Ok(mut saved) = self.saved.lock() {
             saved.layouts.remove(&key);
         }
+        self.lift.store(0, Ordering::SeqCst);
         self.write();
     }
 
