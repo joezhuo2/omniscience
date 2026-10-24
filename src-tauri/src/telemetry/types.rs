@@ -80,6 +80,28 @@ pub struct NetMetric {
     pub level: Level,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, TS)]
+#[serde(rename_all = "snake_case")]
+#[ts(export)]
+pub enum BatteryState {
+    Charging,
+    Discharging,
+    /// On AC power but not charging (full, or held by a charge limit).
+    Idle,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, TS)]
+#[ts(export)]
+pub struct Battery {
+    pub percent: f32,
+    pub state: BatteryState,
+    /// Charge or drain rate, when the driver reports one.
+    pub watts: Option<f32>,
+    /// Time to empty (discharging) or to full (charging), in seconds.
+    #[ts(type = "number | null")]
+    pub secs_remaining: Option<u64>,
+}
+
 /// One network interface's throughput.
 #[derive(Debug, Clone, PartialEq, Serialize, TS)]
 #[ts(export)]
