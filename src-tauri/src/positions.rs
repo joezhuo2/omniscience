@@ -50,6 +50,12 @@ pub fn layout_key(screens: &[Screen]) -> String {
     parts.join("|")
 }
 
+/// Identifies a monitor by its size and scale, wherever it sits in the layout. Two identical
+/// monitors share a key, and so share a remembered spot.
+pub fn monitor_key(s: &Screen) -> String {
+    format!("{}x{}@{}", s.width, s.height, s.scale)
+}
+
 /// True if a window of `width` x `height` at `pos` keeps its top strip (where the pill is) on
 /// some screen, so a saved position can never restore off-screen.
 pub fn is_visible(pos: (i32, i32), width: u32, height: u32, screens: &[Screen]) -> bool {
@@ -137,13 +143,20 @@ pub fn snap(
 struct Saved {
     /// Absolute position per monitor layout.
     layouts: HashMap<String, (i32, i32)>,
+    /// Position relative to the monitor's top-left corner, per monitor.
+    monitors: HashMap<String, (i32, i32)>,
+    /// Key of the monitor the overlay was last moved onto.
+    last_monitor: Option<String>,
 }
 
 impl Saved {
     /// Reads `positions.json`, including the 0.1.0 format (a bare layout map).
     fn parse(json: &str) -> Self {
         serde_json::from_str::<HashMap<String, (i32, i32)>>(json)
-            .map(|layouts| Self { layouts })
+            .map(|layouts| Self {
+                layouts,
+                ..Self::default()
+            })
             .or_else(|_| serde_json::from_str(json))
             .unwrap_or_default()
     }
@@ -207,9 +220,17 @@ impl Positions {
         if !self.tracking.load(Ordering::SeqCst) {
             return;
         }
-        let key = layout_key(&Self::screens(window));
+        let screens = Self::screens(window);
+        let size = window.outer_size().unwrap_or_default();
         if let Ok(mut saved) = self.saved.lock() {
-            saved.layouts.insert(key, (pos.x, pos.y));
+            saved.layouts.insert(layout_key(&screens), (pos.x, pos.y));
+            if let Some(s) = screen_for((pos.x, pos.y), size.width, size.height, &screens) {
+                let key = monitor_key(s);
+                saved
+                    .monitors
+                    .insert(key.clone(), (pos.x - s.x, pos.y - s.y));
+                saved.last_monitor = Some(key);
+            }
         }
         let generation = self.generation.fetch_add(1, Ordering::SeqCst) + 1;
         let this = std::sync::Arc::clone(self);
@@ -263,6 +284,12 @@ mod tests {
         scale: 1.5,
         work: (-2560, 0, 0, 1380),
     };
+
+    #[test]
+    fn monitor_key_ignores_where_the_monitor_sits() {
+        assert_eq!(monitor_key(&B), monitor_key(&Screen { x: 1920, ..B }));
+        assert_ne!(monitor_key(&A), monitor_key(&B));
+    }
 
     #[test]
     fn layout_key_ignores_monitor_order_but_not_scale() {
