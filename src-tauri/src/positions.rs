@@ -230,7 +230,8 @@ impl Positions {
         self.tracking.store(on, Ordering::SeqCst);
     }
 
-    /// Records a move and writes it to disk once moves stop for half a second.
+    /// Records a move. Once moves stop for half a second and the mouse is released, snaps the
+    /// window into place, then writes it to disk.
     pub fn record(self: &std::sync::Arc<Self>, window: &WebviewWindow, pos: PhysicalPosition<i32>) {
         if !self.tracking.load(Ordering::SeqCst) {
             return;
@@ -249,12 +250,39 @@ impl Positions {
         }
         let generation = self.generation.fetch_add(1, Ordering::SeqCst) + 1;
         let this = std::sync::Arc::clone(self);
+        let window = window.clone();
         std::thread::spawn(move || {
             std::thread::sleep(Duration::from_millis(500));
-            if this.generation.load(Ordering::SeqCst) == generation {
-                this.write();
+            let current = || this.generation.load(Ordering::SeqCst) == generation;
+            while current() && crate::platform::mouse_down() {
+                std::thread::sleep(Duration::from_millis(50));
             }
+            if !current() {
+                return;
+            }
+            if let Some((x, y)) = Self::resting_spot(&window)
+                && (x, y) != (pos.x, pos.y)
+            {
+                // The snap is itself a move, recorded and written like any other.
+                let _ = window.set_position(PhysicalPosition::new(x, y));
+                return;
+            }
+            this.write();
         });
+    }
+
+    /// Where the collapsed overlay should settle after a drag.
+    fn resting_spot(window: &WebviewWindow) -> Option<(i32, i32)> {
+        let pos = window.outer_position().ok()?;
+        let size = window.outer_size().ok()?;
+        let scale = window.scale_factor().ok()?;
+        let pill = (crate::window::COLLAPSED_SIZE.1 * scale).round() as u32;
+        settle(
+            (pos.x, pos.y),
+            size.width,
+            size.height.min(pill),
+            &Self::screens(window),
+        )
     }
 
     /// Forgets the position for the current layout (used by "Reset position").
