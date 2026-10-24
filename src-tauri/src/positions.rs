@@ -132,6 +132,15 @@ pub fn fit(pos: (i32, i32), width: u32, height: u32, screens: &[Screen]) -> Opti
     Some(clamp_into(pos, width, height, s.work))
 }
 
+/// Where a window dropped at `pos` comes to rest: fully inside its screen's work area, snapped to
+/// a nearby edge or the top-center.
+pub fn settle(pos: (i32, i32), width: u32, height: u32, screens: &[Screen]) -> Option<(i32, i32)> {
+    let s = screen_for(pos, width, height, screens)?;
+    let inside = clamp_into(pos, width, height, s.work);
+    let distance = (SNAP_DISTANCE * s.scale).round() as i32;
+    Some(snap(inside, width, height, s.work, distance))
+}
+
 #[derive(Debug, Default, Serialize, Deserialize)]
 #[serde(default)]
 struct Saved {
@@ -401,5 +410,18 @@ mod tests {
     #[test]
     fn fit_brings_a_lost_window_to_the_nearest_screen() {
         assert_eq!(fit((5000, 5000), 420, 48, &[A]), Some((1500, 992)));
+    }
+
+    #[test]
+    fn settle_clamps_then_snaps() {
+        assert_eq!(settle((-60, 15), 420, 48, &[A]), Some((0, 0)));
+        assert_eq!(settle((400, 300), 420, 48, &[A]), Some((400, 300)));
+    }
+
+    #[test]
+    fn settle_scales_the_snap_distance() {
+        // 30 px from the top is past 24 px at 1x but within 36 px at 1.5x.
+        assert_eq!(settle((800, 30), 420, 48, &[A]), Some((800, 30)));
+        assert_eq!(settle((-1500, 30), 630, 72, &[B]), Some((-1500, 0)));
     }
 }
