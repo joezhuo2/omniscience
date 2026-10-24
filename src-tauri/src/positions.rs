@@ -62,6 +62,21 @@ pub fn is_visible(pos: (i32, i32), width: u32, height: u32, screens: &[Screen]) 
     })
 }
 
+/// Moves a `width` x `height` window at `pos` the least distance that puts it fully inside `area`
+/// (left, top, right, bottom). A window bigger than the area keeps its top-left corner inside.
+pub fn clamp_into(
+    pos: (i32, i32),
+    width: u32,
+    height: u32,
+    area: (i32, i32, i32, i32),
+) -> (i32, i32) {
+    let (left, top, right, bottom) = area;
+    (
+        pos.0.min(right - width as i32).max(left),
+        pos.1.min(bottom - height as i32).max(top),
+    )
+}
+
 #[derive(Debug, Default, Serialize, Deserialize)]
 struct Saved(HashMap<String, (i32, i32)>);
 
@@ -204,5 +219,21 @@ mod tests {
     fn only_the_pill_strip_needs_to_fit() {
         // An expanded-height window near the bottom edge is fine as long as the pill row fits.
         assert!(is_visible((760, 1030), 400, 560, &[A]));
+    }
+
+    #[test]
+    fn clamp_pulls_a_window_back_inside() {
+        assert_eq!(clamp_into((1700, -20), 420, 48, A.work), (1500, 0));
+        assert_eq!(clamp_into((-100, 1030), 420, 48, A.work), (0, 992));
+    }
+
+    #[test]
+    fn clamp_leaves_an_inside_window_alone() {
+        assert_eq!(clamp_into((760, 8), 420, 48, A.work), (760, 8));
+    }
+
+    #[test]
+    fn clamp_keeps_an_oversized_window_at_the_top_left() {
+        assert_eq!(clamp_into((50, 50), 3000, 2000, A.work), (0, 0));
     }
 }
