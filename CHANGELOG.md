@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-24
+
+### Added
+
+- The overlay snaps to nearby screen edges and to the top-center of its monitor when you drop it ([#5](https://github.com/joezhuo2/omniscience/issues/5)).
+- Its position is now also remembered per monitor, so it returns to its spot on a monitor even after the rest of the monitor layout changes.
+
+### Fixed
+
+- The overlay can no longer be left partly off-screen: after a drag, and when a saved position is restored, it is pulled fully onto the nearest monitor.
+- Opening the dashboard near the bottom of a monitor lifts it so the whole dashboard is visible, and drops it back on collapse.
+- Settings > Reset position also forgets per-monitor positions.
+
 ## [0.1.0] - 2026-10-11
 
 First public release.
@@ -32,5 +45,6 @@ First public release.
 - GitHub Actions CI for Windows and macOS (lint, format check, tests, clippy, release build).
 - MIT license, README, design spec, manual test checklist, and performance measurement scripts.
 
-[Unreleased]: https://github.com/joezhuo2/omniscience/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/joezhuo2/omniscience/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/joezhuo2/omniscience/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/joezhuo2/omniscience/releases/tag/v0.1.0
