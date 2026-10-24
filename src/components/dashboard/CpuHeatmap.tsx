@@ -6,6 +6,9 @@ import type { CoreSample } from '../../types/telemetry';
 import { Card } from './Card';
 import { Skeleton } from './Skeleton';
 
+/** A performance limit below this is normal turbo jitter, not throttling. */
+const THROTTLE_MIN_PCT = 5;
+
 /** Cell fill: the level color, more opaque the busier the core. */
 function cellStyle(core: CoreSample) {
   const alpha = 0.18 + (Math.min(100, Math.max(0, core.usage_pct)) / 100) * 0.82;
@@ -24,12 +27,22 @@ export function CpuHeatmap() {
     null,
   );
   const active = cores.find((c) => c.id === hovered);
+  const limit = detail?.cpu_limit_pct;
+  const throttled = limit != null && limit >= THROTTLE_MIN_PCT;
   const cols = cores.length > 16 ? 8 : Math.max(4, Math.ceil(Math.sqrt(cores.length || 16)));
   return (
     <Card
       title="CPU cores"
       aside={
-        <span className="text-[11px] text-island-muted tabular-nums">
+        <span className="flex items-center gap-1.5 text-[11px] text-island-muted tabular-nums">
+          {throttled && (
+            <span
+              title="Power or thermal limits are holding the CPU below its rated speed"
+              className="rounded-full bg-island-crit/20 px-1.5 text-[9px] text-island-crit"
+            >
+              Throttled −{Math.round(limit)}%
+            </span>
+          )}
           {cores.length ? `${cores.length} threads` : ''}
         </span>
       }

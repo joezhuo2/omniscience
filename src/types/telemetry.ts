@@ -10,6 +10,7 @@ export type { KillResult } from './generated/KillResult';
 export type { Level } from './generated/Level';
 export type { MemoryMetric } from './generated/MemoryMetric';
 export type { Metric } from './generated/Metric';
+export type { NetAdapter } from './generated/NetAdapter';
 export type { NetMetric } from './generated/NetMetric';
 export type { PowerBreakdown } from './generated/PowerBreakdown';
 export type { ProcessGroup } from './generated/ProcessGroup';

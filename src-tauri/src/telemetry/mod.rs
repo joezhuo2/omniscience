@@ -4,7 +4,9 @@
 #[cfg(any(windows, test))]
 mod parse;
 mod peak;
+mod ping;
 pub mod processes;
+mod public_ip;
 mod sampler;
 pub mod types;
 #[cfg(windows)]
@@ -21,12 +23,16 @@ use types::Thresholds;
 pub const TICK_EVENT: &str = "telemetry://tick";
 
 /// What the collector should do; changed from commands, the tray and the window.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Control {
     pub expanded: bool,
     pub visible: bool,
     pub interval: Duration,
     pub thresholds: Thresholds,
+    /// Host to ping while expanded; empty for none.
+    pub ping_target: Arc<str>,
+    /// Whether to look up the public IP while expanded.
+    pub public_ip: bool,
 }
 
 impl Default for Control {
@@ -36,6 +42,8 @@ impl Default for Control {
             visible: true,
             interval: Duration::from_secs(1),
             thresholds: Thresholds::default(),
+            ping_target: "".into(),
+            public_ip: false,
         }
     }
 }
@@ -54,7 +62,10 @@ impl Telemetry {
     }
 
     pub fn control(&self) -> Control {
-        *self.control.lock().unwrap_or_else(|e| e.into_inner())
+        self.control
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .clone()
     }
 
     /// Applies `f` to the control state and wakes the collector so the change takes effect now.
@@ -90,8 +101,9 @@ impl Telemetry {
                 while !c.visible {
                     c = self.wake.wait(c).unwrap_or_else(|e| e.into_inner());
                 }
-                *c
+                c.clone()
             };
+            sampler.set_network(control.ping_target.clone(), control.public_ip);
             let snapshot = sampler.sample(control.thresholds, control.expanded);
             if let Err(e) = app.emit(TICK_EVENT, &snapshot) {
                 eprintln!("emit telemetry: {e}");

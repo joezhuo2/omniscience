@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 use ts_rs::TS;
 
+use crate::telemetry::Control;
 use crate::telemetry::types::Thresholds;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
@@ -25,6 +26,11 @@ pub struct Settings {
     pub launch_at_startup: bool,
     pub auto_check_updates: bool,
     pub hide_over_fullscreen: bool,
+    /// Host pinged for the latency readout while the dashboard is open; empty turns it off.
+    pub ping_target: String,
+    /// Look up the public IP (one DNS query to OpenDNS every ten minutes while open). Off by
+    /// default because it contacts a third party.
+    pub show_public_ip: bool,
 }
 
 impl Default for Settings {
@@ -37,6 +43,8 @@ impl Default for Settings {
             launch_at_startup: false,
             auto_check_updates: true,
             hide_over_fullscreen: true,
+            ping_target: "1.1.1.1".into(),
+            show_public_ip: false,
         }
     }
 }
@@ -57,6 +65,8 @@ impl Settings {
         if self.hotkey.trim().is_empty() {
             self.hotkey = d.hotkey;
         }
+        // 253 is the longest DNS name.
+        self.ping_target = self.ping_target.trim().chars().take(253).collect();
         self
     }
 
@@ -69,6 +79,14 @@ impl Settings {
 
     pub fn interval(&self) -> Duration {
         Duration::from_millis(self.poll_interval_ms as u64)
+    }
+
+    /// Copies the settings the collector uses into its control state.
+    pub fn apply(&self, c: &mut Control) {
+        c.thresholds = self.thresholds();
+        c.interval = self.interval();
+        c.ping_target = self.ping_target.as_str().into();
+        c.public_ip = self.show_public_ip;
     }
 }
 
@@ -129,5 +147,15 @@ mod tests {
         }
         .sanitized();
         assert_eq!(nan.warn_threshold, 70.0);
+    }
+
+    #[test]
+    fn trims_the_ping_target() {
+        let s = Settings {
+            ping_target: "  example.com ".into(),
+            ..Settings::default()
+        }
+        .sanitized();
+        assert_eq!(s.ping_target, "example.com");
     }
 }

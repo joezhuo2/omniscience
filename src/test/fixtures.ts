@@ -21,6 +21,8 @@ export const sampleDetail: DetailMetrics = {
       mem_used_bytes: 0.6 * GB,
       mem_total_bytes: null,
       temp_c: 45,
+      fan_rpm: null,
+      throttling: false,
     },
     {
       name: 'NVIDIA GeForce RTX 5060 Laptop GPU',
@@ -29,9 +31,18 @@ export const sampleDetail: DetailMetrics = {
       mem_used_bytes: 5.2 * GB,
       mem_total_bytes: 8 * GB,
       temp_c: null,
+      fan_rpm: 2100,
+      throttling: true,
     },
   ],
   power: { apu: 8.2, cpu: 2.8, gpu: 3.2, npu: null },
+  cpu_limit_pct: 0,
+  ping_ms: 14,
+  public_ip: null,
+  net_adapters: [
+    { name: 'Wi-Fi', down_bps: 1258291, up_bps: 81920, ipv4: '192.168.1.20' },
+    { name: 'vEthernet (WSL)', down_bps: 0, up_bps: 0, ipv4: '172.20.0.1' },
+  ],
   processes: [
     { key: 'chrome', name: 'chrome.exe', pids: [10, 11], cpu_pct: 6, mem_bytes: 2 * GB },
     { key: 'code', name: 'Code.exe', pids: [20], cpu_pct: 3, mem_bytes: 3 * GB },

@@ -12,6 +12,8 @@ const defaults: Settings = {
   launch_at_startup: false,
   auto_check_updates: true,
   hide_over_fullscreen: true,
+  ping_target: '1.1.1.1',
+  show_public_ip: false,
 };
 
 describe('SettingsView', () => {
@@ -56,6 +58,21 @@ describe('SettingsView', () => {
     fireEvent.blur(input);
     await waitFor(() => expect(saved.at(-1)?.crit_threshold).toBe(85));
     expect(saved).toHaveLength(1);
+  });
+
+  it('commits a trimmed ping target on Enter', async () => {
+    render(<SettingsView onBack={() => {}} />);
+    const input = await screen.findByLabelText('Ping target');
+    fireEvent.change(input, { target: { value: ' 8.8.8.8 ' } });
+    expect(saved).toHaveLength(0);
+    fireEvent.keyDown(input, { key: 'Enter' });
+    await waitFor(() => expect(saved.at(-1)?.ping_target).toBe('8.8.8.8'));
+  });
+
+  it('turns the public IP lookup on', async () => {
+    render(<SettingsView onBack={() => {}} />);
+    fireEvent.click(await screen.findByLabelText('Show public IP'));
+    await waitFor(() => expect(saved.at(-1)?.show_public_ip).toBe(true));
   });
 
   it('steps a threshold with the themed arrows', async () => {

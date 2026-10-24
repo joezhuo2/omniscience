@@ -1,5 +1,5 @@
 import { Zap } from 'lucide-react';
-import { formatBytes, formatPercent, formatTemp, formatWatts } from '../../lib/format';
+import { formatBytes, formatPercent, formatRpm, formatTemp, formatWatts } from '../../lib/format';
 import { ACCENTS } from '../../lib/levels';
 import { useTelemetryStore } from '../../store';
 import type { GpuDetail } from '../../types/telemetry';
@@ -20,11 +20,19 @@ function GpuRow({ gpu }: { gpu: GpuDetail }) {
   return (
     <div className="space-y-1">
       <div className="flex items-baseline justify-between gap-2 text-[11px]">
-        <span className="truncate text-island-text" title={gpu.name}>
-          {gpu.name}
+        <span className="flex min-w-0 items-center gap-1.5">
+          <span className="truncate text-island-text" title={gpu.name}>
+            {gpu.name}
+          </span>
+          {gpu.throttling && (
+            <span className="shrink-0 rounded-full bg-island-crit/20 px-1.5 text-[9px] text-island-crit">
+              Throttling
+            </span>
+          )}
         </span>
         <span className="shrink-0 text-island-muted tabular-nums">
           {formatPercent(gpu.usage_pct)} · {memoryText(gpu)} · {formatTemp(gpu.temp_c)}
+          {gpu.fan_rpm != null && ` · ${formatRpm(gpu.fan_rpm)}`}
         </span>
       </div>
       <div className="h-1 overflow-hidden rounded-full bg-island-track">

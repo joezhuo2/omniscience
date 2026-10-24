@@ -53,10 +53,7 @@ pub fn run() {
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
 
             let settings = settings::load(app.handle());
-            telemetry.update(|c| {
-                c.thresholds = settings.thresholds();
-                c.interval = settings.interval();
-            });
+            telemetry.update(|c| settings.apply(c));
             let shell = shell::Shell::new(settings);
             app.manage(shell.clone());
             shell.init(app.handle());

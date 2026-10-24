@@ -1,15 +1,18 @@
 //! Builds one [`Snapshot`] per tick. The core tier is always sampled; the detail tier exists only
 //! while the dashboard is expanded and is dropped (memory released) on collapse.
 
+use std::sync::Arc;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
 use sysinfo::{Networks, System};
 
 use super::peak::RollingPeak;
+use super::ping::Pinger;
 use super::processes;
+use super::public_ip::PublicIp;
 use super::types::{
-    CoreMetrics, CoreSample, DetailMetrics, MemoryMetric, Metric, NetMetric, Snapshot, Thresholds,
-    classify,
+    CoreMetrics, CoreSample, DetailMetrics, MemoryMetric, Metric, NetAdapter, NetMetric, Snapshot,
+    Thresholds, classify,
 };
 
 /// Network rings are scaled to the busiest second of the last minute, never below 1 MB/s.
@@ -28,6 +31,11 @@ pub struct Sampler {
     last_net: Instant,
     peak_down: RollingPeak,
     peak_up: RollingPeak,
+    /// Per-interface rates from the last network sample.
+    net_adapters: Vec<NetAdapter>,
+    ping_target: Arc<str>,
+    /// `Some` while public IP lookups are on.
+    public_ip: Option<PublicIp>,
     #[cfg(windows)]
     win: win::Core,
     detail: Option<Detail>,
@@ -38,6 +46,7 @@ struct Detail {
     procs: System,
     #[cfg(windows)]
     win: Option<super::windows::Query>,
+    pinger: Option<Pinger>,
     /// Process CPU% needs two samples; the first detail tick only primes.
     warm: bool,
 }
@@ -53,9 +62,20 @@ impl Sampler {
             last_net: Instant::now(),
             peak_down: RollingPeak::new(NET_WINDOW, NET_FLOOR_BPS),
             peak_up: RollingPeak::new(NET_WINDOW, NET_FLOOR_BPS),
+            net_adapters: Vec::new(),
+            ping_target: "".into(),
+            public_ip: None,
             #[cfg(windows)]
             win: win::Core::new(),
             detail: None,
+        }
+    }
+
+    /// Host to ping while expanded (empty for none), and whether to look up the public IP.
+    pub fn set_network(&mut self, ping_target: Arc<str>, public_ip: bool) {
+        self.ping_target = ping_target;
+        if public_ip != self.public_ip.is_some() {
+            self.public_ip = public_ip.then(PublicIp::default);
         }
     }
 
@@ -139,6 +159,7 @@ impl Sampler {
         let elapsed = self.last_net.elapsed().as_secs_f64().max(0.001);
         self.last_net = Instant::now();
         let (mut down, mut up) = (0u64, 0u64);
+        self.net_adapters.clear();
         for (name, data) in &self.networks {
             let lower = name.to_ascii_lowercase();
             if lower == "lo" || lower.contains("loopback") {
@@ -146,7 +167,21 @@ impl Sampler {
             }
             down += data.received();
             up += data.transmitted();
+            if data.total_received() + data.total_transmitted() > 0 {
+                self.net_adapters.push(NetAdapter {
+                    name: name.clone(),
+                    down_bps: (data.received() as f64 / elapsed).round(),
+                    up_bps: (data.transmitted() as f64 / elapsed).round(),
+                    ipv4: data
+                        .ip_networks()
+                        .iter()
+                        .find(|n| n.addr.is_ipv4())
+                        .map(|n| n.addr.to_string()),
+                });
+            }
         }
+        self.net_adapters
+            .sort_by(|a, b| (b.down_bps + b.up_bps).total_cmp(&(a.down_bps + a.up_bps)));
         let down_bps = down as f64 / elapsed;
         let up_bps = up as f64 / elapsed;
         let down_pct = round1(self.peak_down.push(down_bps));
@@ -169,8 +204,13 @@ impl Sampler {
             procs: processes::new_system(),
             #[cfg(windows)]
             win: super::windows::Query::new(&win::DETAIL_COUNTERS),
+            pinger: None,
             warm: false,
         });
+        let target = &self.ping_target;
+        if detail.pinger.as_ref().map(Pinger::target) != Some(&**target) {
+            detail.pinger = (!target.is_empty()).then(|| Pinger::start(target.clone()));
+        }
         if detail.warm {
             processes::refresh(&mut detail.procs);
         }
@@ -206,6 +246,10 @@ impl Sampler {
             })
             .collect();
 
+        if let Some(ip) = self.public_ip.as_mut() {
+            ip.refresh();
+        }
+
         let procs = processes::read(&detail.procs);
         let n = self.sys.cpus().len();
         let mut groups = processes::top_groups(&procs, n, false, TOP_PROCESSES);
@@ -216,15 +260,24 @@ impl Sampler {
         }
 
         #[cfg(windows)]
-        let (temps, gpus, power) = win::detail(detail.win.as_mut(), win, &self.win.adapters);
+        let (temps, gpus, power, cpu_limit) =
+            win::detail(detail.win.as_mut(), win, &self.win.adapters);
         #[cfg(not(windows))]
-        let (temps, gpus, power) = (Vec::new(), Vec::new(), None);
+        let (temps, gpus, power, cpu_limit) = (Vec::new(), Vec::new(), None, None);
 
         Some(DetailMetrics {
             cores,
             temps,
             gpus,
             power,
+            cpu_limit_pct: cpu_limit.map(round1),
+            net_adapters: self.net_adapters.clone(),
+            ping_ms: detail.pinger.as_ref().and_then(Pinger::latest),
+            public_ip: self
+                .public_ip
+                .as_ref()
+                .and_then(PublicIp::latest)
+                .map(|ip| ip.to_string()),
             processes: groups,
         })
     }
@@ -242,7 +295,7 @@ mod win {
 
     use super::super::parse::{self, EnergyReadings};
     use super::super::types::{GpuDetail, GpuKind, PowerBreakdown, TempSample};
-    use super::super::windows::{Adapter, Query, adapter_temp, adapters};
+    use super::super::windows::{Adapter, AdapterPerf, Query, adapter_perf, adapters};
 
     const DISK_IDLE: usize = 0;
     const GPU_ENGINE: usize = 1;
@@ -260,14 +313,15 @@ mod win {
     const THERMAL: usize = 0;
     const GPU_DEDICATED: usize = 1;
     const GPU_SHARED: usize = 2;
-    pub const DETAIL_COUNTERS: [&str; 3] = [
+    const CPU_LIMIT: usize = 3;
+    pub const DETAIL_COUNTERS: [&str; 4] = [
         r"\Thermal Zone Information(*)\High Precision Temperature",
         r"\GPU Adapter Memory(*)\Dedicated Usage",
         r"\GPU Adapter Memory(*)\Shared Usage",
+        r"\Processor Information(_Total)\% Performance Limit",
     ];
 
-    /// A dGPU below this usage is treated as asleep: no D3DKMT temperature query, which could
-    /// wake it.
+    /// A dGPU below this usage is treated as asleep: no D3DKMT sensor query, which could wake it.
     const DGPU_ACTIVE_PCT: f32 = 0.5;
 
     pub struct Core {
@@ -345,8 +399,14 @@ mod win {
         query: Option<&mut Query>,
         core: &CoreSample,
         adapters: &[Adapter],
-    ) -> (Vec<TempSample>, Vec<GpuDetail>, Option<PowerBreakdown>) {
+    ) -> (
+        Vec<TempSample>,
+        Vec<GpuDetail>,
+        Option<PowerBreakdown>,
+        Option<f32>,
+    ) {
         let (mut temps, mut dedicated, mut shared) = (Vec::new(), HashMap::new(), HashMap::new());
+        let mut cpu_limit = None;
         if let Some(q) = query.filter(|q| q.collect_ok()) {
             temps = q
                 .items(THERMAL)
@@ -367,16 +427,19 @@ mod win {
                 .items(GPU_SHARED)
                 .map(|v| parse::sum_by_adapter(&v))
                 .unwrap_or_default();
+            cpu_limit = q
+                .items(CPU_LIMIT)
+                .and_then(|v| v.first().map(|(_, pct)| pct.clamp(0.0, 100.0) as f32));
         }
         let gpus = adapters
             .iter()
             .map(|a| {
                 let usage = core.gpu_usage.get(&a.luid_key).copied().unwrap_or(0.0);
                 let discrete = a.kind == GpuKind::Discrete;
-                let temp_c = if !discrete || usage >= DGPU_ACTIVE_PCT {
-                    adapter_temp(a.luid)
+                let perf = if !discrete || usage >= DGPU_ACTIVE_PCT {
+                    adapter_perf(a.luid)
                 } else {
-                    None
+                    AdapterPerf::default()
                 };
                 GpuDetail {
                     name: a.name.clone(),
@@ -388,14 +451,16 @@ mod win {
                         shared.get(&a.luid_key).copied()
                     },
                     mem_total_bytes: discrete.then_some(a.dedicated_bytes),
-                    temp_c,
+                    temp_c: perf.temp_c,
+                    fan_rpm: perf.fan_rpm,
+                    throttling: perf.throttling,
                 }
             })
             .collect();
         let b = &core.energy.breakdown;
         let power = (b.apu.is_some() || b.cpu.is_some() || b.gpu.is_some() || b.npu.is_some())
             .then(|| b.clone());
-        (temps, gpus, power)
+        (temps, gpus, power, cpu_limit)
     }
 }
 

@@ -9,4 +9,12 @@ mem_used_bytes: number | null,
 /**
  * Dedicated memory size (discrete) or `None` (integrated, shared memory has no fixed size).
  */
-mem_total_bytes: number | null, temp_c: number | null, };
+mem_total_bytes: number | null, temp_c: number | null, 
+/**
+ * Fan speed, when the driver reports one and the fan is spinning.
+ */
+fan_rpm: number | null, 
+/**
+ * Hot enough that the GPU is slowing itself down (thermal throttling).
+ */
+throttling: boolean, };

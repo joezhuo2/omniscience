@@ -48,10 +48,13 @@ close it.
   indicator if telemetry stops arriving.
 - 📊 **Metric strip:** labeled values for each ring, such as CPU usage with its live clock in GHz,
   RAM as `15/31 GB`, and download/upload speeds on two lines.
-- 🎮 **GPU & Power card:** usage, VRAM (`5.2 / 8.0 GB`) and temperature for each GPU, and package
-  watts broken down into APU, CPU, GPU and NPU where the hardware reports them.
+- 🎮 **GPU & Power card:** usage, VRAM (`5.2 / 8.0 GB`), temperature and fan speed for each GPU, a
+  Throttling chip when a GPU reaches its thermal limit, and package watts broken down into APU, CPU,
+  GPU and NPU where the hardware reports them.
 - 🔥 **CPU heatmap:** one cell per logical core. Hover a cell for its usage, clock, per-core watts and
-  the package temperature.
+  the package temperature. A Throttled chip shows how far power or thermal limits hold the CPU back.
+- 🌐 **Network card:** each active adapter with its IPv4 address and live rates, ping latency to a
+  host you choose (1.1.1.1 by default), and optionally your public IP.
 - 📋 **Top processes:** grouped by app (so 30 browser processes show as one row), sortable by CPU or
   RAM. Three rows by default, with "Show more" for a scrollable list.
 - 🛑 **End process:** a two-step "End?" button. Critical OS processes, PIDs 0 and 4, and Omniscience
@@ -176,6 +179,8 @@ Open **Settings** from the gear icon in the dashboard header or from the tray.
 | Launch at startup      | Off            | Also in the tray menu; mirrors the OS login items           |
 | Auto-check for updates | On             | Checks GitHub Releases once at launch                       |
 | Hide over fullscreen   | On             | Hides while a fullscreen app covers the overlay's monitor   |
+| Ping target            | `1.1.1.1`      | Pinged every 2 s while the dashboard is open; empty is off  |
+| Show public IP         | Off            | One DNS query to OpenDNS every 10 min while open            |
 | Reset position         | —              | Moves the overlay back to the top-center of the primary one |
 
 Settings are saved as JSON in the app config folder:
@@ -222,8 +227,10 @@ reference machine are in [docs/perf.md](docs/perf.md).
 ## Privacy and permissions
 
 - 🏠 Omniscience reads system counters locally. It sends no telemetry, analytics or crash reports.
-- 🌐 The only network request is the update check against this repository's GitHub Releases. Turn off
-  **Auto-check for updates** to stop it entirely.
+- 🌐 Network use is limited to the update check against this repository's GitHub Releases, an ICMP
+  ping to the ping target while the dashboard is open, and, only if you turn on **Show public IP**,
+  one DNS query to OpenDNS every ten minutes. Turn off **Auto-check for updates** and clear the ping
+  target to stop all of it.
 - 🛡️ It needs no admin rights. Ending a process that belongs to another user or an elevated app fails
   with an "access denied" toast rather than prompting for elevation.
 

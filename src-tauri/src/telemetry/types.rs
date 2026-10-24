@@ -80,6 +80,17 @@ pub struct NetMetric {
     pub level: Level,
 }
 
+/// One network interface's throughput.
+#[derive(Debug, Clone, PartialEq, Serialize, TS)]
+#[ts(export)]
+pub struct NetAdapter {
+    pub name: String,
+    pub down_bps: f64,
+    pub up_bps: f64,
+    /// First IPv4 address, if any.
+    pub ipv4: Option<String>,
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, TS)]
 #[ts(export)]
 pub struct CoreMetrics {
@@ -136,6 +147,10 @@ pub struct GpuDetail {
     #[ts(type = "number | null")]
     pub mem_total_bytes: Option<u64>,
     pub temp_c: Option<f32>,
+    /// Fan speed, when the driver reports one and the fan is spinning.
+    pub fan_rpm: Option<u32>,
+    /// Hot enough that the GPU is slowing itself down (thermal throttling).
+    pub throttling: bool,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Serialize, TS)]
@@ -168,6 +183,15 @@ pub struct DetailMetrics {
     pub temps: Vec<TempSample>,
     pub gpus: Vec<GpuDetail>,
     pub power: Option<PowerBreakdown>,
+    /// How far power or thermal limits hold the CPU below its rated speed, in percent (0 when
+    /// unthrottled).
+    pub cpu_limit_pct: Option<f32>,
+    /// Interfaces that have carried traffic, busiest first.
+    pub net_adapters: Vec<NetAdapter>,
+    /// Last round trip to the ping target in milliseconds; `None` when off, pending or lost.
+    pub ping_ms: Option<f32>,
+    /// Public IPv4 address, when lookups are on and one has succeeded.
+    pub public_ip: Option<String>,
     pub processes: Vec<ProcessGroup>,
 }
 

@@ -20,4 +20,13 @@ hotkey: string,
 /**
  * Mirrors the OS login items; the OS value wins at startup (see `Shell::init`).
  */
-launch_at_startup: boolean, auto_check_updates: boolean, hide_over_fullscreen: boolean, };
+launch_at_startup: boolean, auto_check_updates: boolean, hide_over_fullscreen: boolean, 
+/**
+ * Host pinged for the latency readout while the dashboard is open; empty turns it off.
+ */
+ping_target: string, 
+/**
+ * Look up the public IP (one DNS query to OpenDNS every ten minutes while open). Off by
+ * default because it contacts a third party.
+ */
+show_public_ip: boolean, };

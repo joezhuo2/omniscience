@@ -38,7 +38,10 @@ Helpers:
 - [ ] Header shows package watts and hottest temperature, or `--` where the hardware does not report them.
 - [ ] Metric strip: CPU % with GHz on a second line, RAM like `15/31 GB`, download/upload on two lines.
 - [ ] GPU & Power card lists each GPU with usage, VRAM and temperature, and the watt breakdown.
+- [ ] A dGPU under load shows its fan speed in rpm (if its driver reports one); a GPU at its thermal limit shows a red Throttling chip.
 - [ ] CPU heatmap has one cell per logical core. Hovering a cell shows usage, clock, watts and temperature.
+- [ ] On battery or under a long all-core load, the CPU cores card shows "Throttled −N%" when the CPU is held back; it is absent when idle on AC.
+- [ ] Network card lists active adapters with IPv4 and live rates, and the ping round trip to the target (`--` with the network unplugged).
 - [ ] Skeletons show briefly on first open, then real data.
 - [ ] Top processes are grouped by app. The CPU/RAM toggle re-sorts. 3 rows by default; "Show more" expands a scrollable list.
 - [ ] End? then confirm on a harmless app (e.g. Notepad) closes it.
@@ -53,6 +56,8 @@ Helpers:
 
 - [ ] Opens from the gear icon and from tray > Settings…; dashboard and settings fade into each other.
 - [ ] Threshold step arrows, update-interval picker and switches all change the value immediately.
+- [ ] Changing the ping target updates the Network card within a few seconds; clearing it hides the ping readout.
+- [ ] Show public IP adds the public address to the Network card within a few seconds; off by default.
 - [ ] Changes survive a restart (`%APPDATA%\io.github.joezhuo2.omniscience\settings.json` is updated).
 - [ ] Hotkey recorder: record a new combination; the new one toggles the overlay and the old one no longer does.
 - [ ] Reset position moves the overlay back to the top-center of the primary monitor.
