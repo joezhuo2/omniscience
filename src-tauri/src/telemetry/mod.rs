@@ -6,6 +6,7 @@ mod parse;
 mod peak;
 mod ping;
 pub mod processes;
+mod public_ip;
 mod sampler;
 pub mod types;
 #[cfg(windows)]
