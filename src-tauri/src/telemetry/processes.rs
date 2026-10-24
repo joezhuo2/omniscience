@@ -95,12 +95,20 @@ pub fn descendants(procs: &[ProcInfo], root: u32) -> HashSet<u32> {
     }
 }
 
-/// Groups processes by [`normalize`]d name and returns the top `limit` by CPU or memory.
+/// Order for [`top_groups`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Sort {
+    Cpu,
+    Memory,
+    Gpu,
+}
+
+/// Groups processes by [`normalize`]d name and returns the top `limit` by `sort`.
 /// The idle pseudo-process is left out (its "CPU usage" is idle time).
 pub fn top_groups(
     procs: &[ProcInfo],
     logical_cpus: usize,
-    by_memory: bool,
+    sort: Sort,
     limit: usize,
 ) -> Vec<ProcessGroup> {
     let cpus = logical_cpus.max(1) as f32;
@@ -134,15 +142,20 @@ pub fn top_groups(
         g.cpu_pct = (g.cpu_pct * 10.0).round() / 10.0;
         g.gpu_pct = (g.gpu_pct.min(100.0) * 10.0).round() / 10.0;
     }
-    if by_memory {
-        list.sort_by(|a, b| b.mem_bytes.cmp(&a.mem_bytes).then(a.key.cmp(&b.key)));
-    } else {
-        list.sort_by(|a, b| {
+    match sort {
+        Sort::Memory => list.sort_by(|a, b| b.mem_bytes.cmp(&a.mem_bytes).then(a.key.cmp(&b.key))),
+        Sort::Cpu => list.sort_by(|a, b| {
             b.cpu_pct
                 .total_cmp(&a.cpu_pct)
                 .then(b.mem_bytes.cmp(&a.mem_bytes))
                 .then(a.key.cmp(&b.key))
-        });
+        }),
+        Sort::Gpu => list.sort_by(|a, b| {
+            b.gpu_pct
+                .total_cmp(&a.gpu_pct)
+                .then(b.gpu_mem_bytes.cmp(&a.gpu_mem_bytes))
+                .then(a.key.cmp(&b.key))
+        }),
     }
     list.truncate(limit);
     list
@@ -346,7 +359,7 @@ mod tests {
             p(3, None, "code.exe", 24.0, 900),
             p(0, None, "System Idle Process", 2000.0, 0),
         ];
-        let top = top_groups(&procs, 8, false, 8);
+        let top = top_groups(&procs, 8, Sort::Cpu, 8);
         assert_eq!(top.len(), 2);
         assert_eq!(top[0].key, "chrome");
         assert_eq!(top[0].pids, vec![1, 2]);
@@ -362,7 +375,7 @@ mod tests {
             gpu_mem_bytes: mem,
             ..p(pid, None, "game.exe", 0.0, 0)
         };
-        let top = top_groups(&[gpu(1, 70.0, 300), gpu(2, 45.0, 100)], 8, false, 8);
+        let top = top_groups(&[gpu(1, 70.0, 300), gpu(2, 45.0, 100)], 8, Sort::Cpu, 8);
         assert_eq!(top[0].gpu_pct, 100.0);
         assert_eq!(top[0].gpu_mem_bytes, 400);
     }
@@ -374,10 +387,29 @@ mod tests {
             p(2, None, "b.exe", 1.0, 30),
             p(3, None, "c.exe", 1.0, 20),
         ];
-        let top = top_groups(&procs, 1, true, 2);
+        let top = top_groups(&procs, 1, Sort::Memory, 2);
         assert_eq!(
             top.iter().map(|g| g.key.as_str()).collect::<Vec<_>>(),
             ["b", "c"]
+        );
+    }
+
+    #[test]
+    fn sorts_by_gpu_then_gpu_memory() {
+        let gpu = |pid, name, pct, mem| ProcInfo {
+            gpu_pct: pct,
+            gpu_mem_bytes: mem,
+            ..p(pid, None, name, 50.0, 0)
+        };
+        let procs = [
+            gpu(1, "a.exe", 0.0, 900),
+            gpu(2, "b.exe", 30.0, 10),
+            gpu(3, "c.exe", 0.0, 50),
+        ];
+        let top = top_groups(&procs, 1, Sort::Gpu, 8);
+        assert_eq!(
+            top.iter().map(|g| g.key.as_str()).collect::<Vec<_>>(),
+            ["b", "a", "c"]
         );
     }
 

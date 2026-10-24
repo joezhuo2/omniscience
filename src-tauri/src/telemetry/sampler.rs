@@ -8,17 +8,17 @@ use sysinfo::{Networks, System};
 
 use super::peak::RollingPeak;
 use super::ping::Pinger;
-use super::processes;
+use super::processes::{self, Sort};
 use super::public_ip::PublicIp;
 use super::types::{
-    CoreMetrics, CoreSample, DetailMetrics, MemoryMetric, Metric, NetAdapter, NetMetric, Snapshot,
-    Thresholds, classify,
+    CoreMetrics, CoreSample, DetailMetrics, MemoryMetric, Metric, NetAdapter, NetMetric,
+    ProcessGroup, Snapshot, Thresholds, classify,
 };
 
 /// Network rings are scaled to the busiest second of the last minute, never below 1 MB/s.
 const NET_WINDOW: usize = 60;
 const NET_FLOOR_BPS: f64 = 1_000_000.0;
-/// Top process groups sent per sort order (CPU and RAM); the frontend shows 8 of the union.
+/// Top process groups sent per sort order (CPU, RAM and GPU); the frontend shows 8 of the union.
 const TOP_PROCESSES: usize = 8;
 
 fn round1(v: f32) -> f32 {
@@ -252,10 +252,12 @@ impl Sampler {
 
         let procs = processes::read(&detail.procs);
         let n = self.sys.cpus().len();
-        let mut groups = processes::top_groups(&procs, n, false, TOP_PROCESSES);
-        for g in processes::top_groups(&procs, n, true, TOP_PROCESSES) {
-            if !groups.iter().any(|x| x.key == g.key) {
-                groups.push(g);
+        let mut groups = Vec::new();
+        for sort in [Sort::Cpu, Sort::Memory, Sort::Gpu] {
+            for g in processes::top_groups(&procs, n, sort, TOP_PROCESSES) {
+                if !groups.iter().any(|x: &ProcessGroup| x.key == g.key) {
+                    groups.push(g);
+                }
             }
         }
 
