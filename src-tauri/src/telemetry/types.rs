@@ -190,6 +190,8 @@ pub struct DetailMetrics {
     pub net_adapters: Vec<NetAdapter>,
     /// Last round trip to the ping target in milliseconds; `None` when off, pending or lost.
     pub ping_ms: Option<f32>,
+    /// Public IPv4 address, when lookups are on and one has succeeded.
+    pub public_ip: Option<String>,
     pub processes: Vec<ProcessGroup>,
 }
 

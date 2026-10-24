@@ -19,4 +19,8 @@ net_adapters: Array<NetAdapter>,
 /**
  * Last round trip to the ping target in milliseconds; `None` when off, pending or lost.
  */
-ping_ms: number | null, processes: Array<ProcessGroup>, };
+ping_ms: number | null, 
+/**
+ * Public IPv4 address, when lookups are on and one has succeeded.
+ */
+public_ip: string | null, processes: Array<ProcessGroup>, };

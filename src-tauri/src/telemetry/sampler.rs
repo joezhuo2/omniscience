@@ -9,6 +9,7 @@ use sysinfo::{Networks, System};
 use super::peak::RollingPeak;
 use super::ping::Pinger;
 use super::processes;
+use super::public_ip::PublicIp;
 use super::types::{
     CoreMetrics, CoreSample, DetailMetrics, MemoryMetric, Metric, NetAdapter, NetMetric, Snapshot,
     Thresholds, classify,
@@ -33,6 +34,8 @@ pub struct Sampler {
     /// Per-interface rates from the last network sample.
     net_adapters: Vec<NetAdapter>,
     ping_target: Arc<str>,
+    /// `Some` while public IP lookups are on.
+    public_ip: Option<PublicIp>,
     #[cfg(windows)]
     win: win::Core,
     detail: Option<Detail>,
@@ -61,15 +64,19 @@ impl Sampler {
             peak_up: RollingPeak::new(NET_WINDOW, NET_FLOOR_BPS),
             net_adapters: Vec::new(),
             ping_target: "".into(),
+            public_ip: None,
             #[cfg(windows)]
             win: win::Core::new(),
             detail: None,
         }
     }
 
-    /// Host to ping while expanded; empty for none.
-    pub fn set_ping_target(&mut self, target: Arc<str>) {
-        self.ping_target = target;
+    /// Host to ping while expanded (empty for none), and whether to look up the public IP.
+    pub fn set_network(&mut self, ping_target: Arc<str>, public_ip: bool) {
+        self.ping_target = ping_target;
+        if public_ip != self.public_ip.is_some() {
+            self.public_ip = public_ip.then(PublicIp::default);
+        }
     }
 
     pub fn sample(&mut self, t: Thresholds, expanded: bool) -> Snapshot {
@@ -239,6 +246,10 @@ impl Sampler {
             })
             .collect();
 
+        if let Some(ip) = self.public_ip.as_mut() {
+            ip.refresh();
+        }
+
         let procs = processes::read(&detail.procs);
         let n = self.sys.cpus().len();
         let mut groups = processes::top_groups(&procs, n, false, TOP_PROCESSES);
@@ -262,6 +273,11 @@ impl Sampler {
             cpu_limit_pct: cpu_limit.map(round1),
             net_adapters: self.net_adapters.clone(),
             ping_ms: detail.pinger.as_ref().and_then(Pinger::latest),
+            public_ip: self
+                .public_ip
+                .as_ref()
+                .and_then(PublicIp::latest)
+                .map(|ip| ip.to_string()),
             processes: groups,
         })
     }

@@ -24,4 +24,9 @@ launch_at_startup: boolean, auto_check_updates: boolean, hide_over_fullscreen: b
 /**
  * Host pinged for the latency readout while the dashboard is open; empty turns it off.
  */
-ping_target: string, };
+ping_target: string, 
+/**
+ * Look up the public IP (one DNS query to OpenDNS every ten minutes while open). Off by
+ * default because it contacts a third party.
+ */
+show_public_ip: boolean, };

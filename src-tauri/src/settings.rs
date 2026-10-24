@@ -28,6 +28,9 @@ pub struct Settings {
     pub hide_over_fullscreen: bool,
     /// Host pinged for the latency readout while the dashboard is open; empty turns it off.
     pub ping_target: String,
+    /// Look up the public IP (one DNS query to OpenDNS every ten minutes while open). Off by
+    /// default because it contacts a third party.
+    pub show_public_ip: bool,
 }
 
 impl Default for Settings {
@@ -41,6 +44,7 @@ impl Default for Settings {
             auto_check_updates: true,
             hide_over_fullscreen: true,
             ping_target: "1.1.1.1".into(),
+            show_public_ip: false,
         }
     }
 }
@@ -82,6 +86,7 @@ impl Settings {
         c.thresholds = self.thresholds();
         c.interval = self.interval();
         c.ping_target = self.ping_target.as_str().into();
+        c.public_ip = self.show_public_ip;
     }
 }
 

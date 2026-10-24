@@ -13,6 +13,7 @@ const defaults: Settings = {
   auto_check_updates: true,
   hide_over_fullscreen: true,
   ping_target: '1.1.1.1',
+  show_public_ip: false,
 };
 
 describe('SettingsView', () => {

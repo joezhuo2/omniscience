@@ -31,6 +31,8 @@ pub struct Control {
     pub thresholds: Thresholds,
     /// Host to ping while expanded; empty for none.
     pub ping_target: Arc<str>,
+    /// Whether to look up the public IP while expanded.
+    pub public_ip: bool,
 }
 
 impl Default for Control {
@@ -41,6 +43,7 @@ impl Default for Control {
             interval: Duration::from_secs(1),
             thresholds: Thresholds::default(),
             ping_target: "".into(),
+            public_ip: false,
         }
     }
 }
@@ -100,7 +103,7 @@ impl Telemetry {
                 }
                 c.clone()
             };
-            sampler.set_ping_target(control.ping_target.clone());
+            sampler.set_network(control.ping_target.clone(), control.public_ip);
             let snapshot = sampler.sample(control.thresholds, control.expanded);
             if let Err(e) = app.emit(TICK_EVENT, &snapshot) {
                 eprintln!("emit telemetry: {e}");
