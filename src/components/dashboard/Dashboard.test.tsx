@@ -5,7 +5,7 @@ import { useSettingsStore, type Settings } from '../../settings';
 import { useTelemetryStore } from '../../store';
 import { sampleDetail, sampleSnapshot } from '../../test/fixtures';
 import { useToastStore } from '../../toasts';
-import type { KillReport } from '../../types/telemetry';
+import type { DetailMetrics, KillReport } from '../../types/telemetry';
 import { Dashboard } from './Dashboard';
 import { CONFIRM_MS } from '../../lib/processes';
 
@@ -66,6 +66,33 @@ describe('Dashboard', () => {
     expect(screen.getByText('192.168.1.20')).toBeInTheDocument();
     expect(screen.getByTestId('ping')).toHaveTextContent('14 ms');
     expect(screen.getByText('203.0.113.9')).toBeInTheDocument();
+  });
+
+  it('shows battery charge, drain and time left', () => {
+    act(() => useTelemetryStore.getState().setSnapshot(withDetail));
+    render(<Dashboard />);
+    expect(screen.getByTestId('battery-percent')).toHaveTextContent('78%');
+    expect(screen.getByTestId('battery-summary')).toHaveTextContent('2h 30m left');
+    expect(screen.getByText('−12 W')).toBeInTheDocument();
+  });
+
+  it('shows charging and plugged-in states, and nothing without a battery', () => {
+    const show = (battery: DetailMetrics['battery']) => {
+      act(() =>
+        useTelemetryStore
+          .getState()
+          .setSnapshot({ ...sampleSnapshot, detail: { ...sampleDetail, battery } }),
+      );
+      return render(<Dashboard />);
+    };
+    let view = show({ percent: 60, state: 'charging', watts: 30, secs_remaining: 1800 });
+    expect(screen.getByTestId('battery-summary')).toHaveTextContent('30m to full');
+    view.unmount();
+    view = show({ percent: 80, state: 'idle', watts: null, secs_remaining: null });
+    expect(screen.getByTestId('battery-summary')).toHaveTextContent('Plugged in, not charging');
+    view.unmount();
+    show(null);
+    expect(screen.queryByText('Battery')).not.toBeInTheDocument();
   });
 
   it('shows a tooltip for a hovered core', () => {
