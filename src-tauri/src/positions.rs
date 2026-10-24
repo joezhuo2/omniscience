@@ -56,18 +56,6 @@ pub fn monitor_key(s: &Screen) -> String {
     format!("{}x{}@{}", s.width, s.height, s.scale)
 }
 
-/// True if a window of `width` x `height` at `pos` keeps its top strip (where the pill is) on
-/// some screen, so a saved position can never restore off-screen.
-pub fn is_visible(pos: (i32, i32), width: u32, height: u32, screens: &[Screen]) -> bool {
-    let (x, y) = pos;
-    let (w, h) = (width as i32, height.min(42) as i32);
-    screens.iter().any(|s| {
-        let (sx, sy) = (s.x, s.y);
-        let (ex, ey) = (s.x + s.width as i32, s.y + s.height as i32);
-        x >= sx && y >= sy && x + w <= ex && y + h <= ey
-    })
-}
-
 /// Moves a `width` x `height` window at `pos` the least distance that puts it fully inside `area`
 /// (left, top, right, bottom). A window bigger than the area keeps its top-left corner inside.
 pub fn clamp_into(
@@ -136,6 +124,12 @@ pub fn snap(
         nearest(pos.0, &[left, left + (right - left - w) / 2, right - w]),
         nearest(pos.1, &[top, bottom - h]),
     )
+}
+
+/// Pulls a window at `pos` fully inside the work area of the screen it belongs to.
+pub fn fit(pos: (i32, i32), width: u32, height: u32, screens: &[Screen]) -> Option<(i32, i32)> {
+    let s = screen_for(pos, width, height, screens)?;
+    Some(clamp_into(pos, width, height, s.work))
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
@@ -212,14 +206,14 @@ impl Positions {
             .collect()
     }
 
-    /// The saved position for the current monitor layout, if it is still on-screen.
+    /// The saved position for the current monitor layout, pulled fully on screen.
     pub fn restore(&self, window: &WebviewWindow) -> Option<PhysicalPosition<i32>> {
         let screens = Self::screens(window);
         let size = window.outer_size().ok()?;
         let saved = self.saved.lock().ok()?;
         let pos = saved.lookup(&screens)?;
-        is_visible(pos, size.width, size.height, &screens)
-            .then(|| PhysicalPosition::new(pos.0, pos.1))
+        let (x, y) = fit(pos, size.width, size.height, &screens)?;
+        Some(PhysicalPosition::new(x, y))
     }
 
     /// Starts or stops recording moves (stopped around programmatic placement).
@@ -311,25 +305,6 @@ mod tests {
     }
 
     #[test]
-    fn accepts_positions_on_any_screen() {
-        assert!(is_visible((760, 8), 400, 42, &[A, B]));
-        assert!(is_visible((-1480, 8), 400, 560, &[A, B]));
-    }
-
-    #[test]
-    fn rejects_positions_off_every_screen() {
-        assert!(!is_visible((760, 8), 400, 42, &[B]));
-        assert!(!is_visible((1700, 8), 400, 42, &[A]));
-        assert!(!is_visible((760, -30), 400, 42, &[A]));
-    }
-
-    #[test]
-    fn only_the_pill_strip_needs_to_fit() {
-        // An expanded-height window near the bottom edge is fine as long as the pill row fits.
-        assert!(is_visible((760, 1030), 400, 560, &[A]));
-    }
-
-    #[test]
     fn clamp_pulls_a_window_back_inside() {
         assert_eq!(clamp_into((1700, -20), 420, 48, A.work), (1500, 0));
         assert_eq!(clamp_into((-100, 1030), 420, 48, A.work), (0, 992));
@@ -415,5 +390,16 @@ mod tests {
         let moved = Screen { x: 1920, ..B };
         assert_eq!(saved.lookup(&[A, moved]), Some((2220, 20)));
         assert_eq!(saved.lookup(&[A]), None);
+    }
+
+    #[test]
+    fn fit_pulls_a_half_off_window_onto_its_screen() {
+        assert_eq!(fit((1700, 8), 420, 48, &[A, B]), Some((1500, 8)));
+        assert_eq!(fit((-100, 8), 420, 48, &[A, B]), Some((0, 8)));
+    }
+
+    #[test]
+    fn fit_brings_a_lost_window_to_the_nearest_screen() {
+        assert_eq!(fit((5000, 5000), 420, 48, &[A]), Some((1500, 992)));
     }
 }
