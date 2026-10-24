@@ -12,6 +12,7 @@ const defaults: Settings = {
   launch_at_startup: false,
   auto_check_updates: true,
   hide_over_fullscreen: true,
+  ping_target: '1.1.1.1',
 };
 
 describe('SettingsView', () => {

@@ -22,12 +22,14 @@ use types::Thresholds;
 pub const TICK_EVENT: &str = "telemetry://tick";
 
 /// What the collector should do; changed from commands, the tray and the window.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Control {
     pub expanded: bool,
     pub visible: bool,
     pub interval: Duration,
     pub thresholds: Thresholds,
+    /// Host to ping while expanded; empty for none.
+    pub ping_target: Arc<str>,
 }
 
 impl Default for Control {
@@ -37,6 +39,7 @@ impl Default for Control {
             visible: true,
             interval: Duration::from_secs(1),
             thresholds: Thresholds::default(),
+            ping_target: "".into(),
         }
     }
 }
@@ -55,7 +58,10 @@ impl Telemetry {
     }
 
     pub fn control(&self) -> Control {
-        *self.control.lock().unwrap_or_else(|e| e.into_inner())
+        self.control
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .clone()
     }
 
     /// Applies `f` to the control state and wakes the collector so the change takes effect now.
@@ -91,7 +97,7 @@ impl Telemetry {
                 while !c.visible {
                     c = self.wake.wait(c).unwrap_or_else(|e| e.into_inner());
                 }
-                *c
+                c.clone()
             };
             let snapshot = sampler.sample(control.thresholds, control.expanded);
             if let Err(e) = app.emit(TICK_EVENT, &snapshot) {

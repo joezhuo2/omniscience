@@ -118,10 +118,7 @@ impl Shell {
             register_hotkey(app, &new.hotkey)?;
             let _ = app.global_shortcut().unregister(old.hotkey.as_str());
         }
-        app.state::<Arc<Telemetry>>().update(|c| {
-            c.thresholds = new.thresholds();
-            c.interval = new.interval();
-        });
+        app.state::<Arc<Telemetry>>().update(|c| new.apply(c));
         settings::save(app, &new)?;
         *self.settings.lock().unwrap_or_else(|e| e.into_inner()) = new.clone();
         self.sync_tray();
