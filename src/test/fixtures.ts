@@ -37,6 +37,7 @@ export const sampleDetail: DetailMetrics = {
   ],
   power: { apu: 8.2, cpu: 2.8, gpu: 3.2, npu: null },
   cpu_limit_pct: 0,
+  ping_ms: 14,
   net_adapters: [
     { name: 'Wi-Fi', down_bps: 1258291, up_bps: 81920, ipv4: '192.168.1.20' },
     { name: 'vEthernet (WSL)', down_bps: 0, up_bps: 0, ipv4: '172.20.0.1' },

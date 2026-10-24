@@ -99,6 +99,7 @@ impl Telemetry {
                 }
                 c.clone()
             };
+            sampler.set_ping_target(control.ping_target.clone());
             let snapshot = sampler.sample(control.thresholds, control.expanded);
             if let Err(e) = app.emit(TICK_EVENT, &snapshot) {
                 eprintln!("emit telemetry: {e}");

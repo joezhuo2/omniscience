@@ -15,4 +15,8 @@ cpu_limit_pct: number | null,
 /**
  * Interfaces that have carried traffic, busiest first.
  */
-net_adapters: Array<NetAdapter>, processes: Array<ProcessGroup>, };
+net_adapters: Array<NetAdapter>, 
+/**
+ * Last round trip to the ping target in milliseconds; `None` when off, pending or lost.
+ */
+ping_ms: number | null, processes: Array<ProcessGroup>, };

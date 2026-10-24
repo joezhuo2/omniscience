@@ -188,6 +188,8 @@ pub struct DetailMetrics {
     pub cpu_limit_pct: Option<f32>,
     /// Interfaces that have carried traffic, busiest first.
     pub net_adapters: Vec<NetAdapter>,
+    /// Last round trip to the ping target in milliseconds; `None` when off, pending or lost.
+    pub ping_ms: Option<f32>,
     pub processes: Vec<ProcessGroup>,
 }
 

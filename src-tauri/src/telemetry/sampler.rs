@@ -1,11 +1,13 @@
 //! Builds one [`Snapshot`] per tick. The core tier is always sampled; the detail tier exists only
 //! while the dashboard is expanded and is dropped (memory released) on collapse.
 
+use std::sync::Arc;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
 use sysinfo::{Networks, System};
 
 use super::peak::RollingPeak;
+use super::ping::Pinger;
 use super::processes;
 use super::types::{
     CoreMetrics, CoreSample, DetailMetrics, MemoryMetric, Metric, NetAdapter, NetMetric, Snapshot,
@@ -30,6 +32,7 @@ pub struct Sampler {
     peak_up: RollingPeak,
     /// Per-interface rates from the last network sample.
     net_adapters: Vec<NetAdapter>,
+    ping_target: Arc<str>,
     #[cfg(windows)]
     win: win::Core,
     detail: Option<Detail>,
@@ -40,6 +43,7 @@ struct Detail {
     procs: System,
     #[cfg(windows)]
     win: Option<super::windows::Query>,
+    pinger: Option<Pinger>,
     /// Process CPU% needs two samples; the first detail tick only primes.
     warm: bool,
 }
@@ -56,10 +60,16 @@ impl Sampler {
             peak_down: RollingPeak::new(NET_WINDOW, NET_FLOOR_BPS),
             peak_up: RollingPeak::new(NET_WINDOW, NET_FLOOR_BPS),
             net_adapters: Vec::new(),
+            ping_target: "".into(),
             #[cfg(windows)]
             win: win::Core::new(),
             detail: None,
         }
+    }
+
+    /// Host to ping while expanded; empty for none.
+    pub fn set_ping_target(&mut self, target: Arc<str>) {
+        self.ping_target = target;
     }
 
     pub fn sample(&mut self, t: Thresholds, expanded: bool) -> Snapshot {
@@ -187,8 +197,13 @@ impl Sampler {
             procs: processes::new_system(),
             #[cfg(windows)]
             win: super::windows::Query::new(&win::DETAIL_COUNTERS),
+            pinger: None,
             warm: false,
         });
+        let target = &self.ping_target;
+        if detail.pinger.as_ref().map(Pinger::target) != Some(&**target) {
+            detail.pinger = (!target.is_empty()).then(|| Pinger::start(target.clone()));
+        }
         if detail.warm {
             processes::refresh(&mut detail.procs);
         }
@@ -246,6 +261,7 @@ impl Sampler {
             power,
             cpu_limit_pct: cpu_limit.map(round1),
             net_adapters: self.net_adapters.clone(),
+            ping_ms: detail.pinger.as_ref().and_then(Pinger::latest),
             processes: groups,
         })
     }
