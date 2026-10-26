@@ -108,7 +108,7 @@ export default function App() {
       <Pill />
       {isMounted(phase) && (
         <div className="panel">
-          <div className="view-fade" data-fading={fading}>
+          <div className="panel-scroll view-fade" data-fading={fading}>
             {panel}
           </div>
         </div>

@@ -11,7 +11,8 @@ describe('index.css', () => {
   });
 
   it('lets the panel scroll inside the window height cap', () => {
-    expect(css).toMatch(/\.panel\s*\{[^}]*max-height:[^}]*overflow-y:\s*auto/);
+    expect(css).toMatch(/\.panel\s*\{[^}]*max-height:/);
+    expect(css).toMatch(/\.panel-scroll\s*\{[^}]*min-height:\s*0[^}]*overflow-y:\s*auto/);
   });
 
   it('imports tailwind', () => {

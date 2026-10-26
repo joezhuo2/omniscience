@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.6] - 2026-10-26
+
+### Fixed
+
+- Expanded dashboard keeps a fixed bottom inset around its rounded corners while scrolling, including with Show more open ([#10](https://github.com/joezhuo2/omniscience/issues/10)).
+
 ## [0.1.5] - 2026-10-26
 
 ### Changed
@@ -77,7 +83,8 @@ First public release.
 - GitHub Actions CI for Windows and macOS (lint, format check, tests, clippy, release build).
 - MIT license, README, design spec, manual test checklist, and performance measurement scripts.
 
-[Unreleased]: https://github.com/joezhuo2/omniscience/compare/v0.1.5...HEAD
+[Unreleased]: https://github.com/joezhuo2/omniscience/compare/v0.1.6...HEAD
+[0.1.6]: https://github.com/joezhuo2/omniscience/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/joezhuo2/omniscience/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/joezhuo2/omniscience/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/joezhuo2/omniscience/compare/v0.1.2...v0.1.3
