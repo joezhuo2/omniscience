@@ -43,7 +43,7 @@ Helpers:
 - [ ] With Show more open, the dashboard scrolls inside the window instead of being cut off at the bottom.
 - [ ] CPU heatmap has one cell per logical core. Hovering a cell shows usage, clock, watts and temperature.
 - [ ] On battery or under a long all-core load, the CPU cores card shows "Throttled −N%" when the CPU is held back; it is absent when idle on AC.
-- [ ] Network card lists active adapters with IPv4 and live rates, and the ping round trip to the target (`--` with the network unplugged).
+- [ ] Network card shows the first adapter, IPv4 and ping on one line, with no repeated download/upload rates. Extra adapters stay listed; ping appears only once (`--` with the network unplugged).
 - [ ] Skeletons show briefly on first open, then real data.
 - [ ] Top processes are grouped by app. The CPU/RAM/GPU toggle re-sorts. 3 rows by default; "Show more" expands a scrollable list.
 - [ ] On the GPU tab, a game or video player leads the list with GPU usage close to Task Manager's GPU column and its GPU memory.

@@ -1,6 +1,6 @@
 import { Globe, Timer } from 'lucide-react';
 import { useEffect } from 'react';
-import { formatLatency, formatRate } from '../../lib/format';
+import { formatLatency } from '../../lib/format';
 import { useSettingsStore } from '../../settings';
 import { useTelemetryStore } from '../../store';
 import { Card } from './Card';
@@ -18,37 +18,34 @@ export function NetworkCard() {
   useEffect(() => {
     if (!loaded) void load();
   }, [loaded, load]);
-  return (
-    <Card
-      title="Network"
-      aside={
-        target ? (
-          <span
-            title={`Round trip to ${target}`}
-            className="flex items-center gap-1 text-[11px] text-island-muted tabular-nums"
-          >
-            <Timer size={11} aria-hidden />
-            <span data-testid="ping">{formatLatency(detail?.ping_ms)}</span>
-          </span>
-        ) : null
-      }
+  const ping = target ? (
+    <span
+      title={`Round trip to ${target}`}
+      className="flex shrink-0 items-center gap-1 whitespace-nowrap text-[11px] text-island-muted tabular-nums"
     >
+      <Timer size={11} aria-hidden />
+      <span data-testid="ping">{formatLatency(detail?.ping_ms)}</span>
+    </span>
+  ) : null;
+  return (
+    <Card title="Network">
       {!detail ? (
         <Skeleton className="h-6" />
       ) : (
         <div className="space-y-1 text-[11px]">
           {detail.net_adapters.length === 0 && (
-            <p className="text-island-muted">No active adapter</p>
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-island-muted">No active adapter</p>
+              {ping}
+            </div>
           )}
-          {detail.net_adapters.slice(0, VISIBLE_ADAPTERS).map((a) => (
+          {detail.net_adapters.slice(0, VISIBLE_ADAPTERS).map((a, index) => (
             <div key={a.name} className="flex items-baseline justify-between gap-2">
               <span className="min-w-0 truncate text-island-text" title={a.name}>
                 {a.name}
                 {a.ipv4 && <span className="pl-1.5 text-island-muted">{a.ipv4}</span>}
               </span>
-              <span className="shrink-0 text-island-muted tabular-nums">
-                ↓ {formatRate(a.down_bps)} · ↑ {formatRate(a.up_bps)}
-              </span>
+              {index === 0 && ping}
             </div>
           ))}
           {detail.public_ip && (

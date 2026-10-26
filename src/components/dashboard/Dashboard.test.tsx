@@ -1,5 +1,5 @@
 import { mockIPC } from '@tauri-apps/api/mocks';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useSettingsStore, type Settings } from '../../settings';
 import { useTelemetryStore } from '../../store';
@@ -65,6 +65,12 @@ describe('Dashboard', () => {
     expect(screen.getByText('Wi-Fi')).toBeInTheDocument();
     expect(screen.getByText('192.168.1.20')).toBeInTheDocument();
     expect(screen.getByTestId('ping')).toHaveTextContent('14 ms');
+    const row = screen.getByText('Wi-Fi').parentElement!;
+    expect(within(row).getByText('192.168.1.20')).toBeInTheDocument();
+    expect(within(row).getByTestId('ping')).toHaveTextContent('14 ms');
+    const card = screen.getByText('Network', { selector: 'h2' }).closest('section')!;
+    expect(card).not.toHaveTextContent(/↓|↑|MB\/s|KB\/s/);
+    expect(within(card).getAllByTestId('ping')).toHaveLength(1);
     expect(screen.getByText('203.0.113.9')).toBeInTheDocument();
   });
 
