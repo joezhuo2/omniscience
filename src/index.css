@@ -75,15 +75,23 @@ body {
 }
 
 .panel {
+  display: flex;
+  flex-direction: column;
   padding: 0 var(--pad) var(--pad);
   /* Past the window's height cap the dashboard scrolls instead of being cut off. 16px is
      WINDOW_EXTRA in App.tsx. */
   max-height: calc(var(--window-max-h) - var(--top-gap) - var(--pill-h) - 16px);
+  opacity: 0;
+  transition: opacity var(--fade-ms) ease-out;
+}
+
+/* Keep the bottom inset outside the scrolling content so it cannot disappear above the
+   rounded edge. The flex child shrinks within the panel's height cap. */
+.panel-scroll {
+  min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
-  opacity: 0;
-  transition: opacity var(--fade-ms) ease-out;
 }
 
 .expanded .panel {
