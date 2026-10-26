@@ -55,7 +55,7 @@ close it.
   time to full, read from the battery driver.
 - 🔥 **CPU heatmap:** one cell per logical core. Hover a cell for its usage, clock, per-core watts and
   the package temperature. A Throttled chip shows how far power or thermal limits hold the CPU back.
-- 🌐 **Network card:** each active adapter with its IPv4 address and live rates, ping latency to a
+- 🌐 **Network card:** each active adapter with its IPv4 address, with ping latency on the first row to a
   host you choose (1.1.1.1 by default), and optionally your public IP.
 - 📋 **Top processes:** grouped by app (so 30 browser processes show as one row), sortable by CPU,
   RAM or GPU. The GPU tab shows each app's GPU usage and GPU memory. Three rows by default, with
