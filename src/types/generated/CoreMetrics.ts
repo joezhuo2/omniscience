@@ -7,4 +7,8 @@ export type CoreMetrics = { cpu: Metric,
 /**
  * Current average clock in MHz (live on Windows, nominal elsewhere).
  */
-cpu_mhz: number | null, ram: MemoryMetric, disk: Metric | null, net: NetMetric, igpu: Metric | null, dgpu: Metric | null, package_watts: number | null, };
+cpu_mhz: number | null, 
+/**
+ * Hottest ACPI thermal zone; a system-temperature proxy, not a CPU package sensor.
+ */
+cpu_temp_c: number | null, igpu_temp_c: number | null, dgpu_temp_c: number | null, ram: MemoryMetric, disk: Metric | null, net: NetMetric, igpu: Metric | null, dgpu: Metric | null, package_watts: number | null, };

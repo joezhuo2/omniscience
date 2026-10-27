@@ -71,6 +71,9 @@ export const sampleSnapshot: Snapshot = {
   core: {
     cpu: metric(23),
     cpu_mhz: 3249,
+    cpu_temp_c: 48,
+    igpu_temp_c: 45,
+    dgpu_temp_c: null,
     ram: { used_bytes: 12.4 * GB, total_bytes: 31.1 * GB, percent: 40, level: 'normal' },
     disk: metric(3),
     net: { down_bps: 1258291, up_bps: 81920, down_pct: 40, up_pct: 5, level: 'normal' },

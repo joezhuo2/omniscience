@@ -120,6 +120,10 @@ pub struct CoreMetrics {
     /// Current average clock in MHz (live on Windows, nominal elsewhere).
     #[ts(type = "number | null")]
     pub cpu_mhz: Option<u64>,
+    /// Hottest ACPI thermal zone; a system-temperature proxy, not a CPU package sensor.
+    pub cpu_temp_c: Option<f32>,
+    pub igpu_temp_c: Option<f32>,
+    pub dgpu_temp_c: Option<f32>,
     pub ram: MemoryMetric,
     pub disk: Option<Metric>,
     pub net: NetMetric,
