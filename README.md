@@ -9,7 +9,7 @@ it morphs into a dashboard with per-core usage, GPU power and temperature, and t
 most resources.
 
 <p align="center">
-  <a href="https://github.com/joezhuo2/omniscience/releases/latest"><img alt="version" src="https://img.shields.io/badge/version-v0.1.0-blue"></a>
+  <a href="https://github.com/joezhuo2/omniscience/releases/latest"><img alt="version" src="https://img.shields.io/github/v/release/joezhuo2/omniscience"></a>
   <img alt="Windows 10/11" src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?logo=windows&logoColor=white">
   <img alt="macOS experimental" src="https://img.shields.io/badge/macOS-experimental-lightgrey?logo=apple&logoColor=white">
   <img alt="Tauri 2" src="https://img.shields.io/badge/Tauri-2-24C8DB?logo=tauri&logoColor=white">
@@ -52,7 +52,7 @@ close it.
   Throttling chip when a GPU reaches its thermal limit, and package watts broken down into APU, CPU,
   GPU and NPU where the hardware reports them.
 - 🔋 **Battery card** (laptops): charge, charging or draining with the rate in watts, and time left or
-  time to full, read from the battery driver.
+  time to full, read from the battery driver. A skeleton appears while battery data loads; the card hides on machines without a battery.
 - 🔥 **CPU heatmap:** one cell per logical core. Hover a cell for its usage, clock, per-core watts and
   the package temperature. A Throttled chip shows how far power or thermal limits hold the CPU back.
 - 🌐 **Network card:** each active adapter with its IPv4 address, with ping latency on the first row to a

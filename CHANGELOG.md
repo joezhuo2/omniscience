@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.7] - 2026-10-27
+
+### Fixed
+
+- Battery card uses the existing skeleton style until detail telemetry arrives, then hides on machines without a battery ([#15](https://github.com/joezhuo2/omniscience/issues/15)).
+
 ## [0.1.6] - 2026-10-26
 
 ### Fixed
@@ -83,7 +89,8 @@ First public release.
 - GitHub Actions CI for Windows and macOS (lint, format check, tests, clippy, release build).
 - MIT license, README, design spec, manual test checklist, and performance measurement scripts.
 
-[Unreleased]: https://github.com/joezhuo2/omniscience/compare/v0.1.6...HEAD
+[Unreleased]: https://github.com/joezhuo2/omniscience/compare/v0.1.7...HEAD
+[0.1.7]: https://github.com/joezhuo2/omniscience/compare/v0.1.6...v0.1.7
 [0.1.6]: https://github.com/joezhuo2/omniscience/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/joezhuo2/omniscience/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/joezhuo2/omniscience/compare/v0.1.3...v0.1.4
