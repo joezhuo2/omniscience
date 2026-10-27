@@ -3,6 +3,7 @@ import { formatDuration, formatWatts } from '../../lib/format';
 import { useTelemetryStore } from '../../store';
 import type { Battery } from '../../types/telemetry';
 import { Card } from './Card';
+import { Skeleton } from './Skeleton';
 
 /** Below this charge the bar turns amber, below half of it red. */
 const LOW_PCT = 20;
@@ -26,7 +27,15 @@ function barColor(b: Battery): string {
 
 /** Laptop battery. Not rendered on machines without one. */
 export function BatteryCard() {
-  const battery = useTelemetryStore((s) => s.snapshot?.detail?.battery);
+  const detail = useTelemetryStore((s) => s.snapshot?.detail);
+  if (!detail) {
+    return (
+      <Card title="Battery">
+        <Skeleton className="h-6" />
+      </Card>
+    );
+  }
+  const battery = detail.battery;
   if (!battery) return null;
   const Icon =
     battery.state === 'charging'

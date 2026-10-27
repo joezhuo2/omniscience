@@ -21,8 +21,23 @@ describe('Dashboard', () => {
     act(() => useTelemetryStore.getState().setSnapshot(sampleSnapshot));
     render(<Dashboard />);
     expect(screen.getAllByTestId('skeleton').length).toBeGreaterThan(0);
+    const battery = screen.getByText('Battery').closest('section')!;
+    expect(within(battery).getByTestId('skeleton')).toBeInTheDocument();
     act(() => useTelemetryStore.getState().setSnapshot(withDetail));
     expect(screen.queryAllByTestId('skeleton')).toHaveLength(0);
+    expect(screen.getByTestId('battery-percent')).toHaveTextContent('78%');
+  });
+
+  it('removes the battery skeleton when detail confirms no battery', () => {
+    render(<Dashboard />);
+    expect(screen.getByText('Battery')).toBeInTheDocument();
+    act(() =>
+      useTelemetryStore.getState().setSnapshot({
+        ...sampleSnapshot,
+        detail: { ...sampleDetail, battery: null },
+      }),
+    );
+    expect(screen.queryByText('Battery')).not.toBeInTheDocument();
   });
 
   it('shows metric values, GPU memory and power', () => {
