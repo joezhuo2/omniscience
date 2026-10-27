@@ -99,3 +99,12 @@ checked.
 | Date       | Build             | Machine                     | Result                                                                                                                                                                                                                                                                                                                    |
 | ---------- | ----------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 2026-10-11 | 0.1.0 (`816bc11`) | Reference machine (perf.md) | Partial, automated only. Pass: window styles (`TOOLWINDOW`, no `APPWINDOW`, `TOPMOST`), top-center position, six rings render, second launch keeps one process. Not run: everything needing real mouse or keyboard input (a synthetic cursor move did not expand the island), installers, updates. Perf: CPU over budget. |
+
+## v0.1.7–v0.1.8 regression checks
+
+- Expand before detail telemetry arrives: Battery shows the same skeleton as other cards, then displays data on a laptop or disappears on a desktop.
+- CPU/iGPU/dGPU inner rings update while collapsed; 52.5°C is half a circle, 105°C or higher is full.
+- Missing temperature hides only the inner ring and shows `—` in the metric strip.
+- Expanded CPU has usage, clock, temperature; GPUs have usage and temperature. Hover CPU temperature to see the ACPI proxy explanation.
+- GPU & Power retains memory, fan, throttling and power but no temperature text.
+- Confirm sleeping dGPU is not woken and check collapsed CPU/RAM usage after enabling temperature sampling.

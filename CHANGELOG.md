@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.8] - 2026-10-27
+
+### Added
+
+- Inner CPU, iGPU and dGPU temperature rings, scaled to 105°C, with live readings in the collapsed pill ([#14](https://github.com/joezhuo2/omniscience/issues/14)).
+- CPU temperature on a third metric-strip line and GPU temperatures on a second line; the CPU tooltip explains the ACPI system-temperature proxy.
+
+### Changed
+
+- Removed duplicate temperatures from the GPU & Power card. Missing temperatures hide the inner ring and show an em dash in the metric strip. Sleeping discrete GPUs remain unqueried.
+
+
 ## [0.1.7] - 2026-10-27
 
 ### Fixed
@@ -89,7 +101,8 @@ First public release.
 - GitHub Actions CI for Windows and macOS (lint, format check, tests, clippy, release build).
 - MIT license, README, design spec, manual test checklist, and performance measurement scripts.
 
-[Unreleased]: https://github.com/joezhuo2/omniscience/compare/v0.1.7...HEAD
+[Unreleased]: https://github.com/joezhuo2/omniscience/compare/v0.1.8...HEAD
+[0.1.8]: https://github.com/joezhuo2/omniscience/compare/v0.1.7...v0.1.8
 [0.1.7]: https://github.com/joezhuo2/omniscience/compare/v0.1.6...v0.1.7
 [0.1.6]: https://github.com/joezhuo2/omniscience/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/joezhuo2/omniscience/compare/v0.1.4...v0.1.5
