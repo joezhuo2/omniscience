@@ -26,8 +26,8 @@ describe('Pill', () => {
   it('draws arcs from the snapshot and leaves a missing dGPU dashed', () => {
     render(<Pill />);
     act(() => useTelemetryStore.getState().setSnapshot(sampleSnapshot));
-    // cpu, ram, igpu, disk, net outer + inner = 6 arcs; dgpu missing.
-    expect(screen.getAllByTestId('ring-arc')).toHaveLength(6);
+    // Six utilization arcs plus CPU/iGPU temperature arcs; dGPU remains missing.
+    expect(screen.getAllByTestId('ring-arc')).toHaveLength(8);
     expect(screen.getByRole('img', { name: 'dGPU' })).toHaveClass('opacity-40');
   });
 });

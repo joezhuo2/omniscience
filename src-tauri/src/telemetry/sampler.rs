@@ -123,6 +123,18 @@ impl Sampler {
         let core = CoreMetrics {
             cpu: Metric::new(round1(self.sys.global_cpu_usage()), t),
             cpu_mhz,
+            #[cfg(windows)]
+            cpu_temp_c: win.temps.iter().map(|t| t.celsius).reduce(f32::max),
+            #[cfg(not(windows))]
+            cpu_temp_c: None,
+            #[cfg(windows)]
+            igpu_temp_c: win.gpu_temperature(super::types::GpuKind::Integrated, &self.win.adapters),
+            #[cfg(not(windows))]
+            igpu_temp_c: None,
+            #[cfg(windows)]
+            dgpu_temp_c: win.gpu_temperature(super::types::GpuKind::Discrete, &self.win.adapters),
+            #[cfg(not(windows))]
+            dgpu_temp_c: None,
             ram: MemoryMetric {
                 used_bytes: used,
                 total_bytes: total,
@@ -315,21 +327,21 @@ mod win {
     const ENERGY: usize = 2;
     const CPU_PERF: usize = 3;
     const CPU_BASE: usize = 4;
-    const CORE_COUNTERS: [&str; 5] = [
+    const THERMAL: usize = 5;
+    const CORE_COUNTERS: [&str; 6] = [
         r"\PhysicalDisk(_Total)\% Idle Time",
         r"\GPU Engine(*)\Utilization Percentage",
         r"\Energy Meter(*)\Power",
         r"\Processor Information(*)\% Processor Performance",
         r"\Processor Information(*)\Processor Frequency",
+        r"\Thermal Zone Information(*)\High Precision Temperature",
     ];
 
-    const THERMAL: usize = 0;
-    const GPU_DEDICATED: usize = 1;
-    const GPU_SHARED: usize = 2;
-    const CPU_LIMIT: usize = 3;
-    const GPU_PROCESS_MEM: usize = 4;
-    pub const DETAIL_COUNTERS: [&str; 5] = [
-        r"\Thermal Zone Information(*)\High Precision Temperature",
+    const GPU_DEDICATED: usize = 0;
+    const GPU_SHARED: usize = 1;
+    const CPU_LIMIT: usize = 2;
+    const GPU_PROCESS_MEM: usize = 3;
+    pub const DETAIL_COUNTERS: [&str; 4] = [
         r"\GPU Adapter Memory(*)\Dedicated Usage",
         r"\GPU Adapter Memory(*)\Shared Usage",
         r"\Processor Information(_Total)\% Performance Limit",
@@ -339,12 +351,44 @@ mod win {
     /// A dGPU below this usage is treated as asleep: no D3DKMT sensor query, which could wake it.
     const DGPU_ACTIVE_PCT: f32 = 0.5;
 
+    fn guarded_perf(kind: GpuKind, usage: f32, read: impl FnOnce() -> AdapterPerf) -> AdapterPerf {
+        if kind != GpuKind::Discrete || usage >= DGPU_ACTIVE_PCT {
+            read()
+        } else {
+            AdapterPerf::default()
+        }
+    }
+
+    #[test]
+    fn sleeping_discrete_gpu_is_never_queried() {
+        for usage in [0.0, 0.49] {
+            assert_eq!(
+                guarded_perf(GpuKind::Discrete, usage, || panic!("woke sleeping GPU")),
+                AdapterPerf::default()
+            );
+        }
+        for (kind, usage) in [(GpuKind::Integrated, 0.0), (GpuKind::Discrete, 0.5)] {
+            let mut called = false;
+            let perf = guarded_perf(kind, usage, || {
+                called = true;
+                AdapterPerf {
+                    temp_c: Some(55.0),
+                    ..Default::default()
+                }
+            });
+            assert!(called);
+            assert_eq!(perf.temp_c, Some(55.0));
+        }
+    }
+
     pub struct Core {
         query: Option<Query>,
         pub adapters: Vec<Adapter>,
     }
 
     pub struct CoreSample {
+        pub temps: Vec<TempSample>,
+        pub gpu_perf: HashMap<String, AdapterPerf>,
         pub disk_pct: Option<f32>,
         pub igpu_pct: Option<f32>,
         pub dgpu_pct: Option<f32>,
@@ -354,6 +398,16 @@ mod win {
         pub energy: EnergyReadings,
         pub cpu_mhz: Option<u64>,
         pub core_mhz: HashMap<u32, u64>,
+    }
+
+    impl CoreSample {
+        pub fn gpu_temperature(&self, kind: GpuKind, adapters: &[Adapter]) -> Option<f32> {
+            adapters
+                .iter()
+                .filter(|a| a.kind == kind)
+                .filter_map(|a| self.gpu_perf.get(&a.luid_key).and_then(|p| p.temp_c))
+                .reduce(f32::max)
+        }
     }
 
     impl Core {
@@ -367,6 +421,8 @@ mod win {
         pub fn sample(&mut self) -> CoreSample {
             let Some(q) = self.query.as_mut().filter(|q| q.collect_ok()) else {
                 return CoreSample {
+                    temps: Vec::new(),
+                    gpu_perf: HashMap::new(),
                     disk_pct: None,
                     igpu_pct: None,
                     dgpu_pct: None,
@@ -383,6 +439,26 @@ mod win {
             });
             let gpu_engines = q.items(GPU_ENGINE).unwrap_or_default();
             let gpu_usage = parse::gpu_usage_by_adapter(&gpu_engines);
+            let temps = q
+                .items(THERMAL)
+                .unwrap_or_default()
+                .iter()
+                .filter_map(|(name, dk)| {
+                    parse::decikelvin_to_c(*dk).map(|celsius| TempSample {
+                        label: parse::zone_label(name),
+                        celsius,
+                    })
+                })
+                .collect();
+            let gpu_perf = self
+                .adapters
+                .iter()
+                .map(|a| {
+                    let usage = gpu_usage.get(&a.luid_key).copied().unwrap_or(0.0);
+                    let perf = guarded_perf(a.kind, usage, || adapter_perf(a.luid));
+                    (a.luid_key.clone(), perf)
+                })
+                .collect();
             let energy = q
                 .items(ENERGY)
                 .map(|v| parse::parse_energy(&v))
@@ -400,6 +476,8 @@ mod win {
                     .reduce(f32::max)
             };
             CoreSample {
+                temps,
+                gpu_perf,
                 disk_pct,
                 igpu_pct: busiest(GpuKind::Integrated),
                 dgpu_pct: busiest(GpuKind::Discrete),
@@ -436,20 +514,9 @@ mod win {
         Option<PowerBreakdown>,
         Option<f32>,
     ) {
-        let (mut temps, mut dedicated, mut shared) = (Vec::new(), HashMap::new(), HashMap::new());
+        let (mut dedicated, mut shared) = (HashMap::new(), HashMap::new());
         let mut cpu_limit = None;
         if let Some(q) = query.filter(|q| q.collect_ok()) {
-            temps = q
-                .items(THERMAL)
-                .unwrap_or_default()
-                .iter()
-                .filter_map(|(name, dk)| {
-                    parse::decikelvin_to_c(*dk).map(|c| TempSample {
-                        label: parse::zone_label(name),
-                        celsius: c,
-                    })
-                })
-                .collect();
             dedicated = q
                 .items(GPU_DEDICATED)
                 .map(|v| parse::sum_by_adapter(&v))
@@ -467,11 +534,8 @@ mod win {
             .map(|a| {
                 let usage = core.gpu_usage.get(&a.luid_key).copied().unwrap_or(0.0);
                 let discrete = a.kind == GpuKind::Discrete;
-                let perf = if !discrete || usage >= DGPU_ACTIVE_PCT {
-                    adapter_perf(a.luid)
-                } else {
-                    AdapterPerf::default()
-                };
+                let unavailable = AdapterPerf::default();
+                let perf = core.gpu_perf.get(&a.luid_key).unwrap_or(&unavailable);
                 GpuDetail {
                     name: a.name.clone(),
                     kind: a.kind,
@@ -491,7 +555,7 @@ mod win {
         let b = &core.energy.breakdown;
         let power = (b.apu.is_some() || b.cpu.is_some() || b.gpu.is_some() || b.npu.is_some())
             .then(|| b.clone());
-        (temps, gpus, power, cpu_limit)
+        (core.temps.clone(), gpus, power, cpu_limit)
     }
 }
 

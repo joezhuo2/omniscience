@@ -34,6 +34,9 @@ most resources.
 - 💊 A black, Dynamic Island–style pill pinned to the top-center of your screen.
 - ⭕ Six live rings with icons and no text: **CPU**, **RAM**, **iGPU**, **dGPU**, **Disk** (active
   time), and a concentric **Network** ring with download outside and upload inside.
+- 🌡️ CPU, iGPU and dGPU have inner temperature rings: a full ring is **105°C**. Missing
+  temperatures hide the inner ring. Temperature colors use the configured warning/critical
+  percentages of that scale (defaults: above 73.5°C / 94.5°C).
 - 🚦 Rings are colored by load: the metric's own accent color normally, amber above the warning
   threshold (default 70%), and pulsing red above the critical threshold (default 90%).
 - ➖ A ring is drawn dashed when its sensor is missing on your machine, instead of showing a fake 0%.
@@ -47,8 +50,11 @@ close it.
 - ⚡ **Header:** total package power in watts and the hottest temperature reported, plus an amber
   indicator if telemetry stops arriving.
 - 📊 **Metric strip:** labeled values for each ring, such as CPU usage with its live clock in GHz,
-  RAM as `15/31 GB`, and download/upload speeds on two lines.
-- 🎮 **GPU & Power card:** usage, VRAM (`5.2 / 8.0 GB`), temperature and fan speed for each GPU, a
+  RAM as `15/31 GB`, and download/upload speeds on two lines. CPU temperature appears on a third
+  line; each GPU temperature appears on a second line. Missing temperatures show `—`. The CPU
+  tooltip identifies the hottest ACPI thermal zone as a system-temperature proxy, which may
+  differ from CPU package temperature.
+- 🎮 **GPU & Power card:** usage, VRAM (`5.2 / 8.0 GB`) and fan speed for each GPU, a
   Throttling chip when a GPU reaches its thermal limit, and package watts broken down into APU, CPU,
   GPU and NPU where the hardware reports them.
 - 🔋 **Battery card** (laptops): charge, charging or draining with the rate in watts, and time left or
@@ -63,8 +69,8 @@ close it.
 - 🛑 **End process:** a two-step "End?" button. Critical OS processes, PIDs 0 and 4, and Omniscience
   itself are refused; the row comes back with a toast explaining why.
 
-Per-core, per-GPU and per-process data is only sampled while the dashboard is open, so the
-collapsed pill costs almost nothing.
+Detailed per-core, GPU memory and per-process data is only sampled while the dashboard is open.
+Temperature readings also update while collapsed; sleeping discrete GPUs are not queried.
 
 ### Lives in the tray
 

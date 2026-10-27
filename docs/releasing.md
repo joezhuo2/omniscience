@@ -32,14 +32,19 @@ installs of earlier versions can no longer update themselves.
 ## Cutting a release
 
 1. Bump the version in `package.json`, `src-tauri/Cargo.toml`, and `src-tauri/tauri.conf.json`
-   (all three must match). `npm run version:check` verifies this; CI runs it on every push, and
+   (all three must match), and synchronize the root app entries in `package-lock.json` and
+   `src-tauri/Cargo.lock`. `npm run version:check` verifies the manifests; CI runs it on every push, and
    the release workflow also fails if the tag does not match.
 2. Move the `[Unreleased]` entries in `CHANGELOG.md` under a new version heading.
-3. Commit, then tag and push:
+3. Commit in small logical changes, push a release branch, and open a PR. After CI passes,
+   merge the PR and tag the merge commit on `main` (replace `vX.Y.Z` with the release version):
 
    ```bash
-   git tag v0.1.0
-   git push origin main --tags
+   git switch main
+   git pull --ff-only
+   npm run version:check -- vX.Y.Z
+   git tag -a vX.Y.Z -m "Omniscience vX.Y.Z"
+   git push origin vX.Y.Z
    ```
 
 4. When the workflow finishes, review the draft release and publish it. The updater endpoint
