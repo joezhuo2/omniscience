@@ -60,6 +60,30 @@ describe('Dashboard', () => {
     expect(screen.getAllByText('Throttling')).toHaveLength(1);
   });
 
+  it('shows temperatures under CPU and GPU rings, with the ACPI source explained', () => {
+    act(() => useTelemetryStore.getState().setSnapshot(withDetail));
+    render(<Dashboard />);
+    expect([...screen.getByTestId('value-cpu').children].map((el) => el.textContent)).toEqual([
+      '23%',
+      '3.2 GHz',
+      '48°C',
+    ]);
+    expect(within(screen.getByTestId('value-cpu')).getByText('48°C')).toHaveAttribute(
+      'title',
+      expect.stringContaining('ACPI'),
+    );
+    expect([...screen.getByTestId('value-igpu').children].map((el) => el.textContent)).toEqual([
+      '4%',
+      '45°C',
+    ]);
+    expect([...screen.getByTestId('value-dgpu').children].map((el) => el.textContent)).toEqual([
+      '--',
+      '—',
+    ]);
+    const gpuCard = screen.getByText('GPU & Power').closest('section')!;
+    expect(within(gpuCard).queryByText(/°C/)).not.toBeInTheDocument();
+  });
+
   it('flags CPU throttling only past the noise floor', () => {
     const limited = { ...sampleDetail, cpu_limit_pct: 22.4 };
     act(() => useTelemetryStore.getState().setSnapshot({ ...sampleSnapshot, detail: limited }));

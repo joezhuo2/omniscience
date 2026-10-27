@@ -1,5 +1,5 @@
 import { Zap } from 'lucide-react';
-import { formatBytes, formatPercent, formatRpm, formatTemp, formatWatts } from '../../lib/format';
+import { formatBytes, formatPercent, formatRpm, formatWatts } from '../../lib/format';
 import { ACCENTS } from '../../lib/levels';
 import { useTelemetryStore } from '../../store';
 import type { GpuDetail } from '../../types/telemetry';
@@ -31,7 +31,7 @@ function GpuRow({ gpu }: { gpu: GpuDetail }) {
           )}
         </span>
         <span className="shrink-0 text-island-muted tabular-nums">
-          {formatPercent(gpu.usage_pct)} · {memoryText(gpu)} · {formatTemp(gpu.temp_c)}
+          {formatPercent(gpu.usage_pct)} · {memoryText(gpu)}
           {gpu.fan_rpm != null && ` · ${formatRpm(gpu.fan_rpm)}`}
         </span>
       </div>

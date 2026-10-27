@@ -1,5 +1,6 @@
 import { RING_STROKE, ringSpecs } from '../lib/metrics';
 import { useTelemetryStore } from '../store';
+import { useSettingsStore } from '../settings';
 import { Ring } from './Ring';
 
 /**
@@ -8,6 +9,7 @@ import { Ring } from './Ring';
  */
 export function Pill() {
   const core = useTelemetryStore((s) => s.snapshot?.core);
+  const settings = useSettingsStore((s) => s.settings);
   return (
     <div
       data-testid="pill"
@@ -15,7 +17,7 @@ export function Pill() {
       className="mx-auto flex items-center justify-center gap-2"
       style={{ width: 'var(--pill-w)', height: 'var(--pill-h)' }}
     >
-      {ringSpecs(core).map((r) => (
+      {ringSpecs(core, settings).map((r) => (
         <Ring
           key={r.key}
           outer={r.outer}
