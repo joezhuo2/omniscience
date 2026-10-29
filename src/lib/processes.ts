@@ -15,9 +15,17 @@ export function visibleProcesses(
   hidden: ReadonlySet<string>,
   sort: ProcessSort,
   limit: number = VISIBLE_PROCESSES,
+  query = '',
 ): ProcessGroup[] {
+  const search = query.trim().toLowerCase();
   return groups
-    .filter((g) => !hidden.has(g.key))
+    .filter(
+      (g) =>
+        !hidden.has(g.key) &&
+        (!search ||
+          g.name.toLowerCase().includes(search) ||
+          g.pids.some((pid) => String(pid).includes(search))),
+    )
     .sort((a, b) => {
       switch (sort) {
         case 'cpu':

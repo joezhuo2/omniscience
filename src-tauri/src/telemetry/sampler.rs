@@ -9,18 +9,16 @@ use sysinfo::{Networks, System};
 use super::battery;
 use super::peak::RollingPeak;
 use super::ping::Pinger;
-use super::processes::{self, Sort};
+use super::processes;
 use super::public_ip::PublicIp;
 use super::types::{
-    CoreMetrics, CoreSample, DetailMetrics, MemoryMetric, Metric, NetAdapter, NetMetric,
-    ProcessGroup, Snapshot, Thresholds, classify,
+    CoreMetrics, CoreSample, DetailMetrics, MemoryMetric, Metric, NetAdapter, NetMetric, Snapshot,
+    Thresholds, classify,
 };
 
 /// Network rings are scaled to the busiest second of the last minute, never below 1 MB/s.
 const NET_WINDOW: usize = 60;
 const NET_FLOOR_BPS: f64 = 1_000_000.0;
-/// Top process groups sent per sort order (CPU, RAM and GPU); the frontend shows 8 of the union.
-const TOP_PROCESSES: usize = 8;
 
 fn round1(v: f32) -> f32 {
     (v * 10.0).round() / 10.0
@@ -279,15 +277,8 @@ impl Sampler {
                 p.gpu_mem_bytes = mem.get(&p.pid).copied().unwrap_or(0);
             }
         }
-        let n = self.sys.cpus().len();
-        let mut groups = Vec::new();
-        for sort in [Sort::Cpu, Sort::Memory, Sort::Gpu] {
-            for g in processes::top_groups(&procs, n, sort, TOP_PROCESSES) {
-                if !groups.iter().any(|x: &ProcessGroup| x.key == g.key) {
-                    groups.push(g);
-                }
-            }
-        }
+        // Search must include quiet apps too; the frontend filters, sorts and limits rows.
+        let groups = processes::groups(&procs, self.sys.cpus().len());
 
         Some(DetailMetrics {
             cores,
