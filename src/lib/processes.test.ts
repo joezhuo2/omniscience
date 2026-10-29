@@ -13,6 +13,27 @@ const g = (key: string, cpu: number, mem: number, gpu = 0, vram = 0): ProcessGro
 });
 
 describe('visibleProcesses', () => {
+  it('filters names case-insensitively before limiting, and matches child PIDs', () => {
+    const many = Array.from({ length: 12 }, (_, i) => g(`app${i}`, i, i));
+    many[0]!.name = 'Quiet App.exe';
+    many[0]!.pids = [42, 9876];
+    const search = (query: string) => visibleProcesses(many, new Set(), 'cpu', 8, query);
+    expect(search('  QUIET APP  ').map((p) => p.key)).toEqual(['app0']);
+    expect(search('9876').map((p) => p.key)).toEqual(['app0']);
+    expect(search('missing')).toEqual([]);
+    expect(search('   ')).toEqual(visibleProcesses(many, new Set(), 'cpu'));
+    expect(visibleProcesses(many, new Set(['app0']), 'cpu', 8, 'quiet')).toEqual([]);
+  });
+
+  it('keeps each sort order within search results', () => {
+    const matches = [g('app-a', 9, 1, 2), g('app-b', 1, 9, 1), g('other', 99, 99, 99)];
+    const keys = (sort: 'cpu' | 'ram' | 'gpu') =>
+      visibleProcesses(matches, new Set(), sort, 8, 'app').map((p) => p.key);
+    expect(keys('cpu')).toEqual(['app-a', 'app-b']);
+    expect(keys('ram')).toEqual(['app-b', 'app-a']);
+    expect(keys('gpu')).toEqual(['app-a', 'app-b']);
+  });
+
   const groups = [g('a', 1, 300), g('b', 9, 100), g('c', 5, 200)];
 
   it('sorts by cpu or ram', () => {

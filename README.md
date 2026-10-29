@@ -65,7 +65,7 @@ close it.
   host you choose (1.1.1.1 by default), and optionally your public IP.
 - 📋 **Top processes:** grouped by app (so 30 browser processes show as one row), sortable by CPU,
   RAM or GPU. The GPU tab shows each app's GPU usage and GPU memory. Three rows by default, with
-  "Show more" for a scrollable list.
+  "Show more" for a scrollable list. Search by app name or PID; skeletons appear while the search updates.
 - 🛑 **End process:** a two-step "End?" button. Critical OS processes, PIDs 0 and 4, and Omniscience
   itself are refused; the row comes back with a toast explaining why.
 
@@ -166,7 +166,8 @@ Settings are kept after uninstalling. Delete the [settings file](#configuration)
 | Show or hide the overlay | `Ctrl+Shift+O` (`Cmd+Shift+O` on macOS), or tray > Show / Hide |
 | Move the overlay         | Drag the pill (the row of rings)                               |
 | Reset its position       | Settings > Reset position                                      |
-| Sort processes           | Click the CPU / RAM toggle on the Top processes card           |
+| Sort processes           | Click the CPU / RAM / GPU toggle on the Top processes card     |
+| Search processes         | Type an app name or PID in the Top processes search bar        |
 | End an app               | Click **End?** on its row, then confirm                        |
 | Open settings            | Gear icon in the dashboard header, or tray > Settings…         |
 | Check for updates        | Tray > Check for updates now                                   |

@@ -211,6 +211,63 @@ describe('Dashboard', () => {
     expect(rows()[0]).toHaveTextContent('307 MB');
   });
 
+  it('shows skeletons while searching, ignores superseded queries, and clears immediately', () => {
+    vi.useFakeTimers();
+    try {
+      act(() => useTelemetryStore.getState().setSnapshot(withDetail));
+      render(<Dashboard />);
+      const search = screen.getByRole('searchbox', { name: 'Search processes' });
+      const card = screen.getByText('Top processes').closest('section')!;
+      fireEvent.change(search, { target: { value: 'chrome' } });
+      expect(within(card).getAllByTestId('skeleton')).toHaveLength(5);
+      expect(screen.queryByLabelText('End chrome.exe')).not.toBeInTheDocument();
+      act(() => vi.advanceTimersByTime(100));
+      fireEvent.change(search, { target: { value: ' CODE ' } });
+      act(() => vi.advanceTimersByTime(100));
+      expect(within(card).getAllByTestId('skeleton')).toHaveLength(5);
+      act(() => vi.advanceTimersByTime(100));
+      expect(within(card).queryAllByTestId('skeleton')).toHaveLength(0);
+      expect(screen.getByTestId('process-rows').querySelectorAll('li')).toHaveLength(1);
+      expect(screen.getByLabelText('End Code.exe')).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('tab', { name: 'gpu' }));
+      expect(screen.getByLabelText('End Code.exe')).toBeInTheDocument();
+      fireEvent.change(search, { target: { value: 'not-running' } });
+      act(() => vi.advanceTimersByTime(200));
+      expect(screen.getByText('No matching processes')).toBeInTheDocument();
+      fireEvent.change(search, { target: { value: 'pending' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Clear process search' }));
+      expect(search).toHaveValue('');
+      expect(screen.getByTestId('process-rows').querySelectorAll('li')).toHaveLength(2);
+      act(() => vi.advanceTimersByTime(200));
+      expect(within(card).queryAllByTestId('skeleton')).toHaveLength(0);
+      expect(screen.getByTestId('process-rows').querySelectorAll('li')).toHaveLength(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('updates filtered rows from live telemetry and disarms end confirmation on search', () => {
+    vi.useFakeTimers();
+    try {
+      act(() => useTelemetryStore.getState().setSnapshot(withDetail));
+      render(<Dashboard />);
+      fireEvent.click(screen.getByLabelText('End chrome.exe'));
+      fireEvent.change(screen.getByRole('searchbox'), { target: { value: '11' } });
+      act(() => vi.advanceTimersByTime(200));
+      expect(screen.getByLabelText('End chrome.exe')).toBeInTheDocument();
+      expect(screen.queryByLabelText('End Code.exe')).not.toBeInTheDocument();
+      act(() =>
+        useTelemetryStore.getState().setSnapshot({
+          ...withDetail,
+          detail: { ...sampleDetail, processes: [sampleDetail.processes[1]!] },
+        }),
+      );
+      expect(screen.getByText('No matching processes')).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('shows the top 3 processes with a toggle for the rest', () => {
     const many = {
       ...sampleDetail,

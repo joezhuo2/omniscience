@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.9] - 2026-10-29
+
+### Added
+
+- Search Top processes by app name or PID, with case-insensitive matching, skeleton loaders while typing, a clear button and an empty-results message ([#18](https://github.com/joezhuo2/omniscience/issues/18)).
+
+### Changed
+
+- Process search includes every running app group, including quiet apps outside the top CPU, RAM and GPU lists. Filtering happens before sorting and limiting displayed rows.
+
 ## [0.1.8] - 2026-10-27
 
 ### Added

@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import { ChevronDown, X } from 'lucide-react';
+import { ChevronDown, Search, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { formatBytes } from '../../lib/format';
 import {
@@ -87,9 +87,32 @@ export function ProcessList() {
   const [armed, setArmed] = useState<string | null>(null);
   const [hidden, setHidden] = useState<ReadonlySet<string>>(new Set());
   const [showAll, setShowAll] = useState(false);
+  const [query, setQuery] = useState('');
+  const [settledQuery, setSettledQuery] = useState('');
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searching = query !== settledQuery;
   const disarm = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => () => clearTimeout(disarm.current ?? undefined), []);
+  useEffect(
+    () => () => {
+      clearTimeout(disarm.current ?? undefined);
+      clearTimeout(searchTimer.current ?? undefined);
+    },
+    [],
+  );
+
+  function onSearch(value: string) {
+    setQuery(value);
+    setShowAll(false);
+    setArmed(null);
+    clearTimeout(disarm.current ?? undefined);
+    clearTimeout(searchTimer.current ?? undefined);
+    if (!value.trim()) {
+      setSettledQuery(value);
+    } else {
+      searchTimer.current = setTimeout(() => setSettledQuery(value), 180);
+    }
+  }
 
   async function onKill(p: ProcessGroup) {
     if (armed !== p.key) {
@@ -118,42 +141,76 @@ export function ProcessList() {
     }
   }
 
-  const all = groups ? visibleProcesses(groups, hidden, sort) : [];
+  const all = groups ? visibleProcesses(groups, hidden, sort, undefined, settledQuery) : [];
   const rows = showAll ? all : all.slice(0, COLLAPSED_PROCESSES);
   return (
     <Card title="Top processes" aside={<SortToggle sort={sort} onChange={setSort} />}>
-      {!groups ? (
-        <div className="space-y-1.5">
-          {Array.from({ length: 5 }, (_, i) => (
-            <Skeleton key={i} className="h-4" />
-          ))}
-        </div>
-      ) : (
-        <>
-          <ul
-            data-testid="process-rows"
-            className={`-mx-1.5 overscroll-contain ${showAll ? 'max-h-36 overflow-y-auto' : ''}`}
+      <div className="mb-2 flex items-center gap-1.5 rounded-md bg-island-hover px-2 focus-within:ring-1 focus-within:ring-island-muted">
+        <Search size={12} aria-hidden className="shrink-0 text-island-muted" />
+        <input
+          type="search"
+          aria-label="Search processes"
+          aria-controls="process-results"
+          placeholder="Search name or PID"
+          value={query}
+          onChange={(event) => onSearch(event.target.value)}
+          className="min-w-0 flex-1 bg-transparent py-1 text-[11px] text-island-text outline-none placeholder:text-island-muted [&::-webkit-search-cancel-button]:appearance-none"
+        />
+        {query && (
+          <button
+            type="button"
+            aria-label="Clear process search"
+            onClick={() => onSearch('')}
+            className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-island-muted hover:text-island-text"
           >
-            {rows.map((p) => (
-              <Row key={p.key} p={p} sort={sort} armed={armed === p.key} onKill={onKill} />
+            <X size={12} aria-hidden />
+          </button>
+        )}
+      </div>
+      <div id="process-results" aria-busy={!groups || searching}>
+        {!groups || searching ? (
+          <div className="space-y-1.5">
+            {searching && (
+              <span role="status" className="sr-only">
+                Searching processes
+              </span>
+            )}
+            {Array.from({ length: 5 }, (_, i) => (
+              <Skeleton key={i} className="h-4" />
             ))}
-          </ul>
-          {all.length > COLLAPSED_PROCESSES && (
-            <button
-              aria-expanded={showAll}
-              onClick={() => setShowAll((v) => !v)}
-              className="mt-1 flex w-full items-center justify-center gap-1 rounded-md py-0.5 text-[10px] text-island-muted hover:bg-island-hover hover:text-island-text"
+          </div>
+        ) : (
+          <>
+            {all.length === 0 && (
+              <p role="status" className="py-2 text-center text-[11px] text-island-muted">
+                {settledQuery.trim() ? 'No matching processes' : 'No processes available'}
+              </p>
+            )}
+            <ul
+              data-testid="process-rows"
+              className={`-mx-1.5 overscroll-contain ${showAll ? 'max-h-36 overflow-y-auto' : ''}`}
             >
-              {showAll ? 'Show less' : `Show ${all.length - COLLAPSED_PROCESSES} more`}
-              <ChevronDown
-                size={11}
-                aria-hidden
-                className={`transition-transform ${showAll ? 'rotate-180' : ''}`}
-              />
-            </button>
-          )}
-        </>
-      )}
+              {rows.map((p) => (
+                <Row key={p.key} p={p} sort={sort} armed={armed === p.key} onKill={onKill} />
+              ))}
+            </ul>
+            {all.length > COLLAPSED_PROCESSES && (
+              <button
+                aria-expanded={showAll}
+                onClick={() => setShowAll((v) => !v)}
+                className="mt-1 flex w-full items-center justify-center gap-1 rounded-md py-0.5 text-[10px] text-island-muted hover:bg-island-hover hover:text-island-text"
+              >
+                {showAll ? 'Show less' : `Show ${all.length - COLLAPSED_PROCESSES} more`}
+                <ChevronDown
+                  size={11}
+                  aria-hidden
+                  className={`transition-transform ${showAll ? 'rotate-180' : ''}`}
+                />
+              </button>
+            )}
+          </>
+        )}
+      </div>
     </Card>
   );
 }
