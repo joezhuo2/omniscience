@@ -1,6 +1,6 @@
 import { emit } from '@tauri-apps/api/event';
 import { mockIPC } from '@tauri-apps/api/mocks';
-import { act, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 import { HOVER_EVENT } from './hooks/useIsland';
@@ -93,6 +93,23 @@ describe('App', () => {
     await flush(100);
     await hover(true);
     expect(island()).toHaveAttribute('data-phase', 'expanded');
+  });
+
+  it('leaves consumed Escape events to inner controls and closes on an ordinary Escape', async () => {
+    render(<App />);
+    await flush(0);
+    await hover(true);
+    await flush(0);
+    const consumed = new KeyboardEvent('keydown', {
+      key: 'Escape',
+      bubbles: true,
+      cancelable: true,
+    });
+    consumed.preventDefault();
+    fireEvent(window, consumed);
+    expect(island()).toHaveClass('expanded');
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(island()).toHaveAttribute('data-phase', 'collapsing');
   });
 
   it('opens on its own for an update prompt', async () => {

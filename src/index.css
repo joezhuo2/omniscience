@@ -125,7 +125,15 @@ body {
   }
 }
 
+.section-sortable[data-dragging='true'] {
+  cursor: grabbing;
+  border-color: var(--color-island-muted);
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .section-sortable {
+    transition: none !important;
+  }
   .island,
   .panel,
   .ring-arc {

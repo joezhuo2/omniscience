@@ -1,5 +1,7 @@
 import { ChevronDown, ChevronRight } from 'lucide-react';
-import { useId, useState, type ReactNode } from 'react';
+import { CSS } from '@dnd-kit/utilities';
+import { useSectionDrag } from './SectionDragContext';
+import { useCallback, useId, useState, type ReactNode } from 'react';
 import { readSectionCollapsed, saveSectionCollapsed, type SectionId } from '../../lib/sections';
 
 export function Card({
@@ -16,6 +18,22 @@ export function Card({
   children: ReactNode;
 }) {
   const id = useId();
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    transform,
+    isDragging,
+    transition,
+  } = useSectionDrag() ?? {};
+  const cardRef = useCallback(
+    (node: HTMLElement | null) => {
+      setNodeRef?.(node);
+      setActivatorNodeRef?.(node);
+    },
+    [setNodeRef, setActivatorNodeRef],
+  );
   const [collapsed, setCollapsed] = useState(() => readSectionCollapsed(section));
   const toggle = () => {
     const next = !collapsed;
@@ -25,8 +43,34 @@ export function Card({
   const Chevron = collapsed ? ChevronRight : ChevronDown;
   return (
     <section
+      ref={cardRef}
+      data-section={section}
+      data-dragging={isDragging || undefined}
+      tabIndex={attributes?.tabIndex}
+      aria-describedby={attributes?.['aria-describedby']}
+      aria-roledescription={attributes ? 'sortable section' : undefined}
+      onMouseDown={listeners ? (event) => listeners.onMouseDown?.(event) : undefined}
+      onTouchStart={listeners ? (event) => listeners.onTouchStart?.(event) : undefined}
+      onKeyDown={
+        listeners
+          ? (event) => {
+              if (event.target === event.currentTarget) listeners.onKeyDown?.(event);
+            }
+          : undefined
+      }
+      style={
+        attributes
+          ? {
+              transform: CSS.Translate.toString(transform ?? null),
+              transition: isDragging ? undefined : transition,
+              position: 'relative',
+              zIndex: isDragging ? 1 : undefined,
+              opacity: isDragging ? 0.85 : undefined,
+            }
+          : undefined
+      }
       aria-labelledby={`${id}-heading`}
-      className="rounded-xl border border-island-faint bg-island-hover p-2.5"
+      className={`rounded-xl border border-island-faint bg-island-hover p-2.5${attributes ? ' section-sortable cursor-grab focus-visible:ring-1 focus-visible:ring-island-muted focus-visible:outline-none' : ''}`}
     >
       <header className={`${collapsed ? '' : 'mb-2 '}flex items-center justify-between gap-2`}>
         <h2

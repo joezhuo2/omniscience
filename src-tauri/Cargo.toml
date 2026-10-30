@@ -1,6 +1,6 @@
 [package]
 name = "omniscience"
-version = "0.1.15"
+version = "0.1.16"
 description = "Dynamic Island-style system monitor overlay"
 authors = ["Omniscience contributors"]
 license = "MIT"
