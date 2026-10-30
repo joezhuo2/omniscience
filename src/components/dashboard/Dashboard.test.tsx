@@ -48,7 +48,7 @@ describe('Dashboard', () => {
     expect(screen.getByTestId('value-cpu')).toHaveTextContent('3.2 GHz');
     expect(screen.getByTestId('value-net')).toHaveTextContent('↓ 1 MB/s');
     expect(screen.getByTestId('value-net')).toHaveTextContent('↑ 80 KB/s');
-    expect(screen.queryByTestId('value-dgpu')).not.toBeInTheDocument();
+    expect(screen.getByTestId('value-dgpu')).toHaveTextContent('--');
     expect(screen.getByText(/5\.2 \/ 8\.0 GB/)).toBeInTheDocument();
     expect(screen.getAllByText('8.2 W').length).toBeGreaterThan(0);
   });
@@ -76,7 +76,10 @@ describe('Dashboard', () => {
       '4%',
       '45°C',
     ]);
-    expect(screen.queryByTestId('value-dgpu')).not.toBeInTheDocument();
+    expect([...screen.getByTestId('value-dgpu').children].map((el) => el.textContent)).toEqual([
+      '--',
+      '—',
+    ]);
     const gpuCard = screen.getByText('GPU & Power').closest('section')!;
     expect(within(gpuCard).queryByText(/°C/)).not.toBeInTheDocument();
   });
