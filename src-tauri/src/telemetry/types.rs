@@ -214,8 +214,9 @@ pub struct DetailMetrics {
     pub temps: Vec<TempSample>,
     pub gpus: Vec<GpuDetail>,
     pub power: Option<PowerBreakdown>,
-    /// How far power or thermal limits hold the CPU below its rated speed, in percent (0 when
-    /// unthrottled).
+    /// Loss of available nominal CPU performance: 100 minus Windows `% Performance Limit`.
+    /// Zero means full headroom; missing/zero raw counters yield None. This is not a direct
+    /// thermal measurement and can reflect Windows power policy.
     pub cpu_limit_pct: Option<f32>,
     /// Interfaces that have carried traffic, busiest first.
     pub net_adapters: Vec<NetAdapter>,
