@@ -253,15 +253,13 @@ describe('Dashboard', () => {
       expect(rows()).toHaveLength(1);
       expect(rows()[0]).toHaveTextContent('1 KB/s');
       act(() =>
-        useTelemetryStore
-          .getState()
-          .setSnapshot({
-            ...withDetail,
-            detail: {
-              ...sampleDetail,
-              processes: sampleDetail.processes.map((p) => ({ ...p, net_bps: null })),
-            },
-          }),
+        useTelemetryStore.getState().setSnapshot({
+          ...withDetail,
+          detail: {
+            ...sampleDetail,
+            processes: sampleDetail.processes.map((p) => ({ ...p, net_bps: null })),
+          },
+        }),
       );
       expect(rows()[0]).toHaveTextContent('—');
       expect(screen.getByText(/Per-app throughput is unavailable/)).toBeInTheDocument();
