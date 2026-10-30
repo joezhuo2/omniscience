@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.12] - 2026-10-30
+
+### Changed
+
+- Remove duplicate package-power and temperature badges from the dashboard header. Package watts remain in GPU & Power, and CPU temperature remains under the CPU ring and in core tooltips ([#22](https://github.com/joezhuo2/omniscience/issues/22)).
+
 ## [0.1.11] - 2026-10-30
 
 ### Changed

@@ -63,7 +63,10 @@ export function GpuPowerCard() {
     <Card
       title="GPU & Power"
       aside={
-        <span className="flex items-center gap-1 text-[11px] text-island-warn tabular-nums">
+        <span
+          title="Package power"
+          className="flex items-center gap-1 text-[11px] text-island-warn tabular-nums"
+        >
           <Zap size={11} aria-hidden />
           {formatWatts(packageWatts)}
         </span>
