@@ -6,7 +6,7 @@ use tauri::{LogicalSize, PhysicalPosition, WebviewWindow};
 /// `hover::TOP_GAP` lower, inside the window.
 pub const TOP_MARGIN: f64 = 0.0;
 /// Collapsed overlay size in logical px. Must match `tauri.conf.json`.
-pub const COLLAPSED_SIZE: (f64, f64) = (420.0, 48.0);
+pub const COLLAPSED_SIZE: (f64, f64) = (500.0, 48.0);
 /// Tallest the expanded dashboard may grow (logical px). The frontend fits the window to its
 /// content within this and scrolls past it. Must match `--window-max-h` in theme.css.
 pub const EXPANDED_MAX_HEIGHT: f64 = 640.0;

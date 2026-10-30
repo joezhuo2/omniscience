@@ -28,13 +28,13 @@
 }
 
 :root {
-  /* Geometry: window 420 x 48 collapsed (window.rs), pill drawn inside it. */
+  /* Geometry: window 500 x 48 collapsed (window.rs), pill drawn inside it. */
   --top-gap: 6px;
   --pill-w: 260px;
   --pill-h: 34px;
   /* Tallest the window may grow. Must match EXPANDED_MAX_HEIGHT in window.rs. */
   --window-max-h: 640px;
-  --panel-w: 400px;
+  --panel-w: 480px;
   --panel-radius: 22px;
   --pad: 14px;
 

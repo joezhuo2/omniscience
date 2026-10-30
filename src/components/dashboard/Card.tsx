@@ -73,9 +73,9 @@ export function Card({
           : undefined
       }
       aria-labelledby={`${id}-heading`}
-      className={`rounded-xl border border-island-faint bg-island-hover p-2.5${attributes ? ' section-sortable cursor-grab focus-visible:ring-1 focus-visible:ring-island-muted focus-visible:outline-none' : ''}`}
+      className={`rounded-xl border border-island-faint bg-island-hover min-w-0 shrink-0 p-3 ${attributes ? ' section-sortable cursor-grab focus-visible:ring-1 focus-visible:ring-island-muted focus-visible:outline-none' : ''}`}
     >
-      <header className="flex items-center justify-between gap-2">
+      <header className="flex flex-wrap items-center justify-between gap-2">
         <h2
           id={`${id}-heading`}
           className="min-w-0 text-[10px] font-semibold tracking-wider text-island-muted uppercase"
