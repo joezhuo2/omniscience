@@ -62,6 +62,7 @@ export function GpuPowerCard() {
   return (
     <Card
       title="GPU & Power"
+      section="gpu-power"
       aside={
         <span
           title="Package power"

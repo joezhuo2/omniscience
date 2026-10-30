@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.15] - 2026-10-30
+
+### Added
+
+- Minimize and expand GPU & Power, Battery, CPU cores, Network and Top processes independently using their section headings. Minimized cards retain key summaries while the metric rings stay visible ([#26](https://github.com/joezhuo2/omniscience/issues/26)).
+- Remember minimized sections across dashboard reopening and app restarts. Expanding restores the existing card controls and input state; unavailable preference storage does not prevent toggling sections.
+
 ## [0.1.14] - 2026-10-30
 
 ### Added

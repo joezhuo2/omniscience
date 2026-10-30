@@ -164,7 +164,11 @@ export function ProcessList() {
   const all = groups ? visibleProcesses(groups, hidden, sort, undefined, settledQuery) : [];
   const rows = showAll ? all : all.slice(0, COLLAPSED_PROCESSES);
   return (
-    <Card title="Top processes" aside={<SortToggle sort={sort} onChange={setSort} />}>
+    <Card
+      section="processes"
+      title="Top processes"
+      aside={<SortToggle sort={sort} onChange={setSort} />}
+    >
       <div className="mb-2 flex items-center gap-1.5 rounded-md bg-island-hover px-2 focus-within:ring-1 focus-within:ring-island-muted">
         <Search size={12} aria-hidden className="shrink-0 text-island-muted" />
         <input

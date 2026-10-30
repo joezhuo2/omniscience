@@ -28,7 +28,7 @@ export function NetworkCard() {
     </span>
   ) : null;
   return (
-    <Card title="Network">
+    <Card section="network" title="Network" summary={ping}>
       {!detail ? (
         <Skeleton className="h-6" />
       ) : (

@@ -34,6 +34,7 @@ export function CpuHeatmap() {
   return (
     <Card
       title="CPU cores"
+      section="cpu-cores"
       aside={
         <span className="flex items-center gap-1.5 text-[11px] text-island-muted tabular-nums">
           {throttled && (
