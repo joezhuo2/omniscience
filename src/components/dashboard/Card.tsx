@@ -1,7 +1,7 @@
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { CSS } from '@dnd-kit/utilities';
 import { useSectionDrag } from './SectionDragContext';
-import { useCallback, useId, useState, type ReactNode } from 'react';
+import { useCallback, useId, useState, type MouseEvent, type ReactNode } from 'react';
 import { readSectionCollapsed, saveSectionCollapsed, type SectionId } from '../../lib/sections';
 
 export function Card({
@@ -35,16 +35,19 @@ export function Card({
     [setNodeRef, setActivatorNodeRef],
   );
   const [collapsed, setCollapsed] = useState(() => readSectionCollapsed(section));
-  const toggle = () => {
+  const [animate, setAnimate] = useState(false);
+  const toggle = (event: MouseEvent<HTMLButtonElement>) => {
+    setAnimate(event.detail > 0);
     const next = !collapsed;
     setCollapsed(next);
     if (section) saveSectionCollapsed(section, next);
   };
-  const Chevron = collapsed ? ChevronRight : ChevronDown;
   return (
     <section
       ref={cardRef}
       data-section={section}
+      data-collapsed={collapsed}
+      data-animate={animate}
       data-dragging={isDragging || undefined}
       tabIndex={attributes?.tabIndex}
       aria-describedby={attributes?.['aria-describedby']}
@@ -72,7 +75,7 @@ export function Card({
       aria-labelledby={`${id}-heading`}
       className={`rounded-xl border border-island-faint bg-island-hover p-2.5${attributes ? ' section-sortable cursor-grab focus-visible:ring-1 focus-visible:ring-island-muted focus-visible:outline-none' : ''}`}
     >
-      <header className={`${collapsed ? '' : 'mb-2 '}flex items-center justify-between gap-2`}>
+      <header className="flex items-center justify-between gap-2">
         <h2
           id={`${id}-heading`}
           className="min-w-0 text-[10px] font-semibold tracking-wider text-island-muted uppercase"
@@ -86,7 +89,7 @@ export function Card({
               onClick={toggle}
               className="-m-1 flex items-center gap-1 rounded p-1 text-left hover:text-island-text focus-visible:ring-1 focus-visible:ring-island-muted focus-visible:outline-none"
             >
-              <Chevron size={12} aria-hidden className="shrink-0" />
+              <ChevronRight size={12} aria-hidden className="card-chevron shrink-0" />
               {title}
             </button>
           ) : (
@@ -95,8 +98,10 @@ export function Card({
         </h2>
         {collapsed ? (summary ?? aside) : aside}
       </header>
-      <div id={`${id}-body`} hidden={collapsed}>
-        {children}
+      <div id={`${id}-body`} className="card-body" aria-hidden={collapsed} inert={collapsed}>
+        <div className="card-body-clip">
+          <div className="pt-2">{children}</div>
+        </div>
       </div>
     </section>
   );

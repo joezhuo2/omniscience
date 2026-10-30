@@ -21,14 +21,44 @@ describe('Card disclosures', () => {
     const body = document.getElementById(toggle.getAttribute('aria-controls')!)!;
     fireEvent.click(toggle);
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
-    expect(body).not.toBeVisible();
+    expect(body).toHaveAttribute('aria-hidden', 'true');
+    expect(body).toHaveAttribute('inert');
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Sort' }));
     expect(onSort).toHaveBeenCalledOnce();
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
     fireEvent.click(toggle);
-    expect(body).toBeVisible();
+    expect(body).toHaveAttribute('aria-hidden', 'false');
+    expect(body).not.toHaveAttribute('inert');
     expect(screen.getByRole('textbox')).toHaveValue('chrome');
+  });
+
+  it('reverses pointer toggles immediately and keeps keyboard toggles instant', () => {
+    render(
+      <Card section="processes" title="Top processes">
+        <input aria-label="Query" defaultValue="retained" />
+      </Card>,
+    );
+    const toggle = screen.getByRole('button', { name: 'Top processes' });
+    const card = toggle.closest('section')!;
+    const body = document.getElementById(toggle.getAttribute('aria-controls')!)!;
+    const input = screen.getByRole('textbox');
+
+    fireEvent.click(toggle, { detail: 1 });
+    expect(card).toHaveAttribute('data-animate', 'true');
+    expect(body).toHaveAttribute('inert');
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    fireEvent.click(toggle, { detail: 1 });
+    expect(body).not.toHaveAttribute('inert');
+    expect(screen.getByRole('textbox')).toBe(input);
+    expect(input).toHaveValue('retained');
+
+    fireEvent.click(toggle, { detail: 0 });
+    expect(card).toHaveAttribute('data-animate', 'false');
+    expect(body).toHaveAttribute('aria-hidden', 'true');
+    fireEvent.click(toggle, { detail: 0 });
+    expect(body).toHaveAttribute('aria-hidden', 'false');
+    expect(screen.getByRole('textbox')).toBe(input);
   });
 
   it('remembers minimization on remount and replaces the aside with a compact summary', () => {
@@ -80,7 +110,10 @@ describe('Card disclosures', () => {
     const cpu = screen.getByRole('button', { name: 'CPU cores' });
     expect(network.getAttribute('aria-controls')).not.toBe(cpu.getAttribute('aria-controls'));
     fireEvent.click(network);
-    expect(screen.getByText('Network detail')).not.toBeVisible();
+    expect(screen.getByText('Network detail').closest('[aria-hidden]')).toHaveAttribute(
+      'aria-hidden',
+      'true',
+    );
     expect(screen.getByText('CPU detail')).toBeVisible();
     expect(screen.getByText('Always visible')).toBeVisible();
     expect(screen.queryByRole('button', { name: 'Static' })).not.toBeInTheDocument();
