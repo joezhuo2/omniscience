@@ -15,6 +15,7 @@ import {
 } from '@dnd-kit/sortable';
 import { useRef, useState, type ReactNode } from 'react';
 import {
+  SECTION_LABELS,
   moveSection,
   readSectionOrder,
   saveSectionOrder,
@@ -24,7 +25,20 @@ import { SectionDragContext } from './SectionDragContext';
 
 function SortableSection({ id, children }: { id: SectionId; children: ReactNode }) {
   const sortable = useSortable({ id, transition: null });
-  return <SectionDragContext.Provider value={sortable}>{children}</SectionDragContext.Provider>;
+  return (
+    <SectionDragContext.Provider
+      value={{
+        attributes: sortable.attributes,
+        listeners: sortable.listeners,
+        setNodeRef: sortable.setNodeRef,
+        setActivatorNodeRef: sortable.setActivatorNodeRef,
+        transform: sortable.transform,
+        isDragging: sortable.isDragging,
+      }}
+    >
+      {children}
+    </SectionDragContext.Provider>
+  );
 }
 
 export function SectionLayout({
@@ -61,6 +75,18 @@ export function SectionLayout({
         dragging.current = false;
       }}
       accessibility={{
+        announcements: {
+          onDragStart: ({ active }) => `${SECTION_LABELS[active.id as SectionId]} picked up.`,
+          onDragOver: ({ active, over }) =>
+            over
+              ? `${SECTION_LABELS[active.id as SectionId]} moved to position ${visible.indexOf(over.id as SectionId) + 1} of ${visible.length}.`
+              : undefined,
+          onDragEnd: ({ active, over }) =>
+            over
+              ? `${SECTION_LABELS[active.id as SectionId]} dropped at position ${visible.indexOf(over.id as SectionId) + 1}.`
+              : 'Reordering cancelled.',
+          onDragCancel: () => 'Reordering cancelled. The section order is unchanged.',
+        },
         screenReaderInstructions: {
           draggable:
             'Press Space or Enter to pick up a section. Use the up and down arrow keys to move it. Press Space or Enter to drop it, or Escape to cancel.',

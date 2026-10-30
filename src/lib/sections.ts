@@ -8,6 +8,14 @@ export const DEFAULT_SECTION_ORDER = [
 ] as const;
 export type SectionId = (typeof DEFAULT_SECTION_ORDER)[number];
 
+export const SECTION_LABELS: Record<SectionId, string> = {
+  'gpu-power': 'GPU & Power',
+  battery: 'Battery',
+  'cpu-cores': 'CPU cores',
+  network: 'Network',
+  processes: 'Top processes',
+};
+
 const PREFIX = 'omniscience:section:';
 const ORDER_KEY = 'omniscience:section-order';
 
