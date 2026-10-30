@@ -47,7 +47,10 @@ describe('Dashboard', () => {
       const button = screen.getByRole('button', { name: title });
       fireEvent.click(button);
       expect(button).toHaveAttribute('aria-expanded', 'false');
-      expect(document.getElementById(button.getAttribute('aria-controls')!)).not.toBeVisible();
+      expect(document.getElementById(button.getAttribute('aria-controls')!)).toHaveAttribute(
+        'aria-hidden',
+        'true',
+      );
     }
     expect(screen.getByTestId('value-cpu')).toBeVisible();
     expect(screen.getByTitle('Package power')).toBeVisible();

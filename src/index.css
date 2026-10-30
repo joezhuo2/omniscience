@@ -125,12 +125,57 @@ body {
   }
 }
 
+/* A grid track follows intrinsic content height and reverses from its current size.
+   Content stays mounted; inert and aria-hidden disable collapsed controls immediately. */
+.card-body {
+  display: grid;
+  grid-template-rows: 1fr;
+  opacity: 1;
+  visibility: visible;
+}
+
+.card-body-clip {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.card-chevron {
+  transform: rotate(90deg);
+}
+
+[data-collapsed='true'] > .card-body {
+  grid-template-rows: 0fr;
+  opacity: 0;
+  visibility: hidden;
+}
+
+[data-collapsed='true'] .card-chevron {
+  transform: rotate(0deg);
+}
+
+[data-animate='true'] > .card-body {
+  transition:
+    grid-template-rows var(--card-ms) var(--ease),
+    opacity var(--card-ms) var(--ease),
+    visibility 0s;
+}
+
+[data-animate='true'][data-collapsed='true'] > .card-body {
+  transition-delay: 0s, 0s, var(--card-ms);
+}
+
+[data-animate='true'] .card-chevron {
+  transition: transform var(--card-ms) var(--ease);
+}
+
 .section-sortable[data-dragging='true'] {
   cursor: grabbing;
   border-color: var(--color-island-muted);
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .card-body,
+  .card-chevron,
   .section-sortable {
     transition: none !important;
   }

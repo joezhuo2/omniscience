@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.17] - 2026-10-30
+
+### Added
+
+- Dashboard cards smoothly expand and collapse over 180 ms, with a rotating chevron and fading details. Rapid pointer toggles reverse the transition without resetting controls or saved preferences ([#42](https://github.com/joezhuo2/omniscience/issues/42)).
+- Collapsed details become inaccessible to keyboard and assistive technology immediately. Keyboard toggles and reduced-motion preferences use instant state changes.
+
+
 ## [0.1.16] - 2026-10-30
 
 ### Added
