@@ -231,6 +231,17 @@ mod tests {
     }
 
     #[test]
+    fn performance_limit_is_available_capacity_not_loss() {
+        assert_eq!(performance_loss_pct(100.0), Some(0.0));
+        assert_eq!(performance_loss_pct(120.0), Some(0.0));
+        assert_eq!(performance_loss_pct(75.0), Some(25.0));
+        assert_eq!(performance_loss_pct(99.0), Some(1.0));
+        for value in [0.0, -1.0, f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
+            assert_eq!(performance_loss_pct(value), None);
+        }
+    }
+
+    #[test]
     fn converts_units() {
         assert_eq!(mw_to_w(8223.5), 8.2235);
         assert_eq!(decikelvin_to_c(3231.5), Some(50.0));
