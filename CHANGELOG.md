@@ -11,8 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Reorder dashboard cards by dragging their grip handles, including minimized cards. The chosen order is remembered across dashboard reopening and app restarts ([#40](https://github.com/joezhuo2/omniscience/issues/40)).
-- Keyboard reordering: focus a grip, press Space or Enter, move with arrow keys, then drop with Space/Enter or cancel with Escape. Reordering preserves card input and minimize state; an absent battery card retains its saved position for when it returns.
+- Reorder dashboard cards by dragging anywhere on a card, including minimized cards, with animated slides as neighboring cards make room. The chosen order is remembered across dashboard reopening and app restarts ([#40](https://github.com/joezhuo2/omniscience/issues/40)).
+- Keyboard reordering: focus a card, press Space or Enter, move with arrow keys, then drop with Space/Enter or cancel with Escape. Reduced-motion preferences disable sliding transitions. Reordering preserves card input and minimize state; an absent battery card retains its saved position for when it returns.
 
 ## [0.1.15] - 2026-10-30
 

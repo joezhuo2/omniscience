@@ -50,7 +50,7 @@ export function Card({
       aria-describedby={attributes?.['aria-describedby']}
       aria-roledescription={attributes ? 'sortable section' : undefined}
       onMouseDown={listeners ? (event) => listeners.onMouseDown?.(event) : undefined}
-      onTouchStart={listeners?.onTouchStart}
+      onTouchStart={listeners ? (event) => listeners.onTouchStart?.(event) : undefined}
       onKeyDown={
         listeners
           ? (event) => {
