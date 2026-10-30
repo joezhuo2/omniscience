@@ -28,6 +28,16 @@ describe('temperature rings', () => {
     );
   });
 
+  it('keeps a sampled idle dGPU but omits an unavailable one', () => {
+    expect(ringSpecs().map((r) => r.key)).toContain('dgpu');
+    expect(ringSpecs(sampleSnapshot.core).map((r) => r.key)).not.toContain('dgpu');
+    expect(
+      ringSpecs({ ...sampleSnapshot.core, dgpu: { percent: 0, level: 'normal' } }).map(
+        (r) => r.key,
+      ),
+    ).toContain('dgpu');
+  });
+
   it('renders live inner temperatures without expanded detail and preserves network rings', () => {
     const rings = ringSpecs(sampleSnapshot.core);
     expect(rings.find((r) => r.key === 'cpu')?.inner?.percent).toBeCloseTo((48 / 105) * 100);
