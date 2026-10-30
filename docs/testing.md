@@ -35,7 +35,7 @@ Helpers:
 - [ ] Moving the cursor onto the pill opens the dashboard at once with the clip-path morph. No flicker or white flash.
 - [ ] Moving the cursor away collapses it at once; coming back mid-collapse reverses it.
 - [ ] Esc closes it.
-- [ ] Header shows package watts and hottest temperature, or `--` where the hardware does not report them.
+- [ ] Header shows the app name, stale indicator and Settings only. Package watts appear once in GPU & Power, CPU temperature under the CPU ring; missing readings show `--` or `—`.
 - [ ] Metric strip: CPU % with GHz on a second line, RAM like `15/31 GB`, download/upload on two lines.
 - [ ] GPU & Power card lists each GPU with usage, VRAM and temperature, and the watt breakdown.
 - [ ] A dGPU under load shows its fan speed in rpm (if its driver reports one); a GPU at its thermal limit shows a red Throttling chip.
