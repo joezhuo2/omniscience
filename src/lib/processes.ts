@@ -42,7 +42,10 @@ export function visibleProcesses(
         case 'disk':
         case 'network': {
           const field = sort === 'disk' ? 'disk_bps' : 'net_bps';
-          return (processRate(b[field]) ?? -1) - (processRate(a[field]) ?? -1) || a.key.localeCompare(b.key);
+          return (
+            (processRate(b[field]) ?? -1) - (processRate(a[field]) ?? -1) ||
+            a.key.localeCompare(b.key)
+          );
         }
       }
     })
