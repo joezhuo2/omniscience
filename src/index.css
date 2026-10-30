@@ -9,6 +9,7 @@ body,
   width: 100%;
   height: 100%;
   overflow: hidden;
+  overscroll-behavior: none;
 }
 
 /* Native scrollbars and form parts render dark. */
@@ -90,7 +91,7 @@ body {
 .panel-scroll {
   min-height: 0;
   overflow-y: auto;
-  overscroll-behavior: contain;
+  overscroll-behavior: none;
   scrollbar-width: thin;
 }
 

@@ -188,7 +188,7 @@ export function ProcessList() {
             )}
             <ul
               data-testid="process-rows"
-              className={`-mx-1.5 overscroll-contain ${showAll ? 'max-h-36 overflow-y-auto' : ''}`}
+              className={`-mx-1.5 overscroll-none ${showAll ? 'max-h-36 overflow-y-auto' : ''}`}
             >
               {rows.map((p) => (
                 <Row key={p.key} p={p} sort={sort} armed={armed === p.key} onKill={onKill} />
