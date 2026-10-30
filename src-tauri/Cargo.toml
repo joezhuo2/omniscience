@@ -34,6 +34,7 @@ opt-level = 3
 strip = true
 
 [target.'cfg(windows)'.dependencies]
+ferrisetw = { version = "1.2", default-features = false }
 # Same versions wry uses, for WebView2 memory-level control.
 webview2-com = "0.39"
 windows-core = "0.62"
