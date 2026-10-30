@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.18] - 2026-10-30
+
+### Changed
+
+- Refresh the README in the Tickr format with an icon-and-name banner, centered badges and navigation, an animated demo below the introduction, and dashboard, pill and settings screenshots using sample telemetry ([#32](https://github.com/joezhuo2/omniscience/issues/32)).
+- Update feature descriptions for card reordering and minimization, per-app Disk/Network rates, the dashboard header and CPU performance limits.
+
 ## [0.1.17] - 2026-10-30
 
 ### Added

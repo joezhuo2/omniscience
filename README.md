@@ -1,31 +1,38 @@
-# Omniscience
-
-A lightweight, open-source system monitor that floats at the top of your screen as a
-Dynamic Island–style pill and expands into a compact dashboard on hover.
-
-Omniscience stays out of the way: no taskbar button, no Alt+Tab entry, no window to manage. Six
-small rings show CPU, RAM, GPU, disk and network load at a glance. Move the cursor onto the pill and
-it morphs into a dashboard with per-core usage, GPU power and temperature, and the apps using the
-most resources.
+<p align="center"><img src="docs/assets/omniscience-banner.png" alt="Omniscience — system monitor" width="100%"></p>
 
 <p align="center">
-  <a href="https://github.com/joezhuo2/omniscience/releases/latest"><img alt="version" src="https://img.shields.io/github/v/release/joezhuo2/omniscience"></a>
-  <img alt="Windows 10/11" src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?logo=windows&logoColor=white">
-  <img alt="macOS experimental" src="https://img.shields.io/badge/macOS-experimental-lightgrey?logo=apple&logoColor=white">
-  <img alt="Tauri 2" src="https://img.shields.io/badge/Tauri-2-24C8DB?logo=tauri&logoColor=white">
-  <img alt="Rust" src="https://img.shields.io/badge/Rust-stable-000000?logo=rust&logoColor=white">
-  <img alt="React 19" src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black">
-  <img alt="Idle RAM about 45 MB" src="https://img.shields.io/badge/idle%20RAM-~45%20MB-brightgreen">
-  <img alt="No admin required" src="https://img.shields.io/badge/admin-not%20required-brightgreen">
-  <img alt="No telemetry" src="https://img.shields.io/badge/telemetry-none-brightgreen">
-  <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-yellow"></a>
+  <a href="https://github.com/joezhuo2/omniscience/releases/latest"><img src="https://img.shields.io/github/v/release/joezhuo2/omniscience?logo=github&amp;color=orange" alt="release"></a>
+  <a href="https://github.com/joezhuo2/omniscience/releases"><img src="https://img.shields.io/github/downloads/joezhuo2/omniscience/total?logo=github&amp;color=blue" alt="downloads"></a>
+  <a href="https://github.com/joezhuo2/omniscience/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/joezhuo2/omniscience/ci.yml?branch=main&amp;label=CI&amp;logo=githubactions&amp;logoColor=white" alt="CI"></a>
+  <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6" alt="Windows 10/11">
+  <img src="https://img.shields.io/badge/macOS-experimental-lightgrey?logo=apple&amp;logoColor=white" alt="macOS experimental">
+  <a href="https://v2.tauri.app"><img src="https://img.shields.io/badge/Tauri-2-24C8DB?logo=tauri&amp;logoColor=white" alt="Tauri 2"></a>
+  <a href="https://react.dev"><img src="https://img.shields.io/badge/React-19-61DAFB?logo=react&amp;logoColor=black" alt="React 19"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/joezhuo2/omniscience?color=green" alt="MIT license"></a>
 </p>
 
-**Jump to:** [✨ Features](#features) · [📦 Installation](#installation) · [🖱️ Usage](#usage) ·
-[⚙️ Configuration](#configuration) · [💻 Platform support](#platform-support) ·
-[⏱️ Performance](#performance) · [🔒 Privacy](#privacy-and-permissions) ·
-[🩺 Troubleshooting](#troubleshooting) · [🛠️ Development](#development) · [🚀 Releasing](#releasing) ·
-[🤝 Contributing](#contributing) · [🙏 Acknowledgements](#acknowledgements) · [📄 License](#license)
+<p align="center">
+  <a href="#installation">Download</a> •
+  <a href="#features">Features</a> •
+  <a href="#screenshots">Screenshots</a> •
+  <a href="#usage">Usage</a> •
+  <a href="#configuration">Settings</a> •
+  <a href="#platform-support">Platforms</a> •
+  <a href="#privacy-and-permissions">Privacy</a> •
+  <a href="#development">Development</a> •
+  <a href="#contributing">Contributing</a> •
+  <a href="#license">License</a>
+</p>
+
+> A lightweight, open-source system monitor built with Tauri 2, Rust and React.
+> Omniscience floats above your desktop as a Dynamic Island–style pill, with rings
+> for CPU, RAM, GPU, disk and network activity. Hover to open a compact dashboard
+> with per-core usage, GPU power and temperature, battery life and top processes.
+> It lives in the tray, with no taskbar button or Alt+Tab entry.
+
+<p align="center"><img src="docs/assets/demo.gif" alt="Omniscience demo: the pill expands into the dashboard, GPU details expand and collapse, processes sort by RAM, and Settings opens" width="600"></p>
+
+<p align="center"><em>Current interface with sample telemetry. Sensor availability varies by hardware and platform.</em></p>
 
 ## Features
 
@@ -47,8 +54,8 @@ Hover the pill and it expands in place with a 280 ms clip-path morph. It opens t
 arrives and collapses the moment it leaves; coming back mid-collapse reverses it. Press **Esc** to
 close it.
 
-- ⚡ **Header:** total package power in watts and the hottest temperature reported, plus an amber
-  indicator if telemetry stops arriving.
+- ⚡ **Header:** a Settings shortcut and an amber indicator if telemetry stops arriving. Package
+  watts live in GPU & Power; CPU temperature sits below the CPU ring.
 - 📊 **Metric strip:** labeled values for each ring, such as CPU usage with its live clock in GHz,
   RAM as `15/31 GB`, and download/upload speeds on two lines. CPU temperature appears on a third
   line; each GPU temperature appears on a second line. Missing temperatures show `—`. The CPU
@@ -60,14 +67,20 @@ close it.
 - 🔋 **Battery card** (laptops): charge, charging or draining with the rate in watts, and time left or
   time to full, read from the battery driver. A skeleton appears while battery data loads; the card hides on machines without a battery.
 - 🔥 **CPU heatmap:** one cell per logical core. Hover a cell for its usage, clock, per-core watts and
-  the package temperature. A Throttled chip shows how far power or thermal limits hold the CPU back.
+  the package temperature. A performance-limit chip reports lost CPU performance headroom from
+  Windows power policy or platform limits; it does not directly measure thermal throttling.
 - 🌐 **Network card:** each active adapter with its IPv4 address, with ping latency on the first row to a
   host you choose (1.1.1.1 by default), and optionally your public IP.
 - 📋 **Top processes:** grouped by app (so 30 browser processes show as one row), sortable by CPU,
-  RAM or GPU. The GPU tab shows each app's GPU usage and GPU memory. Three rows by default, with
+  RAM, GPU, Disk or Network. The GPU tab shows each app's GPU usage and GPU memory; Disk and
+  Network show bytes per second when Windows per-app telemetry is available. Three rows by default, with
   "Show more" for a scrollable list. Search by app name or PID; skeletons appear while the search updates.
 - 🛑 **End process:** a two-step "End?" button. Critical OS processes, PIDs 0 and 4, and Omniscience
   itself are refused; the row comes back with a toast explaining why.
+
+- ↕️ **Arrange cards:** drag a card to reorder it, or focus it and use Space/Enter, arrow keys,
+  then Space/Enter to drop (Esc cancels). Click a section heading to minimize or expand its details.
+  Order and minimized state are remembered across restarts; reduced-motion preferences are respected.
 
 Detailed per-core, GPU memory and per-process data is only sampled while the dashboard is open.
 Temperature readings also update while collapsed; sleeping discrete GPUs are not queried.
@@ -87,7 +100,9 @@ Temperature readings also update while collapsed; sleeping discrete GPUs are not
 
 ### No extra software
 
-- 🔓 No admin rights, kernel drivers, or third-party tools such as HWiNFO or LibreHardwareMonitor.
+- 🔓 Core monitoring needs no admin rights, kernel drivers, or third-party tools such as HWiNFO
+  or LibreHardwareMonitor. Optional per-app Disk and Network rates use Windows ETW and may require
+  administrator rights; unavailable readings display an em dash.
 - 🧩 On Windows, sensors come from built-in performance counters, the Energy Meter counters and
   D3DKMT. NVIDIA's NVML is not used, so a sleeping laptop dGPU is never woken just to be measured.
 - ❔ Missing sensors show `--`.
@@ -166,7 +181,7 @@ Settings are kept after uninstalling. Delete the [settings file](#configuration)
 | Show or hide the overlay | `Ctrl+Shift+O` (`Cmd+Shift+O` on macOS), or tray > Show / Hide |
 | Move the overlay         | Drag the pill (the row of rings)                               |
 | Reset its position       | Settings > Reset position                                      |
-| Sort processes           | Click the CPU / RAM / GPU toggle on the Top processes card     |
+| Sort processes           | Click CPU / RAM / GPU / Disk / Network on Top processes        |
 | Search processes         | Type an app name or PID in the Top processes search bar        |
 | End an app               | Click **End?** on its row, then confirm                        |
 | Open settings            | Gear icon in the dashboard header, or tray > Settings…         |
@@ -175,6 +190,21 @@ Settings are kept after uninstalling. Delete the [settings file](#configuration)
 
 Clicks pass through the transparent area around the pill to whatever is underneath, so the overlay
 never blocks the window behind it.
+
+## Screenshots
+
+Captured from the current React interface using sample telemetry, with private addresses and
+example app names. These illustrate the UI rather than measurements from a particular machine.
+
+<p align="center"><img src="docs/assets/pill.png" alt="Collapsed Omniscience pill with six colored metric rings" width="600"></p>
+
+| Dashboard — overview                                                                                                                                                                                                        | Dashboard — lower sections                                                                                                                                                                                                                             |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| <img src="docs/assets/dashboard.png" alt="Expanded dashboard showing CPU, RAM, GPU, Disk and Network rings, GPU power and VRAM, Battery and CPU cores"><br>**Overview** — metric rings, GPU & Power, Battery and CPU cores. | <img src="docs/assets/dashboard-details.png" alt="Dashboard scrolled down with expanded GPU, battery, CPU cores, Network adapters and Top processes including search and sort controls"><br>**Lower sections** — CPU cores, Network and Top processes. |
+
+<p align="center"><img src="docs/assets/settings.png" alt="Settings with load thresholds, refresh interval, show/hide hotkey, startup, update and fullscreen options, ping target, public IP toggle and position reset" width="520"><br><em>Settings — thresholds, hotkey, privacy controls and position reset.</em></p>
+
+[Media details](docs/assets/README.md)
 
 ## Configuration
 
@@ -241,8 +271,10 @@ reference machine are in [docs/perf.md](docs/perf.md).
   ping to the ping target while the dashboard is open, and, only if you turn on **Show public IP**,
   one DNS query to OpenDNS every ten minutes. Turn off **Auto-check for updates** and clear the ping
   target to stop all of it.
-- 🛡️ It needs no admin rights. Ending a process that belongs to another user or an elevated app fails
-  with an "access denied" toast rather than prompting for elevation.
+- 🛡️ Core monitoring runs without admin rights. Windows per-app Disk and Network rates use a
+  private ETW session while the dashboard is visible and expanded, and may require administrator
+  rights. Ending a process that belongs to another user or an elevated app fails with an
+  "access denied" toast rather than prompting for elevation.
 
 ## Troubleshooting
 
