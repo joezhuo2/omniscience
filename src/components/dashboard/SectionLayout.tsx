@@ -53,7 +53,10 @@ export function SectionLayout({
   const visible = order.filter((id) => !hidden.includes(id));
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+      scrollBehavior: 'auto',
+    }),
   );
   function finish({ active, over }: DragEndEvent) {
     dragging.current = false;

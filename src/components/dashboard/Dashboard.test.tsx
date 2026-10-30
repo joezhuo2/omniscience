@@ -246,7 +246,7 @@ describe('Dashboard', () => {
     render(<Dashboard />);
     fireEvent.click(screen.getByLabelText('End Code.exe'));
     fireEvent.click(screen.getByLabelText('Confirm end Code.exe'));
-    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(/administrator/));
+    await waitFor(() => expect(screen.getByText(/needs administrator rights/)).toBeInTheDocument());
     expect(screen.getByText('Code')).toBeInTheDocument();
   });
 

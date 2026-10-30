@@ -18,7 +18,8 @@ export function Card({
   children: ReactNode;
 }) {
   const id = useId();
-  const drag = useSectionDrag();
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, isDragging } =
+    useSectionDrag() ?? {};
   const [collapsed, setCollapsed] = useState(() => readSectionCollapsed(section));
   const toggle = () => {
     const next = !collapsed;
@@ -28,15 +29,15 @@ export function Card({
   const Chevron = collapsed ? ChevronRight : ChevronDown;
   return (
     <section
-      ref={drag?.setNodeRef}
+      ref={setNodeRef}
       data-section={section}
       style={
-        drag
+        attributes
           ? {
-              transform: CSS.Translate.toString(drag.transform),
+              transform: CSS.Translate.toString(transform ?? null),
               position: 'relative',
-              zIndex: drag.isDragging ? 1 : undefined,
-              opacity: drag.isDragging ? 0.65 : undefined,
+              zIndex: isDragging ? 1 : undefined,
+              opacity: isDragging ? 0.65 : undefined,
             }
           : undefined
       }
@@ -45,12 +46,12 @@ export function Card({
     >
       <header className={`${collapsed ? '' : 'mb-2 '}flex items-center justify-between gap-2`}>
         <div className="flex min-w-0 items-center gap-1">
-          {drag && (
+          {attributes && (
             <button
-              ref={drag.setActivatorNodeRef}
+              ref={setActivatorNodeRef}
               type="button"
-              {...drag.attributes}
-              {...drag.listeners}
+              {...attributes}
+              {...listeners}
               aria-label={`Reorder ${title}`}
               title="Drag to reorder, or press Space and use arrow keys"
               className="-ml-1 flex h-5 w-4 shrink-0 touch-none cursor-grab items-center justify-center rounded text-island-muted hover:text-island-text focus-visible:ring-1 focus-visible:ring-island-muted focus-visible:outline-none active:cursor-grabbing"
