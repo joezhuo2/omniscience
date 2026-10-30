@@ -46,7 +46,9 @@ Helpers:
 - [ ] Compare CPU cores against `\Processor Information(_Total)\% Performance Limit`: raw 100% shows no badge; raw 75% means Throttled −25%. Missing/zero raw readings hide the badge. Check AC, battery and sustained load; the tooltip explains this is a Windows power/platform estimate.
 - [ ] Network card shows the first adapter, IPv4 and ping on one line, with no repeated download/upload rates. Extra adapters stay listed; ping appears only once (`--` with the network unplugged).
 - [ ] Skeletons show briefly on first open, then real data.
-- [ ] Top processes are grouped by app. The CPU/RAM/GPU toggle re-sorts. 3 rows by default; "Show more" expands a scrollable list.
+- [ ] Top processes are grouped by app. The CPU/RAM/GPU/Disk/Network toggle re-sorts. 3 rows by default; "Show more" expands a scrollable list.
+- [ ] On Windows with permission to trace, generate disk reads/writes and TCP/UDP traffic: Disk and Network tabs show bytes/second and put the busiest app first. Search and Show more retain the selected sort. Without tracing permission, rates show `—` with an explanation, never fabricated zeroes.
+- [ ] Collapse or hide the overlay and verify its private `Omniscience-ProcessIo-*` ETW session stops (`logman query -ets`); reopening starts a fresh session without stale traffic.
 - [ ] On the GPU tab, a game or video player leads the list with GPU usage close to Task Manager's GPU column and its GPU memory.
 - [ ] End? then confirm on a harmless app (e.g. Notepad) closes it.
 - [ ] End on a critical process (e.g. `csrss`, `System`) or on Omniscience itself is refused: the row comes back with a toast.
