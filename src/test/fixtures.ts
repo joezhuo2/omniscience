@@ -53,6 +53,8 @@ export const sampleDetail: DetailMetrics = {
       mem_bytes: 2 * GB,
       gpu_pct: 2,
       gpu_mem_bytes: 0.3 * GB,
+      disk_bps: 1024,
+      net_bps: 2 * 1024 * 1024,
     },
     {
       key: 'code',
@@ -62,6 +64,8 @@ export const sampleDetail: DetailMetrics = {
       mem_bytes: 3 * GB,
       gpu_pct: 0,
       gpu_mem_bytes: 0,
+      disk_bps: 4 * 1024 * 1024,
+      net_bps: 1024,
     },
   ],
 };

@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.14] - 2026-10-30
+
+### Added
+
+- Disk and Network sorting in Top processes, with per-app bytes/second, grouped across each app’s processes and compatible with search and Show more ([#24](https://github.com/joezhuo2/omniscience/issues/24)).
+- Windows collects physical disk read/write and IPv4/IPv6 TCP/UDP payload traffic with a private ETW session only while the dashboard is visible and expanded. Administrator rights may be required. Unavailable telemetry displays an em dash and an explanation, and sorts after measured idle apps; other platforms currently report these rates as unavailable.
+
 ## [0.1.13] - 2026-10-30
 
 ### Fixed

@@ -9,8 +9,9 @@ import type { TempSample } from "./TempSample";
 
 export type DetailMetrics = { cores: Array<CoreSample>, temps: Array<TempSample>, gpus: Array<GpuDetail>, power: PowerBreakdown | null, 
 /**
- * How far power or thermal limits hold the CPU below its rated speed, in percent (0 when
- * unthrottled).
+ * Loss of available nominal CPU performance: 100 minus Windows `% Performance Limit`.
+ * Zero means full headroom; missing/zero raw counters yield None. This is not a direct
+ * thermal measurement and can reflect Windows power policy.
  */
 cpu_limit_pct: number | null, 
 /**

@@ -1,11 +1,12 @@
 import { invoke } from '@tauri-apps/api/core';
 import { ChevronDown, Search, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { formatBytes } from '../../lib/format';
+import { formatBytes, formatRateRounded } from '../../lib/format';
 import {
   COLLAPSED_PROCESSES,
   CONFIRM_MS,
   killFailure,
+  processRate,
   visibleProcesses,
   type ProcessSort,
 } from '../../lib/processes';
@@ -17,13 +18,17 @@ import { Skeleton } from './Skeleton';
 
 function SortToggle({ sort, onChange }: { sort: ProcessSort; onChange: (s: ProcessSort) => void }) {
   return (
-    <div role="tablist" className="flex rounded-md bg-island-hover p-0.5 text-[10px]">
-      {(['cpu', 'ram', 'gpu'] as const).map((s) => (
+    <div
+      role="tablist"
+      aria-label="Sort processes"
+      className="flex rounded-md bg-island-hover p-0.5 text-[10px]"
+    >
+      {(['cpu', 'ram', 'gpu', 'disk', 'network'] as const).map((s) => (
         <button
           key={s}
           role="tab"
           aria-selected={sort === s}
-          className={`rounded px-2 py-0.5 font-medium uppercase transition-colors ${
+          className={`rounded px-1.5 py-0.5 font-medium uppercase transition-colors ${
             sort === s
               ? 'bg-island-track text-island-text'
               : 'text-island-muted hover:text-island-text'
@@ -50,14 +55,29 @@ function Row({
 }) {
   // The GPU view swaps both columns for GPU usage and GPU memory.
   const gpu = sort === 'gpu';
+  const throughput = sort === 'disk' || sort === 'network';
+  const rate = processRate(sort === 'disk' ? p.disk_bps : p.net_bps);
   return (
     <li className="group flex items-center gap-2 rounded-md px-1.5 py-1 text-[11px] hover:bg-island-track/30">
       <span className="min-w-0 flex-1 truncate text-island-text" title={p.name}>
         {p.name.replace(/\.exe$/i, '')}
         {p.pids.length > 1 && <span className="ml-1 text-island-muted">×{p.pids.length}</span>}
       </span>
-      <span className="w-12 text-right text-island-text tabular-nums">
-        {(gpu ? p.gpu_pct : p.cpu_pct).toFixed(1)}%
+      <span
+        className={`${throughput ? 'w-20' : 'w-12'} text-right text-island-text tabular-nums`}
+        title={
+          throughput
+            ? sort === 'disk'
+              ? 'Disk read + write'
+              : 'Network send + receive'
+            : undefined
+        }
+      >
+        {throughput
+          ? rate == null
+            ? '—'
+            : formatRateRounded(rate)
+          : `${(gpu ? p.gpu_pct : p.cpu_pct).toFixed(1)}%`}
       </span>
       <span
         className="w-16 text-right text-island-muted tabular-nums"
@@ -167,6 +187,13 @@ export function ProcessList() {
           </button>
         )}
       </div>
+      {(sort === 'disk' || sort === 'network') &&
+        groups &&
+        groups.every((p) => processRate(sort === 'disk' ? p.disk_bps : p.net_bps) == null) && (
+          <p role="status" className="mb-2 text-[10px] text-island-muted">
+            Per-app throughput is unavailable. On Windows, administrator rights may be required.
+          </p>
+        )}
       <div id="process-results" aria-busy={!groups || searching}>
         {!groups || searching ? (
           <div className="space-y-1.5">

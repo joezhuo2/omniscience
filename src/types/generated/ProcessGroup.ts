@@ -20,4 +20,12 @@ gpu_pct: number,
 /**
  * Dedicated GPU memory in use across adapters.
  */
-gpu_mem_bytes: number, };
+gpu_mem_bytes: number, 
+/**
+ * Physical disk bytes read + written per second; None when collection is unavailable.
+ */
+disk_bps: number | null, 
+/**
+ * TCP/UDP payload bytes sent + received per second; None when collection is unavailable.
+ */
+net_bps: number | null, };

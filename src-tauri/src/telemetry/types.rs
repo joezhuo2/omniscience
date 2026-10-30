@@ -205,6 +205,10 @@ pub struct ProcessGroup {
     /// Dedicated GPU memory in use across adapters.
     #[ts(type = "number")]
     pub gpu_mem_bytes: u64,
+    /// Physical disk bytes read + written per second; None when collection is unavailable.
+    pub disk_bps: Option<f64>,
+    /// TCP/UDP payload bytes sent + received per second; None when collection is unavailable.
+    pub net_bps: Option<f64>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, TS)]

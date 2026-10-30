@@ -235,6 +235,39 @@ describe('Dashboard', () => {
     expect(rows()[0]).toHaveTextContent('307 MB');
   });
 
+  it('sorts by disk and network rates and preserves the selected tab during search', () => {
+    vi.useFakeTimers();
+    try {
+      act(() => useTelemetryStore.getState().setSnapshot(withDetail));
+      render(<Dashboard />);
+      const rows = () => screen.getByTestId('process-rows').querySelectorAll('li');
+      fireEvent.click(screen.getByRole('tab', { name: 'disk' }));
+      expect(rows()[0]).toHaveTextContent('Code');
+      expect(rows()[0]).toHaveTextContent('4 MB/s');
+      fireEvent.click(screen.getByRole('tab', { name: 'network' }));
+      expect(rows()[0]).toHaveTextContent('chrome');
+      expect(rows()[0]).toHaveTextContent('2 MB/s');
+      fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'Code' } });
+      act(() => vi.advanceTimersByTime(200));
+      expect(screen.getByRole('tab', { name: 'network' })).toHaveAttribute('aria-selected', 'true');
+      expect(rows()).toHaveLength(1);
+      expect(rows()[0]).toHaveTextContent('1 KB/s');
+      act(() =>
+        useTelemetryStore.getState().setSnapshot({
+          ...withDetail,
+          detail: {
+            ...sampleDetail,
+            processes: sampleDetail.processes.map((p) => ({ ...p, net_bps: null })),
+          },
+        }),
+      );
+      expect(rows()[0]).toHaveTextContent('—');
+      expect(screen.getByText(/Per-app throughput is unavailable/)).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('shows skeletons while searching, ignores superseded queries, and clears immediately', () => {
     vi.useFakeTimers();
     try {
@@ -303,6 +336,8 @@ describe('Dashboard', () => {
         mem_bytes: 1,
         gpu_pct: 0,
         gpu_mem_bytes: 0,
+        disk_bps: null,
+        net_bps: null,
       })),
     };
     act(() => useTelemetryStore.getState().setSnapshot({ ...sampleSnapshot, detail: many }));

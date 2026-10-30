@@ -6,6 +6,8 @@ mod battery;
 mod parse;
 mod peak;
 mod ping;
+#[cfg(windows)]
+mod process_io;
 pub mod processes;
 mod public_ip;
 mod sampler;
@@ -100,6 +102,7 @@ impl Telemetry {
             let control = {
                 let mut c = self.control.lock().unwrap_or_else(|e| e.into_inner());
                 while !c.visible {
+                    sampler.suspend_detail();
                     c = self.wake.wait(c).unwrap_or_else(|e| e.into_inner());
                 }
                 c.clone()
