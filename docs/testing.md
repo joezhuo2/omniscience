@@ -38,6 +38,9 @@ Helpers:
 - [ ] Header shows the app name, stale indicator and Settings only. Package watts appear once in GPU & Power, CPU temperature under the CPU ring; missing readings show `--` or `—`.
 - [ ] Click each card heading or focus it and press Space/Enter to minimize and expand GPU & Power, Battery, CPU cores, Network and Top processes independently. Minimized cards keep their heading and key summary; rings stay visible and the overlay shrinks to fit.
 - [ ] Minimize several cards, close/reopen the dashboard, then restart the app: those cards stay minimized. Expand them to undo. Process search text and sort selection survive minimizing and expanding the card within the same dashboard session.
+- [ ] Drag each card by its grip into a new position, including minimized cards and across the scroll area. Titles still minimize/expand, and search, sorting and End buttons remain usable. Reopen the dashboard and restart the app: the chosen order is retained.
+- [ ] Focus a grip and press Space/Enter, move with Up/Down, then drop with Space/Enter. Escape cancels the drag without changing the saved order or closing the overlay; a later Escape closes it normally. Focus returns to the grip.
+- [ ] Reorder with no battery present, then check a laptop/battery-present fixture: the battery keeps its saved relative position. Invalid order preferences fall back to all known sections without duplicates.
 - [ ] Metric strip: CPU % with GHz on a second line, RAM like `15/31 GB`, download/upload on two lines.
 - [ ] GPU & Power card lists each GPU with usage, VRAM and temperature, and the watt breakdown.
 - [ ] A dGPU under load shows its fan speed in rpm (if its driver reports one); a GPU at its thermal limit shows a red Throttling chip.
