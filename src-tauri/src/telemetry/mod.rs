@@ -6,6 +6,8 @@ mod battery;
 mod parse;
 mod peak;
 mod ping;
+#[cfg(windows)]
+mod process_io;
 pub mod processes;
 mod public_ip;
 mod sampler;
