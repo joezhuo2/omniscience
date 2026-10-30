@@ -23,11 +23,21 @@ describe('Pill', () => {
     expect(screen.queryAllByTestId('ring-arc')).toHaveLength(0);
   });
 
-  it('draws arcs from the snapshot and leaves a missing dGPU dashed', () => {
+  it('centers five live rings when the discrete GPU is unavailable', () => {
     render(<Pill />);
     act(() => useTelemetryStore.getState().setSnapshot(sampleSnapshot));
-    // Six utilization arcs plus CPU/iGPU temperature arcs; dGPU remains missing.
+    // Five metrics plus the upload and CPU/iGPU temperature arcs.
     expect(screen.getAllByTestId('ring-arc')).toHaveLength(8);
-    expect(screen.getByRole('img', { name: 'dGPU' })).toHaveClass('opacity-40');
+    expect(screen.queryByRole('img', { name: 'dGPU' })).not.toBeInTheDocument();
+    expect(screen.getAllByRole('img')).toHaveLength(5);
+    expect(screen.getByTestId('pill')).toHaveClass('justify-center');
+    act(() =>
+      useTelemetryStore.getState().setSnapshot({
+        ...sampleSnapshot,
+        core: { ...sampleSnapshot.core, dgpu: { percent: 0, level: 'normal' } },
+      }),
+    );
+    expect(screen.getAllByRole('img')).toHaveLength(6);
+    expect(screen.getByRole('img', { name: 'dGPU' })).toBeInTheDocument();
   });
 });

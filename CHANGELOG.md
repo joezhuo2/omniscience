@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.11] - 2026-10-30
+
+### Changed
+
+- Center the collapsed pill rings without an empty dGPU slot when the discrete GPU is absent or asleep. The expanded dashboard keeps all six indicators. A sampled GPU at 0% remains visible; loading retains all six placeholders ([#21](https://github.com/joezhuo2/omniscience/issues/21)).
+
 ## [0.1.10] - 2026-10-30
 
 ### Fixed
