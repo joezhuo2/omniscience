@@ -53,6 +53,17 @@ describe('Dashboard', () => {
     expect(screen.getAllByText('8.2 W').length).toBeGreaterThan(0);
   });
 
+  it('shows package watts once and keeps temperature out of the header', () => {
+    act(() => useTelemetryStore.getState().setSnapshot(withDetail));
+    render(<Dashboard onSettings={() => {}} />);
+    expect(screen.getAllByText('8.2 W')).toHaveLength(1);
+    expect(screen.getByTitle('Package power')).toHaveTextContent('8.2 W');
+    const header = screen.getByText('Omniscience').closest('header')!;
+    expect(header).not.toHaveTextContent(/W|°C/);
+    expect(within(header).getByRole('button', { name: 'Settings' })).toBeInTheDocument();
+    expect(screen.getByTestId('value-cpu')).toHaveTextContent('48°C');
+  });
+
   it('shows GPU fan speed and throttling', () => {
     act(() => useTelemetryStore.getState().setSnapshot(withDetail));
     render(<Dashboard />);
