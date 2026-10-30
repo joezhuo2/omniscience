@@ -40,6 +40,34 @@ describe('Dashboard', () => {
     expect(screen.queryByText('Battery')).not.toBeInTheDocument();
   });
 
+  it('minimizes every section independently while keeping metric rings and summaries visible', () => {
+    act(() => useTelemetryStore.getState().setSnapshot(withDetail));
+    const { unmount } = render(<Dashboard />);
+    for (const title of ['GPU & Power', 'Battery', 'CPU cores', 'Network', 'Top processes']) {
+      const button = screen.getByRole('button', { name: title });
+      fireEvent.click(button);
+      expect(button).toHaveAttribute('aria-expanded', 'false');
+      expect(document.getElementById(button.getAttribute('aria-controls')!)).not.toBeVisible();
+    }
+    expect(screen.getByTestId('value-cpu')).toBeVisible();
+    expect(screen.getByTitle('Package power')).toBeVisible();
+    expect(screen.getByText('2 threads')).toBeVisible();
+    expect(
+      screen.getByRole('region', { name: 'Battery' }).querySelector('header'),
+    ).toHaveTextContent('78%');
+    unmount();
+    render(<Dashboard />);
+    for (const title of ['GPU & Power', 'Battery', 'CPU cores', 'Network', 'Top processes']) {
+      const button = screen.getByRole('button', { name: title });
+      expect(button).toHaveAttribute('aria-expanded', 'false');
+      fireEvent.click(button);
+      expect(button).toHaveAttribute('aria-expanded', 'true');
+      expect(document.getElementById(button.getAttribute('aria-controls')!)).toBeVisible();
+    }
+    expect(screen.getByTestId('battery-percent')).toBeVisible();
+    expect(screen.getByRole('searchbox')).toBeVisible();
+  });
+
   it('shows metric values, GPU memory and power', () => {
     act(() => useTelemetryStore.getState().setSnapshot(withDetail));
     render(<Dashboard />);
@@ -131,7 +159,7 @@ describe('Dashboard', () => {
     const row = screen.getByText('Wi-Fi').parentElement!;
     expect(within(row).getByText('192.168.1.20')).toBeInTheDocument();
     expect(within(row).getByTestId('ping')).toHaveTextContent('14 ms');
-    const card = screen.getByText('Network', { selector: 'h2' }).closest('section')!;
+    const card = screen.getByRole('heading', { name: 'Network' }).closest('section')!;
     expect(card).not.toHaveTextContent(/↓|↑|MB\/s|KB\/s/);
     expect(within(card).getAllByTestId('ping')).toHaveLength(1);
     expect(screen.getByText('203.0.113.9')).toBeInTheDocument();
