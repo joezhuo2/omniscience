@@ -8,7 +8,10 @@ import { afterEach, beforeEach } from 'vitest';
 const hasDom = typeof window !== 'undefined';
 
 beforeEach(() => {
-  if (hasDom) mockIPC(() => null);
+  if (hasDom) {
+    localStorage.clear();
+    mockIPC(() => null);
+  }
 });
 
 afterEach(() => {
