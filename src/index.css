@@ -91,7 +91,7 @@ body {
 .panel-scroll {
   min-height: 0;
   overflow-y: auto;
-  overscroll-behavior: contain;
+  overscroll-behavior: none;
   scrollbar-width: thin;
 }
 
