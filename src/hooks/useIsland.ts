@@ -69,7 +69,7 @@ export function useIsland(pinned: boolean, sticky: boolean, onUnpin: () => void)
       }
     });
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape' || stickyRef.current) return;
+      if (e.key !== 'Escape' || e.defaultPrevented || stickyRef.current) return;
       unpin.current();
       dispatch('collapse');
     };
