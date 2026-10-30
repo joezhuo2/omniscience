@@ -15,6 +15,11 @@ describe('index.css', () => {
     expect(css).toMatch(/\.panel-scroll\s*\{[^}]*min-height:\s*0[^}]*overflow-y:\s*auto/);
   });
 
+  it('disables bounce at the page and panel boundaries', () => {
+    expect(css).toMatch(/html,\s*body,\s*#root\s*\{[^}]*overscroll-behavior:\s*none/);
+    expect(css).toMatch(/\.panel-scroll\s*\{[^}]*overscroll-behavior:\s*none/);
+  });
+
   it('imports tailwind', () => {
     expect(css).toMatch(/@import ['"]tailwindcss['"]/);
   });
