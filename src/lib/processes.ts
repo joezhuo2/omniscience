@@ -1,6 +1,11 @@
 import type { KillReport, ProcessGroup } from '../types/telemetry';
 
-export type ProcessSort = 'cpu' | 'ram' | 'gpu';
+export type ProcessSort = 'cpu' | 'ram' | 'gpu' | 'disk' | 'network';
+
+/** Keep unavailable throughput distinct from a measured idle app. */
+export function processRate(value: number | null | undefined): number | null {
+  return value != null && Number.isFinite(value) && value >= 0 ? value : null;
+}
 
 /** Rows shown by default, and when "Show more" is on. */
 export const COLLAPSED_PROCESSES = 3;
@@ -34,6 +39,11 @@ export function visibleProcesses(
           return b.mem_bytes - a.mem_bytes || b.cpu_pct - a.cpu_pct;
         case 'gpu':
           return b.gpu_pct - a.gpu_pct || b.gpu_mem_bytes - a.gpu_mem_bytes;
+        case 'disk':
+        case 'network': {
+          const field = sort === 'disk' ? 'disk_bps' : 'net_bps';
+          return (processRate(b[field]) ?? -1) - (processRate(a[field]) ?? -1) || a.key.localeCompare(b.key);
+        }
       }
     })
     .slice(0, limit);
