@@ -518,7 +518,7 @@ mod win {
                 .unwrap_or_default();
             cpu_limit = q
                 .items(CPU_LIMIT)
-                .and_then(|v| v.first().map(|(_, pct)| pct.clamp(0.0, 100.0) as f32));
+                .and_then(|v| v.first().and_then(|(_, pct)| parse::performance_loss_pct(*pct)));
         }
         let gpus = adapters
             .iter()
