@@ -44,6 +44,8 @@ pub struct Sampler {
 struct Detail {
     procs: System,
     #[cfg(windows)]
+    io: Option<super::process_io::ProcessIo>,
+    #[cfg(windows)]
     win: Option<super::windows::Query>,
     pinger: Option<Pinger>,
     /// Process CPU% needs two samples; the first detail tick only primes.
@@ -76,6 +78,10 @@ impl Sampler {
         if public_ip != self.public_ip.is_some() {
             self.public_ip = public_ip.then(PublicIp::default);
         }
+    }
+
+    pub fn suspend_detail(&mut self) {
+        self.detail = None;
     }
 
     pub fn sample(&mut self, t: Thresholds, expanded: bool) -> Snapshot {
@@ -214,6 +220,8 @@ impl Sampler {
         let detail = self.detail.get_or_insert_with(|| Detail {
             procs: processes::new_system(),
             #[cfg(windows)]
+            io: super::process_io::ProcessIo::start(),
+            #[cfg(windows)]
             win: super::windows::Query::new(&win::DETAIL_COUNTERS),
             pinger: None,
             warm: false,
@@ -272,9 +280,18 @@ impl Sampler {
         #[cfg(windows)]
         {
             let (usage, mem) = win::process_gpu(detail.win.as_ref(), win);
+            let rates = detail
+                .io
+                .as_mut()
+                .and_then(super::process_io::ProcessIo::sample);
             for p in &mut procs {
                 p.gpu_pct = usage.get(&p.pid).copied().unwrap_or(0.0);
                 p.gpu_mem_bytes = mem.get(&p.pid).copied().unwrap_or(0);
+                if let Some(rates) = &rates {
+                    let (disk, net) = rates.get(&p.pid).copied().unwrap_or_default();
+                    p.disk_bps = Some(disk);
+                    p.net_bps = Some(net);
+                }
             }
         }
         // Search must include quiet apps too; the frontend filters, sorts and limits rows.
