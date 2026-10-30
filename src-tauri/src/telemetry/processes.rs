@@ -77,6 +77,8 @@ pub struct ProcInfo {
     pub gpu_pct: f32,
     /// GPU memory in use (dedicated, all adapters).
     pub gpu_mem_bytes: u64,
+    pub disk_bps: Option<f64>,
+    pub net_bps: Option<f64>,
 }
 
 /// `root` and all of its descendants.
@@ -116,12 +118,16 @@ pub fn groups(procs: &[ProcInfo], logical_cpus: usize) -> Vec<ProcessGroup> {
             mem_bytes: 0,
             gpu_pct: 0.0,
             gpu_mem_bytes: 0,
+            disk_bps: p.disk_bps.map(|_| 0.0),
+            net_bps: p.net_bps.map(|_| 0.0),
         });
         g.pids.push(p.pid);
         g.cpu_pct += p.cpu_core_pct / cpus;
         g.mem_bytes += p.mem_bytes;
         g.gpu_pct += p.gpu_pct;
         g.gpu_mem_bytes += p.gpu_mem_bytes;
+        g.disk_bps = g.disk_bps.zip(p.disk_bps).map(|(a, b)| a + b);
+        g.net_bps = g.net_bps.zip(p.net_bps).map(|(a, b)| a + b);
     }
     let mut list: Vec<ProcessGroup> = groups.into_values().collect();
     for g in &mut list {
@@ -146,6 +152,8 @@ pub fn read(sys: &System) -> Vec<ProcInfo> {
             mem_bytes: p.memory(),
             gpu_pct: 0.0,
             gpu_mem_bytes: 0,
+            disk_bps: None,
+            net_bps: None,
         })
         .collect()
 }
@@ -278,6 +286,8 @@ mod tests {
             mem_bytes: mem,
             gpu_pct: 0.0,
             gpu_mem_bytes: 0,
+            disk_bps: None,
+            net_bps: None,
         }
     }
 
