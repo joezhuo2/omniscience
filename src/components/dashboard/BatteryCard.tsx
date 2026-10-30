@@ -30,7 +30,7 @@ export function BatteryCard() {
   const detail = useTelemetryStore((s) => s.snapshot?.detail);
   if (!detail) {
     return (
-      <Card title="Battery">
+      <Card section="battery" title="Battery">
         <Skeleton className="h-6" />
       </Card>
     );
@@ -47,6 +47,12 @@ export function BatteryCard() {
   return (
     <Card
       title="Battery"
+      section="battery"
+      summary={
+        <span className="text-[11px] text-island-text tabular-nums">
+          {Math.round(battery.percent)}%
+        </span>
+      }
       aside={
         battery.watts != null ? (
           <span
