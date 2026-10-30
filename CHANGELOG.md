@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.13] - 2026-10-30
+
+### Fixed
+
+- Interpret Windows `% Performance Limit` as available performance: 100% now means no throttle warning, and 75% means 25% lost headroom. Invalid or unsupported readings no longer produce a false 100% badge ([#23](https://github.com/joezhuo2/omniscience/issues/23)).
+- Explain that the CPU indicator reports available performance limited by Windows power policy or the platform, rather than directly measuring thermal throttling.
+
 ## [0.1.12] - 2026-10-30
 
 ### Changed

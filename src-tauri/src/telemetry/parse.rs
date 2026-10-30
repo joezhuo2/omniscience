@@ -171,6 +171,13 @@ pub fn core_watts(cores: &HashMap<u32, f32>, logical: u32, logical_count: usize)
     cores.get(&physical).copied()
 }
 
+/// Convert Windows `% Performance Limit` (available nominal performance) to loss.
+/// 100% or boosted headroom means no loss. Zero/non-finite readings are unavailable,
+/// not evidence that a running CPU has lost 100% of its performance.
+pub fn performance_loss_pct(available: f64) -> Option<f32> {
+    (available.is_finite() && available > 0.0).then(|| (100.0 - available).max(0.0) as f32)
+}
+
 /// Logical CPU index from a `Processor Information` instance (`0,5` -> 5, `1,3` -> 67). Totals
 /// (`_Total`, `0,_Total`) return `None`.
 fn processor_index(instance: &str) -> Option<u32> {
@@ -220,6 +227,17 @@ mod tests {
 
     fn items(v: &[(&str, f64)]) -> Vec<(String, f64)> {
         v.iter().map(|(n, x)| (n.to_string(), *x)).collect()
+    }
+
+    #[test]
+    fn performance_limit_is_available_capacity_not_loss() {
+        assert_eq!(performance_loss_pct(100.0), Some(0.0));
+        assert_eq!(performance_loss_pct(120.0), Some(0.0));
+        assert_eq!(performance_loss_pct(75.0), Some(25.0));
+        assert_eq!(performance_loss_pct(99.0), Some(1.0));
+        for value in [0.0, -1.0, f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
+            assert_eq!(performance_loss_pct(value), None);
+        }
     }
 
     #[test]

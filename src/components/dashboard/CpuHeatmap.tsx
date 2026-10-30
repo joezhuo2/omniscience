@@ -28,7 +28,8 @@ export function CpuHeatmap() {
   );
   const active = cores.find((c) => c.id === hovered);
   const limit = detail?.cpu_limit_pct;
-  const throttled = limit != null && limit >= THROTTLE_MIN_PCT;
+  const throttled =
+    limit != null && Number.isFinite(limit) && limit >= THROTTLE_MIN_PCT && limit < 100;
   const cols = cores.length > 16 ? 8 : Math.max(4, Math.ceil(Math.sqrt(cores.length || 16)));
   return (
     <Card
@@ -37,7 +38,7 @@ export function CpuHeatmap() {
         <span className="flex items-center gap-1.5 text-[11px] text-island-muted tabular-nums">
           {throttled && (
             <span
-              title="Power or thermal limits are holding the CPU below its rated speed"
+              title="Windows reports reduced available CPU performance from power policy or platform limits; this is not a direct thermal measurement"
               className="rounded-full bg-island-crit/20 px-1.5 text-[9px] text-island-crit"
             >
               Throttled −{Math.round(limit)}%

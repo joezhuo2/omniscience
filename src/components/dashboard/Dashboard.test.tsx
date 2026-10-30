@@ -107,6 +107,19 @@ describe('Dashboard', () => {
     expect(screen.queryByText(/Throttled/)).not.toBeInTheDocument();
   });
 
+  it.each([null, 0, 100, -1, NaN, Infinity])(
+    'hides unsupported CPU loss readings (%s)',
+    (cpu_limit_pct) => {
+      act(() =>
+        useTelemetryStore
+          .getState()
+          .setSnapshot({ ...sampleSnapshot, detail: { ...sampleDetail, cpu_limit_pct } }),
+      );
+      render(<Dashboard />);
+      expect(screen.queryByText(/Throttled/)).not.toBeInTheDocument();
+    },
+  );
+
   it('lists network adapters, ping and public IP', () => {
     useSettingsStore.setState({ settings: { ping_target: '1.1.1.1' } as Settings });
     const detail = { ...sampleDetail, public_ip: '203.0.113.9' };

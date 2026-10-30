@@ -43,7 +43,7 @@ Helpers:
 - [ ] With Show more open, the dashboard scrolls inside the window and keeps a black inset above the rounded bottom edge at every scroll position. Scroll to the end and verify the last row and Show less button are fully reachable.
 - [ ] With a touchpad, scroll past both ends of the dashboard, Settings and expanded process list: content stays within the overlay without bounce; intermediate rows remain reachable.
 - [ ] CPU heatmap has one cell per logical core. Hovering a cell shows usage, clock, watts and temperature.
-- [ ] On battery or under a long all-core load, the CPU cores card shows "Throttled −N%" when the CPU is held back; it is absent when idle on AC.
+- [ ] Compare CPU cores against `\Processor Information(_Total)\% Performance Limit`: raw 100% shows no badge; raw 75% means Throttled −25%. Missing/zero raw readings hide the badge. Check AC, battery and sustained load; the tooltip explains this is a Windows power/platform estimate.
 - [ ] Network card shows the first adapter, IPv4 and ping on one line, with no repeated download/upload rates. Extra adapters stay listed; ping appears only once (`--` with the network unplugged).
 - [ ] Skeletons show briefly on first open, then real data.
 - [ ] Top processes are grouped by app. The CPU/RAM/GPU toggle re-sorts. 3 rows by default; "Show more" expands a scrollable list.
