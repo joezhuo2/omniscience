@@ -32,12 +32,10 @@ describe('Pill', () => {
     expect(screen.getAllByRole('img')).toHaveLength(5);
     expect(screen.getByTestId('pill')).toHaveClass('justify-center');
     act(() =>
-      useTelemetryStore
-        .getState()
-        .setSnapshot({
-          ...sampleSnapshot,
-          core: { ...sampleSnapshot.core, dgpu: { percent: 0, level: 'normal' } },
-        }),
+      useTelemetryStore.getState().setSnapshot({
+        ...sampleSnapshot,
+        core: { ...sampleSnapshot.core, dgpu: { percent: 0, level: 'normal' } },
+      }),
     );
     expect(screen.getAllByRole('img')).toHaveLength(6);
     expect(screen.getByRole('img', { name: 'dGPU' })).toBeInTheDocument();
