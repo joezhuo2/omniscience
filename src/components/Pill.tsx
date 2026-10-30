@@ -17,16 +17,18 @@ export function Pill() {
       className="mx-auto flex items-center justify-center gap-2"
       style={{ width: 'var(--pill-w)', height: 'var(--pill-h)' }}
     >
-      {ringSpecs(core, settings).map((r) => (
-        <Ring
-          key={r.key}
-          outer={r.outer}
-          inner={r.inner}
-          size={22}
-          stroke={r.inner ? RING_STROKE.pillPair : RING_STROKE.pill}
-          label={r.label}
-        />
-      ))}
+      {ringSpecs(core, settings)
+        .filter((r) => !core || r.key !== 'dgpu' || core.dgpu != null)
+        .map((r) => (
+          <Ring
+            key={r.key}
+            outer={r.outer}
+            inner={r.inner}
+            size={22}
+            stroke={r.inner ? RING_STROKE.pillPair : RING_STROKE.pill}
+            label={r.label}
+          />
+        ))}
     </div>
   );
 }

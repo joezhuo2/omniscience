@@ -25,7 +25,7 @@ Helpers:
 
 ## Pill
 
-- [ ] Rings: CPU, RAM, iGPU, optional dGPU, Disk, Network (download outside, upload inside). No text. With an absent or sleeping dGPU, five rings stay centered in both pill and metric strip; waking it restores six. A sampled 0% dGPU stays visible.
+- [ ] Rings: CPU, RAM, iGPU, optional dGPU, Disk, Network (download outside, upload inside). No text. With an absent or sleeping dGPU, five rings stay centered in the collapsed pill; waking it restores six. The expanded dashboard always keeps the dGPU indicator. A sampled 0% dGPU stays visible.
 - [ ] Rings move with load (start a heavy task and watch CPU climb).
 - [ ] A ring turns amber above the warning threshold and pulses red above the critical one (lower the thresholds in Settings to force it).
 - [ ] A ring with no sensor is dashed, not stuck at 0%.

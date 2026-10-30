@@ -56,7 +56,7 @@ export function ringSpecs(
   settings?: Pick<Settings, 'warn_threshold' | 'crit_threshold'> | null,
 ): RingSpec[] {
   const net = core?.net;
-  const specs: RingSpec[] = [
+  return [
     {
       key: 'cpu',
       label: 'CPU',
@@ -94,6 +94,4 @@ export function ringSpecs(
         : missing(ACCENTS.net),
     },
   ];
-  // Keep the loading layout stable; a missing dGPU after sampling means absent or asleep.
-  return core ? specs.filter((r) => r.key !== 'dgpu' || core.dgpu != null) : specs;
 }

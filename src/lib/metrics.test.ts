@@ -28,9 +28,9 @@ describe('temperature rings', () => {
     );
   });
 
-  it('keeps a sampled idle dGPU but omits an unavailable one', () => {
+  it('keeps the expanded dashboard dGPU slot even when unavailable', () => {
     expect(ringSpecs(undefined).map((r) => r.key)).toContain('dgpu');
-    expect(ringSpecs(sampleSnapshot.core).map((r) => r.key)).not.toContain('dgpu');
+    expect(ringSpecs(sampleSnapshot.core).map((r) => r.key)).toContain('dgpu');
     expect(
       ringSpecs({ ...sampleSnapshot.core, dgpu: { percent: 0, level: 'normal' } }).map(
         (r) => r.key,
