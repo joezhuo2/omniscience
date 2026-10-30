@@ -1,7 +1,7 @@
-import { ChevronDown, ChevronRight, GripVertical } from 'lucide-react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import { CSS } from '@dnd-kit/utilities';
 import { useSectionDrag } from './SectionDragContext';
-import { useId, useState, type ReactNode } from 'react';
+import { useCallback, useId, useState, type ReactNode } from 'react';
 import { readSectionCollapsed, saveSectionCollapsed, type SectionId } from '../../lib/sections';
 
 export function Card({
@@ -18,8 +18,22 @@ export function Card({
   children: ReactNode;
 }) {
   const id = useId();
-  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, isDragging } =
-    useSectionDrag() ?? {};
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    transform,
+    isDragging,
+    transition,
+  } = useSectionDrag() ?? {};
+  const cardRef = useCallback(
+    (node: HTMLElement | null) => {
+      setNodeRef?.(node);
+      setActivatorNodeRef?.(node);
+    },
+    [setNodeRef, setActivatorNodeRef],
+  );
   const [collapsed, setCollapsed] = useState(() => readSectionCollapsed(section));
   const toggle = () => {
     const next = !collapsed;
@@ -29,57 +43,56 @@ export function Card({
   const Chevron = collapsed ? ChevronRight : ChevronDown;
   return (
     <section
-      ref={setNodeRef}
+      ref={cardRef}
       data-section={section}
+      data-dragging={isDragging || undefined}
+      tabIndex={attributes?.tabIndex}
+      aria-describedby={attributes?.['aria-describedby']}
+      aria-roledescription={attributes ? 'sortable section' : undefined}
+      onMouseDown={listeners ? (event) => listeners.onMouseDown?.(event) : undefined}
+      onTouchStart={listeners?.onTouchStart}
+      onKeyDown={
+        listeners
+          ? (event) => {
+              if (event.target === event.currentTarget) listeners.onKeyDown?.(event);
+            }
+          : undefined
+      }
       style={
         attributes
           ? {
               transform: CSS.Translate.toString(transform ?? null),
+              transition: isDragging ? undefined : transition,
               position: 'relative',
               zIndex: isDragging ? 1 : undefined,
-              opacity: isDragging ? 0.65 : undefined,
+              opacity: isDragging ? 0.85 : undefined,
             }
           : undefined
       }
       aria-labelledby={`${id}-heading`}
-      className="rounded-xl border border-island-faint bg-island-hover p-2.5"
+      className={`rounded-xl border border-island-faint bg-island-hover p-2.5${attributes ? ' section-sortable cursor-grab focus-visible:ring-1 focus-visible:ring-island-muted focus-visible:outline-none' : ''}`}
     >
       <header className={`${collapsed ? '' : 'mb-2 '}flex items-center justify-between gap-2`}>
-        <div className="flex min-w-0 items-center gap-1">
-          {attributes && (
+        <h2
+          id={`${id}-heading`}
+          className="min-w-0 text-[10px] font-semibold tracking-wider text-island-muted uppercase"
+        >
+          {section ? (
             <button
-              ref={setActivatorNodeRef}
               type="button"
-              {...attributes}
-              {...listeners}
-              aria-label={`Reorder ${title}`}
-              title="Drag to reorder, or press Space and use arrow keys"
-              className="-ml-1 flex h-5 w-4 shrink-0 touch-none cursor-grab items-center justify-center rounded text-island-muted hover:text-island-text focus-visible:ring-1 focus-visible:ring-island-muted focus-visible:outline-none active:cursor-grabbing"
+              aria-expanded={!collapsed}
+              aria-controls={`${id}-body`}
+              title={`${collapsed ? 'Expand' : 'Minimize'} ${title}`}
+              onClick={toggle}
+              className="-m-1 flex items-center gap-1 rounded p-1 text-left hover:text-island-text focus-visible:ring-1 focus-visible:ring-island-muted focus-visible:outline-none"
             >
-              <GripVertical size={12} aria-hidden />
+              <Chevron size={12} aria-hidden className="shrink-0" />
+              {title}
             </button>
+          ) : (
+            title
           )}
-          <h2
-            id={`${id}-heading`}
-            className="min-w-0 text-[10px] font-semibold tracking-wider text-island-muted uppercase"
-          >
-            {section ? (
-              <button
-                type="button"
-                aria-expanded={!collapsed}
-                aria-controls={`${id}-body`}
-                title={`${collapsed ? 'Expand' : 'Minimize'} ${title}`}
-                onClick={toggle}
-                className="-m-1 flex items-center gap-1 rounded p-1 text-left hover:text-island-text focus-visible:ring-1 focus-visible:ring-island-muted focus-visible:outline-none"
-              >
-                <Chevron size={12} aria-hidden className="shrink-0" />
-                {title}
-              </button>
-            ) : (
-              title
-            )}
-          </h2>
-        </div>
+        </h2>
         {collapsed ? (summary ?? aside) : aside}
       </header>
       <div id={`${id}-body`} hidden={collapsed}>

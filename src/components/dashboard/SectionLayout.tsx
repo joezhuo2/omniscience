@@ -1,7 +1,8 @@
 import {
   DndContext,
   KeyboardSensor,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   closestCenter,
   useSensor,
   useSensors,
@@ -23,8 +24,19 @@ import {
 } from '../../lib/sections';
 import { SectionDragContext } from './SectionDragContext';
 
-function SortableSection({ id, children }: { id: SectionId; children: ReactNode }) {
-  const sortable = useSortable({ id, transition: null });
+function SortableSection({
+  id,
+  animate,
+  children,
+}: {
+  id: SectionId;
+  animate: boolean;
+  children: ReactNode;
+}) {
+  const sortable = useSortable({
+    id,
+    transition: animate ? { duration: 180, easing: 'cubic-bezier(0.32, 0.72, 0, 1)' } : null,
+  });
   return (
     <SectionDragContext.Provider
       value={{
@@ -34,6 +46,7 @@ function SortableSection({ id, children }: { id: SectionId; children: ReactNode 
         setActivatorNodeRef: sortable.setActivatorNodeRef,
         transform: sortable.transform,
         isDragging: sortable.isDragging,
+        transition: sortable.transition,
       }}
     >
       {children}
@@ -50,9 +63,11 @@ export function SectionLayout({
 }) {
   const [order, setOrder] = useState(readSectionOrder);
   const dragging = useRef(false);
+  const [animate, setAnimate] = useState(true);
   const visible = order.filter((id) => !hidden.includes(id));
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
       scrollBehavior: 'auto',
@@ -70,8 +85,9 @@ export function SectionLayout({
     <DndContext
       sensors={sensors}
       collisionDetection={closestCenter}
-      onDragStart={() => {
+      onDragStart={(event) => {
         dragging.current = true;
+        setAnimate(!(event.activatorEvent instanceof KeyboardEvent));
       }}
       onDragEnd={finish}
       onDragCancel={() => {
@@ -92,7 +108,7 @@ export function SectionLayout({
         },
         screenReaderInstructions: {
           draggable:
-            'Press Space or Enter to pick up a section. Use the up and down arrow keys to move it. Press Space or Enter to drop it, or Escape to cancel.',
+            'Focus a card, then press Space or Enter to pick it up. Use the up and down arrow keys to move it. Press Space or Enter to drop it, or Escape to cancel.',
         },
       }}
     >
@@ -105,7 +121,7 @@ export function SectionLayout({
       >
         <SortableContext items={visible} strategy={verticalListSortingStrategy}>
           {visible.map((id) => (
-            <SortableSection key={id} id={id}>
+            <SortableSection key={id} id={id} animate={animate}>
               {children(id)}
             </SortableSection>
           ))}
