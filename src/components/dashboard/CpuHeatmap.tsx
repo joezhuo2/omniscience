@@ -28,7 +28,8 @@ export function CpuHeatmap() {
   );
   const active = cores.find((c) => c.id === hovered);
   const limit = detail?.cpu_limit_pct;
-  const throttled = limit != null && Number.isFinite(limit) && limit >= THROTTLE_MIN_PCT && limit < 100;
+  const throttled =
+    limit != null && Number.isFinite(limit) && limit >= THROTTLE_MIN_PCT && limit < 100;
   const cols = cores.length > 16 ? 8 : Math.max(4, Math.ceil(Math.sqrt(cores.length || 16)));
   return (
     <Card
