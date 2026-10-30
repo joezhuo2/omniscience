@@ -10,6 +10,8 @@ const g = (key: string, cpu: number, mem: number, gpu = 0, vram = 0): ProcessGro
   mem_bytes: mem,
   gpu_pct: gpu,
   gpu_mem_bytes: vram,
+  disk_bps: null,
+  net_bps: null,
 });
 
 describe('visibleProcesses', () => {
@@ -45,6 +47,31 @@ describe('visibleProcesses', () => {
     const gpu = [g('a', 9, 9, 0, 50), g('b', 1, 1, 30, 0), g('c', 5, 5, 0, 200)];
     expect(visibleProcesses(gpu, new Set(), 'gpu').map((p) => p.key)).toEqual(['b', 'c', 'a']);
   });
+
+  it.each(['disk', 'network'] as const)(
+    'sorts %s rates before idle and missing values without mutating input',
+    (sort) => {
+      const field = sort === 'disk' ? 'disk_bps' : 'net_bps';
+      const apps = [g('missing', 99, 99), g('idle', 0, 0), g('busy', 0, 0), g('invalid', 0, 0)];
+      apps[1]![field] = 0;
+      apps[2]![field] = 4096;
+      apps[3]![field] = Infinity;
+      const before = [...apps];
+      expect(visibleProcesses(apps, new Set(), sort).map((p) => p.key)).toEqual([
+        'busy',
+        'idle',
+        'invalid',
+        'missing',
+      ]);
+      expect(visibleProcesses(apps, new Set(['busy']), sort, 1).map((p) => p.key)).toEqual([
+        'idle',
+      ]);
+      expect(visibleProcesses(apps, new Set(), sort, 8, 'missing').map((p) => p.key)).toEqual([
+        'missing',
+      ]);
+      expect(apps).toEqual(before);
+    },
+  );
 
   it('drops hidden rows and caps at 8', () => {
     expect(visibleProcesses(groups, new Set(['b']), 'cpu').map((p) => p.key)).toEqual(['c', 'a']);
