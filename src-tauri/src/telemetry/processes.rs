@@ -352,6 +352,21 @@ mod tests {
     }
 
     #[test]
+    fn sums_group_throughput_and_preserves_unavailable() {
+        let mut a = p(10, None, "app.exe", 0.0, 0);
+        a.disk_bps = Some(100.0);
+        a.net_bps = Some(20.0);
+        let mut b = p(11, None, "APP.EXE", 0.0, 0);
+        b.disk_bps = Some(50.0);
+        b.net_bps = Some(30.0);
+        let grouped = groups(&[a.clone(), b.clone()], 1);
+        assert_eq!(grouped[0].disk_bps, Some(150.0));
+        assert_eq!(grouped[0].net_bps, Some(50.0));
+        b.net_bps = None;
+        assert_eq!(groups(&[a, b], 1)[0].net_bps, None);
+    }
+
+    #[test]
     fn sums_gpu_usage_and_memory_per_group() {
         let gpu = |pid, pct, mem| ProcInfo {
             gpu_pct: pct,
