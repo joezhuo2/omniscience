@@ -47,9 +47,9 @@ export function MetricStrip() {
   const core = useTelemetryStore((s) => s.snapshot?.core);
   const settings = useSettingsStore((s) => s.settings);
   return (
-    <div className="grid grid-cols-6 gap-1">
+    <div className="flex justify-center gap-1">
       {ringSpecs(core, settings).map((r) => (
-        <div key={r.key} className="flex min-w-0 flex-col items-center gap-1">
+        <div key={r.key} className="flex min-w-0 flex-1 flex-col items-center gap-1">
           <Ring
             outer={r.outer}
             inner={r.inner}
