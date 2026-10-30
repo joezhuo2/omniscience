@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.19] - 2026-10-30
+
+### Fixed
+
+- Restore padding on every dashboard card so its contents stay clear of all four borders. Keep the padding utility separate from conditional classes so it is included in generated CSS.
+- Widen the dashboard from 400 to 480 logical pixels, with a matching 500-pixel native window. Crowded card headers wrap, card bodies stay within the available width, and cards retain their full content height in the scrolling dashboard.
+
+
 ## [0.1.18] - 2026-10-30
 
 ### Changed
