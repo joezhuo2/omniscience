@@ -66,6 +66,12 @@ Helpers:
 - [ ] With the pill near the bottom of a monitor, hovering lifts the window so the whole dashboard is visible; it drops back on collapse.
 - [ ] On a second monitor, unplugging and replugging another monitor (a new layout) still brings the pill back to its spot on that monitor.
 
+## Power mode
+
+- [ ] Config > Power mode shows the mode Windows reports (matches Settings > System > Power & battery). Changing it in Windows Settings shows up within a few seconds.
+- [ ] Efficiency, Balanced and Performance change the Windows mode for the current power source. Auto switches to Efficiency on battery and Performance when plugged in, even with the overlay closed.
+- [ ] Restart the app: the saved selection is reapplied.
+
 ## GPU configuration
 
 - [ ] On a supported ASUS ROG laptop, Config > GPU mode reports the actual firmware mode. On unsupported hardware/platforms, controls are disabled with an explanation.

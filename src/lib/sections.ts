@@ -12,6 +12,7 @@ export const CONFIG_SECTION_ORDER = [
   'gpu-mode',
   'power-limits',
   'cpu-boost',
+  'power-mode',
 ] as const;
 export type ConfigSectionId = (typeof CONFIG_SECTION_ORDER)[number];
 export type CardSectionId = SectionId | ConfigSectionId;

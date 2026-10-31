@@ -52,6 +52,23 @@ refusals and permission errors stay visible; Omniscience does not terminate GPU 
 If Windows denies access to the ASUS device, administrator access may be needed.
 Other manufacturers and macOS currently have no GPU-switching backend.
 
+## Power mode
+
+Requires Windows 11. Sets the Windows power mode overlay, shown in Settings as Best power
+efficiency, Balanced and Best performance.
+
+| Mode        | Behavior                                            |
+| ----------- | --------------------------------------------------- |
+| Auto        | Efficiency on battery; Performance when plugged in. |
+| Efficiency  | Best power efficiency.                              |
+| Balanced    | Windows default balance of power and performance.   |
+| Performance | Best performance.                                   |
+
+Windows keeps a separate mode for battery and plugged in, so a manual choice applies to
+the current power source. The selection is saved and reapplied when Omniscience starts;
+Auto reapplies whenever the power source changes, even with the overlay closed. The card
+always shows the mode Windows reports, so changes made elsewhere are visible.
+
 The endpoint identifiers follow the public ASUS WMI protocol documented in
 [Linux's ASUS WMI header](https://github.com/torvalds/linux/blob/master/include/linux/platform_data/x86/asus-wmi.h).
 
