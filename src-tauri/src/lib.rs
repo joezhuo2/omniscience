@@ -9,6 +9,7 @@ mod hover;
 mod platform;
 mod positions;
 mod power_limits;
+mod power_mode;
 mod settings;
 mod shell;
 mod system_command;
@@ -53,7 +54,9 @@ pub fn run() {
             power_limits::set_power_limits,
             power_limits::reset_power_limits,
             cpu_boost::get_cpu_boost,
-            cpu_boost::set_cpu_boost
+            cpu_boost::set_cpu_boost,
+            power_mode::get_power_mode,
+            power_mode::set_power_mode
         ])
         .on_window_event(|window, event| {
             if let (tauri::WindowEvent::Moved(pos), Some(main)) =
@@ -72,6 +75,7 @@ pub fn run() {
 
             app.manage(gpu_mode::GpuConfig::start(app.handle())?);
             app.manage(power_limits::PowerLimits::start(app.handle())?);
+            app.manage(power_mode::PowerConfig::start(app.handle())?);
             let settings = settings::load(app.handle());
             telemetry.update(|c| settings.apply(c));
             let shell = shell::Shell::new(settings);
