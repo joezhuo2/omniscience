@@ -296,3 +296,5 @@ fn apply_device(asus: &impl GpuDevice, mode: GpuMode, ac: bool) -> Result<bool, 
 fn apply(_mode: GpuMode, _ac: bool) -> Result<bool, String> {
     Err("GPU controls currently require Windows and supported ASUS ROG firmware.".into())
 }
+#[cfg(test)]
+mod tests;
