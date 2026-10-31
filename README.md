@@ -97,6 +97,8 @@ apps are not checked.
 On supported ASUS ROG laptops, Config also offers **GPU mode**: Auto switches between
 iGPU-only on battery and hybrid graphics when plugged in; Med, Min and Max select hybrid,
 iGPU-only and dGPU display modes. MUX changes require a Windows restart.
+**Display** switches the built-in panel's refresh rate (with an Auto mode that uses a lower
+rate on battery) and resolution.
 See [System configuration](docs/configuration.md) for coverage and usage.
 
 ### Lives in the tray

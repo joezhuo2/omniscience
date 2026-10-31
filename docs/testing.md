@@ -74,6 +74,12 @@ Helpers:
 - [ ] After a Windows restart, the requested mode completes. Auto selects Min on battery and Med when plugged in, even with the overlay closed or hidden. No GPU automation runs before a mode has been chosen.
 - [ ] Collapse GPU mode, close/reopen the dashboard and restart the app: collapsed state is remembered.
 
+## Display configuration
+
+- [ ] Config > Display shows the built-in panel name, its refresh rates at the current resolution and its resolutions. Buttons reflect the actual Windows mode after each change.
+- [ ] Choosing a rate or resolution applies it and keeps it after restarting Omniscience. A rejected mode shows an error and the real state.
+- [ ] Auto selects the lowest rate of at least 60 Hz on battery and the highest when plugged in, even with the overlay closed or hidden. Choosing a manual rate turns Auto off.
+
 ## Settings
 
 - [ ] Opens from the gear icon and from tray > Settings…; dashboard and settings fade into each other.
