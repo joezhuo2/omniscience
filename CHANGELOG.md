@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.6] - 2026-10-31
+
+### Added
+
+- Add a collapsible Display card for the built-in panel with a refresh-rate row (Auto plus one button per rate at the current resolution) and a resolution row (#27). Auto uses the lowest rate of at least 60 Hz on battery and the highest rate when plugged in, and follows power-source changes in the background. Every change is verified against Windows before the buttons update.
+
 ## [0.2.5] - 2026-10-31
 
 ### Added
