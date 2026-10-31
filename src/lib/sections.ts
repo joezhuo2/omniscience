@@ -7,7 +7,7 @@ export const DEFAULT_SECTION_ORDER = [
   'processes',
 ] as const;
 export type SectionId = (typeof DEFAULT_SECTION_ORDER)[number];
-export const CONFIG_SECTION_ORDER = ['driver-updates', 'gpu-mode'] as const;
+export const CONFIG_SECTION_ORDER = ['driver-updates', 'gpu-mode', 'display'] as const;
 export type ConfigSectionId = (typeof CONFIG_SECTION_ORDER)[number];
 export type CardSectionId = SectionId | ConfigSectionId;
 
