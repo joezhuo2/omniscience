@@ -24,6 +24,8 @@ const modes: { value: Mode; label: string; description: string }[] = [
 
 export function GpuModeCard({ active = true }: { active?: boolean }) {
   const { status, busy, error, apply } = useNativeControl<GpuStatus>('get_gpu_mode', active);
+  const selected =
+    status?.selected === 'auto' || status?.restart_required ? status.selected : status?.current;
   return (
     <Card section="gpu-mode" title="GPU mode">
       <div className="grid grid-cols-4 gap-1" role="group" aria-label="GPU mode">
@@ -33,7 +35,7 @@ export function GpuModeCard({ active = true }: { active?: boolean }) {
             key={value}
             className="config-button"
             title={description}
-            aria-pressed={(status?.selected ?? status?.current) === value}
+            aria-pressed={selected === value}
             disabled={
               !status?.supported ||
               busy ||

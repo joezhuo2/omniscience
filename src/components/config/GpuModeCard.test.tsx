@@ -63,6 +63,15 @@ it('requires restart after a MUX change and prevents further GPU writes', async 
     expect(button).toBeDisabled();
 });
 
+it('shows firmware state when another utility overrides a saved manual selection', async () => {
+  mockIPC(() => ({ ...supported, selected: 'min', current: 'med' }));
+  render(<GpuModeCard />);
+  await waitFor(() =>
+    expect(screen.getByRole('button', { name: 'Med' })).toHaveAttribute('aria-pressed', 'true'),
+  );
+  expect(screen.getByRole('button', { name: 'Min' })).toHaveAttribute('aria-pressed', 'false');
+});
+
 it('retains actual state and reports a refused write', async () => {
   mockIPC((cmd) => {
     if (cmd === 'get_gpu_mode') return supported;

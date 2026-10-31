@@ -275,12 +275,18 @@ fn apply_device(asus: &impl GpuDevice, mode: GpuMode, ac: bool) -> Result<bool, 
         }
         if mux != Some(0) {
             asus.set(GPU_MUX, 0)?;
+            if asus.get(GPU_MUX)? != 0 {
+                return Err("The firmware did not accept dGPU display mode.".into());
+            }
             return Ok(true);
         }
         return Ok(false);
     }
     if mux == Some(0) {
         asus.set(GPU_MUX, 1)?;
+        if asus.get(GPU_MUX)? != 1 {
+            return Err("The firmware did not accept hybrid display routing.".into());
+        }
         return Ok(true);
     }
     let requested = u32::from(mode == GpuMode::Min);
