@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.5] - 2026-10-31
+
+### Added
+
+- Add a collapsible Power mode card with Auto, Efficiency, Balanced and Performance (#28). It sets the Windows 11 power mode; Auto uses best power efficiency on battery and best performance when plugged in, and keeps switching in the background. The selection is saved and reapplied at startup, and the card always shows the mode Windows reports.
+
 ## [0.2.4] - 2026-10-31
 
 ### Added
