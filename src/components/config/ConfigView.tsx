@@ -1,9 +1,9 @@
 import { DriverUpdatesCard } from './DriverUpdatesCard';
 
-export function ConfigView() {
+export function ConfigView({ active = true }: { active?: boolean }) {
   return (
     <div className="flex flex-col gap-2">
-      <DriverUpdatesCard />
+      <DriverUpdatesCard active={active} />
     </div>
   );
 }

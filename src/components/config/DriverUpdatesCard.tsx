@@ -1,23 +1,45 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { Card } from '../dashboard/Card';
 
 type OfferedUpdate = { id: string; title: string };
+export type ScanStatus = {
+  phase: 'idle' | 'checking' | 'complete' | 'failed';
+  updates: OfferedUpdate[];
+  error: string | null;
+};
 
-export function DriverUpdatesCard() {
-  const [updates, setUpdates] = useState<OfferedUpdate[] | null>(null);
-  const [busy, setBusy] = useState(false);
+export function DriverUpdatesCard({ active = true }: { active?: boolean }) {
+  const [scan, setScan] = useState<ScanStatus>({ phase: 'idle', updates: [], error: null });
   const [error, setError] = useState('');
+  const busy = scan.phase === 'checking';
+  const updates = scan.phase === 'complete' && !error ? scan.updates : null;
+  useEffect(() => {
+    if (!active) return;
+    let cancelled = false;
+    const refresh = async () => {
+      try {
+        const next = await invoke<ScanStatus>('get_system_update_status');
+        if (!cancelled && next) setScan(next);
+      } catch (e) {
+        if (!cancelled) setError(String(e));
+      }
+    };
+    void refresh();
+    const timer = busy ? setInterval(() => void refresh(), 1000) : undefined;
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [active, busy]);
   const check = async () => {
-    setBusy(true);
     setError('');
-    setUpdates(null);
+    setScan({ phase: 'checking', updates: [], error: null });
     try {
-      setUpdates(await invoke<OfferedUpdate[]>('scan_driver_updates'));
+      setScan(await invoke<ScanStatus>('scan_driver_updates'));
     } catch (e) {
       setError(String(e));
-    } finally {
-      setBusy(false);
+      setScan({ phase: 'failed', updates: [], error: null });
     }
   };
   return (
@@ -70,9 +92,9 @@ export function DriverUpdatesCard() {
           </ul>
         )}
       </div>
-      {error && (
+      {(error || scan.error) && (
         <p role="alert" className="mt-2 text-xs text-amber-400 break-words">
-          {error}
+          {error || scan.error}
         </p>
       )}
     </Card>
