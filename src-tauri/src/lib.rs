@@ -1,5 +1,6 @@
 #[cfg(windows)]
 mod asus;
+mod charge_limit;
 mod commands;
 mod driver_updates;
 mod fullscreen;
@@ -46,7 +47,9 @@ pub fn run() {
             driver_updates::get_system_update_status,
             driver_updates::open_update_download,
             gpu_mode::get_gpu_mode,
-            gpu_mode::set_gpu_mode
+            gpu_mode::set_gpu_mode,
+            charge_limit::get_charge_limit,
+            charge_limit::set_charge_limit
         ])
         .on_window_event(|window, event| {
             if let (tauri::WindowEvent::Moved(pos), Some(main)) =
@@ -64,6 +67,7 @@ pub fn run() {
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
 
             app.manage(gpu_mode::GpuConfig::start(app.handle())?);
+            app.manage(charge_limit::ChargeLimit::start(app.handle())?);
             let settings = settings::load(app.handle());
             telemetry.update(|c| settings.apply(c));
             let shell = shell::Shell::new(settings);

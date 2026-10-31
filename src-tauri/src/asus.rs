@@ -12,6 +12,7 @@ use windows_sys::Win32::System::IO::DeviceIoControl;
 
 pub const GPU_ECO: u32 = 0x0009_0020;
 pub const GPU_MUX: u32 = 0x0009_0016;
+pub const CHARGE_LIMIT: u32 = 0x0012_0057;
 
 pub struct Asus(HANDLE);
 
