@@ -27,7 +27,6 @@ fn label(value: u32) -> String {
     .into()
 }
 
-#[cfg(any(windows, test))]
 fn validate(mode: u32) -> Result<u32, String> {
     if mode > 2 {
         return Err("CPU boost mode must be 0 (Off), 1 (On) or 2 (Aggressive).".into());
@@ -185,14 +184,22 @@ mod win {
 }
 
 #[cfg(not(windows))]
-const UNSUPPORTED: &str = "CPU boost control currently requires Windows.";
+mod win {
+    use super::CpuBoostStatus;
+
+    const UNSUPPORTED: &str = "CPU boost control currently requires Windows.";
+
+    pub fn read() -> Result<CpuBoostStatus, String> {
+        Err(UNSUPPORTED.into())
+    }
+
+    pub fn write(_mode: u32) -> Result<(), String> {
+        Err(UNSUPPORTED.into())
+    }
+}
 
 fn read() -> CpuBoostStatus {
-    #[cfg(windows)]
-    let result = win::read();
-    #[cfg(not(windows))]
-    let result = Err(UNSUPPORTED.to_string());
-    result.unwrap_or_else(|error| CpuBoostStatus {
+    win::read().unwrap_or_else(|error| CpuBoostStatus {
         current: None,
         label: None,
         plan: None,
@@ -213,11 +220,7 @@ pub async fn get_cpu_boost() -> Result<CpuBoostStatus, String> {
 pub async fn set_cpu_boost(mode: u32) -> Result<CpuBoostStatus, String> {
     let mode = validate(mode)?;
     tauri::async_runtime::spawn_blocking(move || {
-        #[cfg(windows)]
         win::write(mode)?;
-        #[cfg(not(windows))]
-        return Err(UNSUPPORTED.to_string());
-        #[cfg(windows)]
         Ok(read())
     })
     .await
