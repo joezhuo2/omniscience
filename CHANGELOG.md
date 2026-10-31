@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-10-31
+
+### Added
+
+- Add a collapsible Power limits card with Sustained (SPL) and Boost (SPPT) sliders from 5 to 80 W on supported ASUS ROG firmware (#30). Boost never drops below Sustained. Limits are written once on release, saved, and reapplied on launch and when the power source changes. Reset clears the saved limits.
+
 ## [0.2.2] - 2026-10-31
 
 ### Added
