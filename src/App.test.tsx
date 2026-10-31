@@ -6,6 +6,8 @@ import App from './App';
 import { HOVER_EVENT } from './hooks/useIsland';
 import { COLLAPSE_FALLBACK_MS } from './lib/island';
 import { useUpdaterStore } from './updater';
+import { OPEN_SYSTEM_UPDATES_EVENT } from './systemUpdates';
+import { saveSectionCollapsed } from './lib/sections';
 
 // jsdom has no ResizeObserver.
 class NoopResizeObserver {
@@ -48,6 +50,26 @@ describe('App', () => {
       await emit(HOVER_EVENT, inside);
     });
   };
+
+  it('opens and expands the system update card from the tray navigation event', async () => {
+    saveSectionCollapsed('driver-updates', true);
+    render(<App />);
+    await flush(0);
+    await act(async () => {
+      await emit(OPEN_SYSTEM_UPDATES_EVENT);
+    });
+    await flush(0);
+    expect(island()).toHaveClass('expanded');
+    expect(screen.getByRole('tab', { name: 'config' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('button', { name: 'Driver & software updates' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
+    expect(screen.getByRole('button', { name: 'Check now' })).toBeInTheDocument();
+    fireEvent.keyDown(window, { key: 'Escape' });
+    await flush(COLLAPSE_FALLBACK_MS + 10);
+    expect(screen.queryByTestId('dashboard')).not.toBeInTheDocument();
+  });
 
   it('renders the collapsed pill with no panel', async () => {
     render(<App />);

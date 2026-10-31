@@ -10,6 +10,8 @@ import { useTelemetry } from './hooks/useTelemetry';
 import { isMounted, isOpen } from './lib/island';
 import { OPEN_SETTINGS_EVENT, subscribeSettings, type Settings } from './settings';
 import { CHECK_UPDATE_EVENT, useUpdaterStore } from './updater';
+import { OPEN_SYSTEM_UPDATES_EVENT } from './systemUpdates';
+import { saveSectionCollapsed } from './lib/sections';
 
 /** Matches `--fade-ms`: how long the outgoing view takes to fade before the swap. */
 const VIEW_FADE_MS = 140;
@@ -40,6 +42,7 @@ export default function App() {
   const banner = useUpdaterStore((s) => s.banner);
   const checkNow = useUpdaterStore((s) => s.checkNow);
   const [settingsPinned, setSettingsPinned] = useState(false);
+  const [systemUpdatesRequest, setSystemUpdatesRequest] = useState(0);
   const [view, setView] = useState<'dashboard' | 'settings'>('dashboard');
   const [fading, setFading] = useState(false);
   const fadeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -71,6 +74,20 @@ export default function App() {
     };
   }, []);
 
+  useEffect(() => {
+    const unlisten = listen(OPEN_SYSTEM_UPDATES_EVENT, () => {
+      clearTimeout(fadeTimer.current);
+      setFading(false);
+      saveSectionCollapsed('driver-updates', false);
+      setSystemUpdatesRequest((request) => request + 1);
+      setView('dashboard');
+      setSettingsPinned(true);
+    });
+    return () => {
+      unlisten.then((f) => f()).catch(() => {});
+    };
+  }, []);
+
   // Launch-time update check (if enabled) and tray "Check for updates now".
   useEffect(() => {
     invoke<Settings>('get_settings')
@@ -89,7 +106,11 @@ export default function App() {
   ) : view === 'settings' ? (
     <SettingsView onBack={() => switchView('dashboard')} />
   ) : (
-    <Dashboard onSettings={() => switchView('settings')} />
+    <Dashboard
+      key={systemUpdatesRequest}
+      showSystemUpdates={systemUpdatesRequest}
+      onSettings={() => switchView('settings')}
+    />
   );
 
   return (

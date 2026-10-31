@@ -20,9 +20,15 @@ const SECTIONS = {
   processes: ProcessList,
 };
 
-export function Dashboard({ onSettings }: { onSettings?: () => void }) {
-  const [tab, setTab] = useState<'info' | 'config'>('info');
-  const [configOpened, setConfigOpened] = useState(false);
+export function Dashboard({
+  onSettings,
+  showSystemUpdates = 0,
+}: {
+  onSettings?: () => void;
+  showSystemUpdates?: number;
+}) {
+  const [tab, setTab] = useState<'info' | 'config'>(showSystemUpdates > 0 ? 'config' : 'info');
+  const [configOpened, setConfigOpened] = useState(showSystemUpdates > 0);
   const selectTab = (name: 'info' | 'config') => {
     if (name === 'config') setConfigOpened(true);
     setTab(name);
@@ -92,7 +98,7 @@ export function Dashboard({ onSettings }: { onSettings?: () => void }) {
         aria-labelledby={`${id}-config-tab`}
         hidden={tab !== 'config'}
       >
-        {configOpened && <ConfigView />}
+        {configOpened && <ConfigView key={showSystemUpdates} active={tab === 'config'} />}
       </div>
       <Toasts />
     </div>
