@@ -65,7 +65,8 @@ close it.
   Throttling chip when a GPU reaches its thermal limit, and package watts broken down into APU, CPU,
   GPU and NPU where the hardware reports them.
 - 🔋 **Battery card** (laptops): charge, charging or draining with the rate in watts, and time left or
-  time to full, read from the battery driver. A skeleton appears while battery data loads; the card hides on machines without a battery.
+  time to full, read from the battery driver. On supported ASUS laptops a draggable bar sets the maximum charge
+  (20-100%), saved and reapplied at launch. A skeleton appears while battery data loads; the card hides on machines without a battery.
 - 🔥 **CPU heatmap:** one cell per logical core. Hover a cell for its usage, clock, per-core watts and
   the package temperature. A performance-limit chip reports lost CPU performance headroom from
   Windows power policy or platform limits; it does not directly measure thermal throttling.
