@@ -7,6 +7,7 @@ mod gpu_mode;
 mod hover;
 mod platform;
 mod positions;
+mod power_limits;
 mod settings;
 mod shell;
 mod system_command;
@@ -46,7 +47,10 @@ pub fn run() {
             driver_updates::get_system_update_status,
             driver_updates::open_update_download,
             gpu_mode::get_gpu_mode,
-            gpu_mode::set_gpu_mode
+            gpu_mode::set_gpu_mode,
+            power_limits::get_power_limits,
+            power_limits::set_power_limits,
+            power_limits::reset_power_limits
         ])
         .on_window_event(|window, event| {
             if let (tauri::WindowEvent::Moved(pos), Some(main)) =
@@ -64,6 +68,7 @@ pub fn run() {
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
 
             app.manage(gpu_mode::GpuConfig::start(app.handle())?);
+            app.manage(power_limits::PowerLimits::start(app.handle())?);
             let settings = settings::load(app.handle());
             telemetry.update(|c| settings.apply(c));
             let shell = shell::Shell::new(settings);
