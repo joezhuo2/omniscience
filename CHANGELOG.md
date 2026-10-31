@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.4] - 2026-10-31
+
+### Added
+
+- Add a collapsible CPU boost card with Off, On and Aggressive modes (#29). It sets the processor boost mode of the active Windows power plan for both plugged-in and battery use, always shows the plan's actual value and name, reports when the two values differ, and names other Windows boost modes such as "Efficient enabled" with no button selected.
+
 ## [0.2.3] - 2026-10-31
 
 ### Added
