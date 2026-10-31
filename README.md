@@ -99,6 +99,8 @@ iGPU-only on battery and hybrid graphics when plugged in; Med, Min and Max selec
 iGPU-only and dGPU display modes. MUX changes require a Windows restart. **Power limits** sets
 the CPU sustained (SPL) and boost (SPPT) wattage from 5 to 80 W; the choice is saved and reapplied
 on launch and when the power source changes.
+Config also offers **CPU boost** (Off, On, Aggressive), which sets the active Windows power
+plan for both plugged-in and battery use.
 See [System configuration](docs/configuration.md) for coverage and usage.
 
 ### Lives in the tray

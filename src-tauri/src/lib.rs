@@ -1,6 +1,7 @@
 #[cfg(windows)]
 mod asus;
 mod commands;
+mod cpu_boost;
 mod driver_updates;
 mod fullscreen;
 mod gpu_mode;
@@ -50,7 +51,9 @@ pub fn run() {
             gpu_mode::set_gpu_mode,
             power_limits::get_power_limits,
             power_limits::set_power_limits,
-            power_limits::reset_power_limits
+            power_limits::reset_power_limits,
+            cpu_boost::get_cpu_boost,
+            cpu_boost::set_cpu_boost
         ])
         .on_window_event(|window, event| {
             if let (tauri::WindowEvent::Moved(pos), Some(main)) =
