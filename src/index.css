@@ -1,6 +1,40 @@
 @import 'tailwindcss';
 @import './theme.css';
 
+.config-button,
+.config-input {
+  border: 1px solid var(--color-island-faint);
+  border-radius: 6px;
+  background: var(--color-island-hover);
+  color: var(--color-island-text);
+  padding: 5px 8px;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.config-button {
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+.config-button:hover:not(:disabled),
+.config-button[aria-pressed='true'] {
+  background: var(--color-island-faint);
+}
+.config-button:focus-visible,
+.config-input:focus-visible {
+  outline: 2px solid var(--color-island-muted);
+  outline-offset: 2px;
+}
+.config-button:disabled,
+.config-input:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+@media (prefers-reduced-motion: reduce) {
+  .config-button {
+    transition: none;
+  }
+}
+
 html,
 body,
 #root {

@@ -22,6 +22,11 @@ const SECTIONS = {
 
 export function Dashboard({ onSettings }: { onSettings?: () => void }) {
   const [tab, setTab] = useState<'info' | 'config'>('info');
+  const [configOpened, setConfigOpened] = useState(false);
+  const selectTab = (name: 'info' | 'config') => {
+    if (name === 'config') setConfigOpened(true);
+    setTab(name);
+  };
   const id = useId();
   const hasBattery = useTelemetryStore((state) => state.snapshot?.detail?.battery !== null);
   return (
@@ -41,7 +46,7 @@ export function Dashboard({ onSettings }: { onSettings?: () => void }) {
             aria-selected={tab === name}
             aria-controls={`${id}-${name}-panel`}
             tabIndex={tab === name ? 0 : -1}
-            onClick={() => setTab(name)}
+            onClick={() => selectTab(name)}
             onKeyDown={(event) => {
               const next =
                 event.key === 'Home'
@@ -55,7 +60,7 @@ export function Dashboard({ onSettings }: { onSettings?: () => void }) {
                       : null;
               if (next) {
                 event.preventDefault();
-                setTab(next);
+                selectTab(next);
                 document.getElementById(`${id}-${next}-tab`)?.focus();
               }
             }}
@@ -87,7 +92,7 @@ export function Dashboard({ onSettings }: { onSettings?: () => void }) {
         aria-labelledby={`${id}-config-tab`}
         hidden={tab !== 'config'}
       >
-        {tab === 'config' && <ConfigView />}
+        {configOpened && <ConfigView />}
       </div>
       <Toasts />
     </div>
