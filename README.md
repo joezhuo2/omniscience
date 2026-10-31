@@ -85,6 +85,14 @@ close it.
 Detailed per-core, GPU memory and per-process data is only sampled while the dashboard is open.
 Temperature readings also update while collapsed; sleeping discrete GPUs are not queried.
 
+### System configuration
+
+The dashboard has **Info** and **Config** tabs. Info contains monitoring; Config contains
+a **Driver & software updates** card. Choose **Check now** to query Windows Update,
+including optional drivers and Microsoft software. Offered updates have a **Download**
+button that opens their Microsoft Update Catalog entry. Other third-party apps are not checked.
+See [System configuration](docs/configuration.md) for coverage and usage.
+
 ### Lives in the tray
 
 - 🫥 No taskbar button and no Alt+Tab entry. Everything else is in the tray menu: **Show / Hide**,

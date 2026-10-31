@@ -75,3 +75,34 @@ pub fn powershell(script: &str, timeout: std::time::Duration) -> Result<String, 
         })
     }
 }
+
+#[cfg(all(test, windows))]
+mod tests {
+    use super::*;
+    use std::time::{Duration, Instant};
+
+    #[test]
+    fn preserves_utf8_output_and_reports_failed_commands() {
+        assert_eq!(
+            powershell("Write-Output 'Pilote é'", Duration::from_secs(15)).unwrap(),
+            "Pilote é"
+        );
+        let error = powershell(
+            "throw 'Update service unavailable'",
+            Duration::from_secs(15),
+        )
+        .unwrap_err();
+        assert!(error.contains("Update service unavailable"));
+    }
+
+    #[test]
+    fn terminates_a_stalled_management_process() {
+        let start = Instant::now();
+        assert!(
+            powershell("Start-Sleep -Seconds 30", Duration::from_millis(300))
+                .unwrap_err()
+                .contains("timed out")
+        );
+        assert!(start.elapsed() < Duration::from_secs(10));
+    }
+}
