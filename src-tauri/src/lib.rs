@@ -1,6 +1,7 @@
 #[cfg(windows)]
 mod asus;
 mod commands;
+mod display;
 mod driver_updates;
 mod fullscreen;
 mod gpu_mode;
@@ -46,7 +47,10 @@ pub fn run() {
             driver_updates::get_system_update_status,
             driver_updates::open_update_download,
             gpu_mode::get_gpu_mode,
-            gpu_mode::set_gpu_mode
+            gpu_mode::set_gpu_mode,
+            display::get_display_mode,
+            display::set_display_refresh,
+            display::set_display_resolution
         ])
         .on_window_event(|window, event| {
             if let (tauri::WindowEvent::Moved(pos), Some(main)) =
@@ -64,6 +68,7 @@ pub fn run() {
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
 
             app.manage(gpu_mode::GpuConfig::start(app.handle())?);
+            app.manage(display::DisplayConfig::start(app.handle())?);
             let settings = settings::load(app.handle());
             telemetry.update(|c| settings.apply(c));
             let shell = shell::Shell::new(settings);
