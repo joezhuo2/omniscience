@@ -7,6 +7,9 @@ export const DEFAULT_SECTION_ORDER = [
   'processes',
 ] as const;
 export type SectionId = (typeof DEFAULT_SECTION_ORDER)[number];
+export const CONFIG_SECTION_ORDER = ['driver-updates'] as const;
+export type ConfigSectionId = (typeof CONFIG_SECTION_ORDER)[number];
+export type CardSectionId = SectionId | ConfigSectionId;
 
 export const SECTION_LABELS: Record<SectionId, string> = {
   'gpu-power': 'GPU & Power',
@@ -53,7 +56,7 @@ export function moveSection(order: SectionId[], active: string, over: string): S
   return next;
 }
 
-export function readSectionCollapsed(section: SectionId | undefined): boolean {
+export function readSectionCollapsed(section: CardSectionId | undefined): boolean {
   if (!section) return false;
   try {
     return localStorage.getItem(`${PREFIX}${section}`) === 'true';
@@ -62,7 +65,7 @@ export function readSectionCollapsed(section: SectionId | undefined): boolean {
   }
 }
 
-export function saveSectionCollapsed(section: SectionId, collapsed: boolean): void {
+export function saveSectionCollapsed(section: CardSectionId, collapsed: boolean): void {
   try {
     if (collapsed) localStorage.setItem(`${PREFIX}${section}`, 'true');
     else localStorage.removeItem(`${PREFIX}${section}`);

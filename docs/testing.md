@@ -91,6 +91,10 @@ Helpers:
 
 ## Updates
 
+- [ ] Config > Driver & software updates: start a check, close the dashboard, and reopen Config. It still shows Checking until the background job succeeds or reports an error; finished results remain available. No second scan starts while one is running.
+- [ ] Tray > Check for system updates starts that same job, opens Config and expands the update card even if it was saved collapsed. Offered updates open their matching Microsoft Update Catalog entry. This is separate from the signed Omniscience app updater.
+- [ ] Collapse/expand Config cards using their headings, reopen the dashboard and restart the app: disclosure state persists and collapsed controls cannot receive keyboard focus.
+
 - [ ] Tray > Check for updates now with no newer release reports that you are up to date.
 - [ ] With a newer published release, the island opens with "vX available. Update? Yes / No" and stays until answered.
 - [ ] Yes downloads, installs and restarts into the new version. No dismisses it.

@@ -1,10 +1,12 @@
 mod commands;
+mod driver_updates;
 mod fullscreen;
 mod hover;
 mod platform;
 mod positions;
 mod settings;
 mod shell;
+mod system_command;
 mod telemetry;
 mod tray;
 mod webview;
@@ -29,13 +31,17 @@ pub fn run() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
         .manage(telemetry.clone())
+        .manage(Arc::new(driver_updates::UpdateChecker::default()))
         .invoke_handler(tauri::generate_handler![
             commands::set_expanded,
             commands::set_overlay_height,
             commands::kill_process_group,
             commands::get_settings,
             commands::set_settings,
-            commands::reset_position
+            commands::reset_position,
+            driver_updates::scan_driver_updates,
+            driver_updates::get_system_update_status,
+            driver_updates::open_update_download
         ])
         .on_window_event(|window, event| {
             if let (tauri::WindowEvent::Moved(pos), Some(main)) =
