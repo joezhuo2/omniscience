@@ -108,6 +108,18 @@ pub fn open_update_download(id: String) -> Result<(), String> {
 mod tests {
     use super::*;
     #[test]
+    #[cfg(windows)]
+    #[ignore = "contacts the machine's configured Windows Update service"]
+    fn update_scan_live() {
+        let updates = scan().expect("Windows Update scan");
+        assert!(
+            updates
+                .iter()
+                .all(|u| valid_update_id(&u.id) && !u.title.is_empty())
+        );
+    }
+
+    #[test]
     fn accepts_only_catalog_update_guids() {
         assert!(valid_update_id("12345678-abcd-1234-5678-1234567890ab"));
         for id in [
