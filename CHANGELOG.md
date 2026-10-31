@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-10-31
+
+### Added
+
+- Add a collapsible GPU mode card with Auto, Med, Min and Max on supported ASUS ROG firmware. Auto follows AC/battery changes in the background, selection persists, and MUX changes wait for a Windows restart before further GPU writes (#31). Unsupported or refused settings report their actual status.
+
 ## [0.2.1] - 2026-10-31
 
 ### Added
