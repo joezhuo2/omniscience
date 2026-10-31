@@ -1,5 +1,6 @@
 import { CpuBoostCard } from './CpuBoostCard';
 import { DriverUpdatesCard } from './DriverUpdatesCard';
+import { DisplayCard } from './DisplayCard';
 import { GpuModeCard } from './GpuModeCard';
 import { PowerLimitsCard } from './PowerLimitsCard';
 import { PowerModeCard } from './PowerModeCard';
@@ -12,6 +13,7 @@ export function ConfigView({ active = true }: { active?: boolean }) {
       <PowerLimitsCard active={active} />
       <CpuBoostCard active={active} />
       <PowerModeCard active={active} />
+      <DisplayCard active={active} />
     </div>
   );
 }
