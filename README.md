@@ -96,7 +96,9 @@ the dashboard closes; reopening Config shows progress or the finished results. T
 apps are not checked.
 On supported ASUS ROG laptops, Config also offers **GPU mode**: Auto switches between
 iGPU-only on battery and hybrid graphics when plugged in; Med, Min and Max select hybrid,
-iGPU-only and dGPU display modes. MUX changes require a Windows restart.
+iGPU-only and dGPU display modes. MUX changes require a Windows restart. **Power limits** sets
+the CPU sustained (SPL) and boost (SPPT) wattage from 5 to 80 W; the choice is saved and reapplied
+on launch and when the power source changes.
 See [System configuration](docs/configuration.md) for coverage and usage.
 
 ### Lives in the tray

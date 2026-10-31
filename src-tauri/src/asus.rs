@@ -12,6 +12,9 @@ use windows_sys::Win32::System::IO::DeviceIoControl;
 
 pub const GPU_ECO: u32 = 0x0009_0020;
 pub const GPU_MUX: u32 = 0x0009_0016;
+pub const PPT_SPL: u32 = 0x0012_00A3;
+pub const PPT_SPPT: u32 = 0x0012_00A0;
+pub const PPT_FPPT: u32 = 0x0012_00C1;
 
 pub struct Asus(HANDLE);
 
