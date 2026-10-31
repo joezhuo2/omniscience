@@ -103,6 +103,8 @@ Config also offers **CPU boost** (Off, On, Aggressive), which sets the active Wi
 plan for both plugged-in and battery use.
 **Power mode** sets the Windows 11 power mode (Efficiency, Balanced or Performance); Auto
 uses Efficiency on battery and Performance when plugged in.
+**Display** switches the built-in panel's refresh rate (with an Auto mode that uses a lower
+rate on battery) and resolution.
 See [System configuration](docs/configuration.md) for coverage and usage.
 
 ### Lives in the tray
