@@ -94,6 +94,9 @@ button that opens their Microsoft Update Catalog entry. Checks continue in the b
 the dashboard closes; reopening Config shows progress or the finished results. The tray's
 **Check for system updates** action starts the same check and opens the card. Other third-party
 apps are not checked.
+On supported ASUS ROG laptops, Config also offers **GPU mode**: Auto switches between
+iGPU-only on battery and hybrid graphics when plugged in; Med, Min and Max select hybrid,
+iGPU-only and dGPU display modes. MUX changes require a Windows restart.
 See [System configuration](docs/configuration.md) for coverage and usage.
 
 ### Lives in the tray
