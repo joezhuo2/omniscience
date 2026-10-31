@@ -8,9 +8,16 @@ restarts. Collapsed controls are removed from keyboard navigation.
 
 ## Driver and software updates
 
-Choose **Check now** in **Driver & software updates**. Omniscience queries the computer's
-configured Windows Update service, including optional drivers and Microsoft software.
-The check runs only when requested and may take up to three minutes.
+Choose **Check now** in **Driver & software updates**, or right-click the tray icon and choose
+**Check for system updates**. Both actions use the same background job. The tray action also
+opens Config and expands the update card.
+
+Omniscience queries the computer's configured Windows Update service, including optional
+drivers and Microsoft software. The check runs only when requested and may take up to three
+minutes. Closing or collapsing the card, switching tabs, and hiding the overlay do not cancel
+it. Reopening the card shows the current check or its finished results. Starting another check
+while one is running joins the existing job. Results are kept until the next check or app exit;
+quitting the application stops the job.
 
 Only updates offered to this computer appear. **Download** opens the matching
 [Microsoft Update Catalog](https://www.catalog.update.microsoft.com/) entry in the

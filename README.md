@@ -90,14 +90,17 @@ Temperature readings also update while collapsed; sleeping discrete GPUs are not
 The dashboard has **Info** and **Config** tabs. Info contains monitoring; Config contains
 a **Driver & software updates** card. Choose **Check now** to query Windows Update,
 including optional drivers and Microsoft software. Offered updates have a **Download**
-button that opens their Microsoft Update Catalog entry. Other third-party apps are not checked.
+button that opens their Microsoft Update Catalog entry. Checks continue in the background when
+the dashboard closes; reopening Config shows progress or the finished results. The tray's
+**Check for system updates** action starts the same check and opens the card. Other third-party
+apps are not checked.
 See [System configuration](docs/configuration.md) for coverage and usage.
 
 ### Lives in the tray
 
 - 🫥 No taskbar button and no Alt+Tab entry. Everything else is in the tray menu: **Show / Hide**,
   **Launch at startup**, **Auto-check for updates**, **Hide over fullscreen apps**, **Check for
-  updates now**, **Settings…**, and **Quit**.
+  updates now**, **Check for system updates**, **Settings…**, and **Quit**.
 - ⌨️ A global show/hide hotkey, `Ctrl+Shift+O` by default (`Cmd+Shift+O` on macOS).
 - 🖐️ Drag the pill (the row of rings) to move the overlay. It snaps to nearby screen edges and the
   top-center, never stays partly off-screen, and its spot is remembered per monitor layout and per
