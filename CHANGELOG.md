@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-31
+
+### Added
+
+- Info and Config dashboard tabs with keyboard navigation and preserved Info controls when switching tabs (#46).
+
 ## [0.1.19] - 2026-10-30
 
 ### Fixed
