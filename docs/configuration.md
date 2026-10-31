@@ -2,7 +2,9 @@
 
 Open the dashboard and choose **Config**. **Info** contains the live monitoring cards;
 switching tabs keeps the process search, sorting and card state for that dashboard session.
-The gear icon still opens application settings.
+The gear icon still opens application settings. Config cards can be collapsed or expanded
+with their headings; their collapsed state is remembered across dashboard reopening and app
+restarts. Collapsed controls are removed from keyboard navigation.
 
 ## Driver and software updates
 

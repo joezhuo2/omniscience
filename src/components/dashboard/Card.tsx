@@ -2,7 +2,7 @@ import { ChevronRight } from 'lucide-react';
 import { CSS } from '@dnd-kit/utilities';
 import { useSectionDrag } from './SectionDragContext';
 import { useCallback, useId, useState, type MouseEvent, type ReactNode } from 'react';
-import { readSectionCollapsed, saveSectionCollapsed, type SectionId } from '../../lib/sections';
+import { readSectionCollapsed, saveSectionCollapsed, type CardSectionId } from '../../lib/sections';
 
 export function Card({
   title,
@@ -12,7 +12,7 @@ export function Card({
   children,
 }: {
   title: string;
-  section?: SectionId;
+  section?: CardSectionId;
   aside?: ReactNode;
   summary?: ReactNode;
   children: ReactNode;

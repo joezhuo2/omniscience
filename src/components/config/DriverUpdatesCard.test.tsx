@@ -3,6 +3,26 @@ import { mockIPC } from '@tauri-apps/api/mocks';
 import { expect, it } from 'vitest';
 import { DriverUpdatesCard } from './DriverUpdatesCard';
 
+it('remembers Config card collapse state and hides its controls', () => {
+  const first = render(<DriverUpdatesCard />);
+  const toggle = screen.getByRole('button', { name: 'Driver & software updates' });
+  fireEvent.click(toggle);
+  expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  expect(screen.queryByRole('button', { name: 'Check now' })).not.toBeInTheDocument();
+  expect(document.getElementById(toggle.getAttribute('aria-controls')!)).toHaveAttribute('inert');
+  first.unmount();
+  render(<DriverUpdatesCard />);
+  expect(screen.getByRole('button', { name: 'Driver & software updates' })).toHaveAttribute(
+    'aria-expanded',
+    'false',
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Driver & software updates' }));
+  expect(screen.getByRole('button', { name: 'Driver & software updates' })).toHaveAttribute(
+    'aria-expanded',
+    'true',
+  );
+});
+
 it('checks on request and opens the catalog entry for an offered update', async () => {
   const calls: unknown[] = [];
   mockIPC((cmd, args) => {

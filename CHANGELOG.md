@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Config now checks Windows Update for offered driver and Microsoft software updates, lists only pending updates with Microsoft Update Catalog download links, and reports checked-empty, error, timeout and retry states (#38). Other third-party apps are outside this check.
+- Config now checks Windows Update for offered driver and Microsoft software updates, lists only pending updates with Microsoft Update Catalog download links, and reports checked-empty, error, timeout and retry states (#38). Other third-party apps are outside this check. Config cards support remembered collapse/expand state.
 
 ## [0.2.0] - 2026-10-31
 

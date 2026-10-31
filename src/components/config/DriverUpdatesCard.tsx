@@ -22,6 +22,12 @@ export function DriverUpdatesCard() {
   };
   return (
     <Card
+      section="driver-updates"
+      summary={
+        <span className="text-[11px] text-island-muted">
+          {busy ? 'Checking…' : updates ? `${updates.length} offered` : 'Not checked'}
+        </span>
+      }
       title="Driver & software updates"
       aside={
         <button
