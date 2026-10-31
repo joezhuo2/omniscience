@@ -1,10 +1,12 @@
 mod commands;
+mod driver_updates;
 mod fullscreen;
 mod hover;
 mod platform;
 mod positions;
 mod settings;
 mod shell;
+mod system_command;
 mod telemetry;
 mod tray;
 mod webview;
@@ -35,7 +37,9 @@ pub fn run() {
             commands::kill_process_group,
             commands::get_settings,
             commands::set_settings,
-            commands::reset_position
+            commands::reset_position,
+            driver_updates::scan_driver_updates,
+            driver_updates::open_update_download
         ])
         .on_window_event(|window, event| {
             if let (tauri::WindowEvent::Moved(pos), Some(main)) =
