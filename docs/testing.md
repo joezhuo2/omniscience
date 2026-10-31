@@ -74,6 +74,11 @@ Helpers:
 - [ ] After a Windows restart, the requested mode completes. Auto selects Min on battery and Med when plugged in, even with the overlay closed or hidden. No GPU automation runs before a mode has been chosen.
 - [ ] Collapse GPU mode, close/reopen the dashboard and restart the app: collapsed state is remembered.
 
+## CPU boost
+
+- [ ] Config > CPU boost shows the active power plan and highlights Off/On/Aggressive to match it; changing the mode in Windows power options is reflected within a few seconds.
+- [ ] Choosing a mode updates both plugged-in and battery values; a plan with differing values shows a mismatch notice.
+
 ## Settings
 
 - [ ] Opens from the gear icon and from tray > Settings…; dashboard and settings fade into each other.

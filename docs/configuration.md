@@ -55,5 +55,13 @@ Other manufacturers and macOS currently have no GPU-switching backend.
 The endpoint identifiers follow the public ASUS WMI protocol documented in
 [Linux's ASUS WMI header](https://github.com/torvalds/linux/blob/master/include/linux/platform_data/x86/asus-wmi.h).
 
+## CPU boost
+
+Off, On and Aggressive set the processor performance boost mode (PERFBOOSTMODE) of the
+active Windows power plan for both plugged-in and battery use. Omniscience stores nothing:
+it always shows the active plan's value, so switching plans changes what is shown. If the
+two values differ, the plugged-in value is shown with a notice. Other modes (such as
+Efficient enabled) are named with no button selected. Windows only.
+
 The update query uses Microsoft's
 [Windows Update Agent search API](https://learn.microsoft.com/en-us/windows/win32/api/wuapi/nf-wuapi-iupdatesearcher-search).
