@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.7] - 2026-10-31
+
+### Added
+
+- Add a draggable battery charge limit bar under the Battery card's charge bar on supported ASUS laptops (#25). It sets the maximum charge from 20 to 100% in 5% steps (default 100%), writes to firmware on release and confirms by reading it back, saves the limit and reapplies it at launch because ASUS firmware resets it on reboot. The bar is hidden on unsupported hardware.
+
 ## [0.2.6] - 2026-10-31
 
 ### Added
