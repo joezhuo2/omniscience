@@ -29,5 +29,31 @@ third-party program or compare against every manufacturer's website. Failed, par
 offline and timed-out checks show an error and can be retried; they never count as an
 up-to-date result. This check is currently available on Windows only.
 
-The query uses Microsoft's
+## GPU mode
+
+Requires Windows and an ASUS ROG laptop whose installed ASUS System Control Interface
+exposes the GPU controls. Unsupported controls are disabled with an explanation.
+
+| Mode | Behavior                                                                    |
+| ---- | --------------------------------------------------------------------------- |
+| Auto | iGPU only on battery; hybrid graphics when plugged in.                      |
+| Med  | Both GPUs available through hybrid graphics.                                |
+| Min  | iGPU only, with the dGPU disabled. Close apps using the dGPU first.         |
+| Max  | Routes the display through the dGPU on laptops with a supported MUX switch. |
+
+MUX changes require a Windows restart. Omniscience reports this and pauses further GPU
+changes until a restart; it does not restart Windows for you. Selecting Min or Auto from
+Max first switches back to hybrid display routing, then completes the requested mode
+after restart.
+
+The selected mode is saved. Auto responds to power-source changes while Omniscience runs,
+including when the overlay is closed or hidden. It is off until you choose it. Firmware
+refusals and permission errors stay visible; Omniscience does not terminate GPU apps.
+If Windows denies access to the ASUS device, administrator access may be needed.
+Other manufacturers and macOS currently have no GPU-switching backend.
+
+The endpoint identifiers follow the public ASUS WMI protocol documented in
+[Linux's ASUS WMI header](https://github.com/torvalds/linux/blob/master/include/linux/platform_data/x86/asus-wmi.h).
+
+The update query uses Microsoft's
 [Windows Update Agent search API](https://learn.microsoft.com/en-us/windows/win32/api/wuapi/nf-wuapi-iupdatesearcher-search).

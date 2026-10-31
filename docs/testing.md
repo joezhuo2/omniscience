@@ -66,6 +66,14 @@ Helpers:
 - [ ] With the pill near the bottom of a monitor, hovering lifts the window so the whole dashboard is visible; it drops back on collapse.
 - [ ] On a second monitor, unplugging and replugging another monitor (a new layout) still brings the pill back to its spot on that monitor.
 
+## GPU configuration
+
+- [ ] On a supported ASUS ROG laptop, Config > GPU mode reports the actual firmware mode. On unsupported hardware/platforms, controls are disabled with an explanation.
+- [ ] Med enables hybrid graphics; Min disables the dGPU when applications permit. Firmware refusal reports an error and restores the actual selected state.
+- [ ] Max is disabled without a MUX. A MUX change reports Restart Windows and prevents further GPU writes in this boot, including after restarting only Omniscience.
+- [ ] After a Windows restart, the requested mode completes. Auto selects Min on battery and Med when plugged in, even with the overlay closed or hidden. No GPU automation runs before a mode has been chosen.
+- [ ] Collapse GPU mode, close/reopen the dashboard and restart the app: collapsed state is remembered.
+
 ## Settings
 
 - [ ] Opens from the gear icon and from tray > Settings…; dashboard and settings fade into each other.
