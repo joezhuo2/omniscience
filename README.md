@@ -101,6 +101,8 @@ the CPU sustained (SPL) and boost (SPPT) wattage from 5 to 80 W; the choice is s
 on launch and when the power source changes.
 Config also offers **CPU boost** (Off, On, Aggressive), which sets the active Windows power
 plan for both plugged-in and battery use.
+**Power mode** sets the Windows 11 power mode (Efficiency, Balanced or Performance); Auto
+uses Efficiency on battery and Performance when plugged in.
 See [System configuration](docs/configuration.md) for coverage and usage.
 
 ### Lives in the tray
