@@ -1,6 +1,9 @@
+#[cfg(windows)]
+mod asus;
 mod commands;
 mod driver_updates;
 mod fullscreen;
+mod gpu_mode;
 mod hover;
 mod platform;
 mod positions;
@@ -41,7 +44,9 @@ pub fn run() {
             commands::reset_position,
             driver_updates::scan_driver_updates,
             driver_updates::get_system_update_status,
-            driver_updates::open_update_download
+            driver_updates::open_update_download,
+            gpu_mode::get_gpu_mode,
+            gpu_mode::set_gpu_mode
         ])
         .on_window_event(|window, event| {
             if let (tauri::WindowEvent::Moved(pos), Some(main)) =
@@ -58,6 +63,7 @@ pub fn run() {
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
 
+            app.manage(gpu_mode::GpuConfig::start(app.handle())?);
             let settings = settings::load(app.handle());
             telemetry.update(|c| settings.apply(c));
             let shell = shell::Shell::new(settings);
