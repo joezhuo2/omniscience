@@ -1,18 +1,94 @@
 //! Offered updates from Windows Update, including optional drivers.
 //! Does not inspect arbitrary third-party applications or install anything.
 use serde::Serialize;
+use std::sync::{Arc, Mutex};
+use tauri::State;
 
-#[derive(Serialize)]
+#[derive(Clone, Serialize)]
 pub struct OfferedUpdate {
     id: String,
     title: String,
 }
 
+#[derive(Clone, Copy, Default, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ScanPhase {
+    #[default]
+    Idle,
+    Checking,
+    Complete,
+    Failed,
+}
+
+#[derive(Clone, Default, Serialize)]
+pub struct ScanStatus {
+    phase: ScanPhase,
+    updates: Vec<OfferedUpdate>,
+    error: Option<String>,
+}
+
+/// One shared job, independent of IPC request lifetime and dashboard mounting.
+#[derive(Default)]
+pub struct UpdateChecker {
+    state: Mutex<ScanStatus>,
+}
+
+impl UpdateChecker {
+    pub fn status(&self) -> ScanStatus {
+        self.state.lock().unwrap_or_else(|e| e.into_inner()).clone()
+    }
+
+    fn begin(&self) -> bool {
+        let mut state = self.state.lock().unwrap_or_else(|e| e.into_inner());
+        if state.phase == ScanPhase::Checking {
+            return false;
+        }
+        *state = ScanStatus {
+            phase: ScanPhase::Checking,
+            ..ScanStatus::default()
+        };
+        true
+    }
+
+    fn finish(&self, result: Result<Vec<OfferedUpdate>, String>) {
+        let mut state = self.state.lock().unwrap_or_else(|e| e.into_inner());
+        *state = match result {
+            Ok(updates) => ScanStatus {
+                phase: ScanPhase::Complete,
+                updates,
+                error: None,
+            },
+            Err(error) => ScanStatus {
+                phase: ScanPhase::Failed,
+                updates: vec![],
+                error: Some(error),
+            },
+        };
+    }
+
+    pub fn start(self: &Arc<Self>) -> ScanStatus {
+        if self.begin() {
+            let job = self.clone();
+            tauri::async_runtime::spawn(async move {
+                let result = tauri::async_runtime::spawn_blocking(scan)
+                    .await
+                    .map_err(|e| e.to_string())
+                    .and_then(|r| r);
+                job.finish(result);
+            });
+        }
+        self.status()
+    }
+}
+
 #[tauri::command]
-pub async fn scan_driver_updates() -> Result<Vec<OfferedUpdate>, String> {
-    tauri::async_runtime::spawn_blocking(scan)
-        .await
-        .map_err(|e| e.to_string())?
+pub fn scan_driver_updates(checker: State<'_, Arc<UpdateChecker>>) -> ScanStatus {
+    checker.start()
+}
+
+#[tauri::command]
+pub fn get_system_update_status(checker: State<'_, Arc<UpdateChecker>>) -> ScanStatus {
+    checker.status()
 }
 
 #[cfg(windows)]
@@ -107,6 +183,27 @@ pub fn open_update_download(id: String) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn one_background_job_retains_its_result_until_rechecked() {
+        let checker = UpdateChecker::default();
+        assert!(checker.begin());
+        assert!(!checker.begin());
+        assert!(checker.status().phase == ScanPhase::Checking);
+        checker.finish(Ok(vec![OfferedUpdate {
+            id: "id".into(),
+            title: "Driver".into(),
+        }]));
+        let reopened = checker.status();
+        assert!(reopened.phase == ScanPhase::Complete);
+        assert_eq!(reopened.updates.len(), 1);
+        assert!(checker.begin());
+        assert!(checker.status().updates.is_empty());
+        checker.finish(Err("offline".into()));
+        let failed = checker.status();
+        assert!(failed.phase == ScanPhase::Failed);
+        assert_eq!(failed.error.as_deref(), Some("offline"));
+    }
+
     #[test]
     #[cfg(windows)]
     #[ignore = "contacts the machine's configured Windows Update service"]

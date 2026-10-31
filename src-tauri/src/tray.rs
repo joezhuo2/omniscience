@@ -13,6 +13,8 @@ const LAUNCH_AT_STARTUP: &str = "launch_at_startup";
 const AUTO_CHECK_UPDATES: &str = "auto_check_updates";
 const HIDE_OVER_FULLSCREEN: &str = "hide_over_fullscreen";
 const CHECK_UPDATES: &str = "check_updates";
+const SYSTEM_UPDATES: &str = "system_updates";
+pub const OPEN_SYSTEM_UPDATES_EVENT: &str = "omniscience://open-system-updates";
 const SETTINGS: &str = "settings";
 const QUIT: &str = "quit";
 
@@ -68,6 +70,13 @@ pub fn init(app: &AppHandle) -> tauri::Result<()> {
                 true,
                 None::<&str>,
             )?,
+            &MenuItem::with_id(
+                app,
+                SYSTEM_UPDATES,
+                "Check for system updates",
+                true,
+                None::<&str>,
+            )?,
             &MenuItem::with_id(app, SETTINGS, "Settings…", true, None::<&str>)?,
             &PredefinedMenuItem::separator(app)?,
             &MenuItem::with_id(app, QUIT, "Quit", true, None::<&str>)?,
@@ -106,6 +115,16 @@ fn on_menu(app: &AppHandle, id: &str) {
         CHECK_UPDATES => {
             shell.show(app);
             let _ = app.emit(CHECK_UPDATE_EVENT, ());
+            return;
+        }
+        SYSTEM_UPDATES => {
+            app.state::<Arc<crate::driver_updates::UpdateChecker>>()
+                .start();
+            shell.show(app);
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.set_focus();
+            }
+            let _ = app.emit(OPEN_SYSTEM_UPDATES_EVENT, ());
             return;
         }
         SETTINGS => {
