@@ -88,7 +88,10 @@ Temperature readings also update while collapsed; sleeping discrete GPUs are not
 
 ### System configuration
 
-The dashboard has **Info** and **Config** tabs. Info contains monitoring; Config contains
+Config is off by default: turn on **System config** in Settings to add the **Info** and
+**Config** tabs and the tray's **Check for system updates**. While it is off, no Config
+automation runs and nothing in it changes your hardware (the Battery charge limit is unaffected).
+Your saved Config choices are kept and resume when you turn it back on. Info contains monitoring; Config contains
 a **Driver & software updates** card. Choose **Check now** to query Windows Update,
 including optional drivers and Microsoft software. Offered updates have a **Download**
 button that opens their Microsoft Update Catalog entry. Checks continue in the background when
@@ -244,6 +247,7 @@ Open **Settings** from the gear icon in the dashboard header or from the tray.
 | Hide over fullscreen   | On             | Hides while a fullscreen app covers the overlay's monitor   |
 | Ping target            | `1.1.1.1`      | Pinged every 2 s while the dashboard is open; empty is off  |
 | Show public IP         | Off            | One DNS query to OpenDNS every 10 min while open            |
+| System config          | Off            | Adds the Config tab (GPU, power, display); see above        |
 | Reset position         | —              | Moves the overlay back to the top-center of the primary one |
 
 Settings are saved as JSON in the app config folder:

@@ -82,8 +82,9 @@ impl UpdateChecker {
 }
 
 #[tauri::command]
-pub fn scan_driver_updates(checker: State<'_, Arc<UpdateChecker>>) -> ScanStatus {
-    checker.start()
+pub fn scan_driver_updates(checker: State<'_, Arc<UpdateChecker>>) -> Result<ScanStatus, String> {
+    crate::config_gate::require()?;
+    Ok(checker.start())
 }
 
 #[tauri::command]

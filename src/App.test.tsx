@@ -27,7 +27,7 @@ describe('App', () => {
     mockIPC(
       (cmd, args) => {
         if (cmd === 'set_expanded') expandCalls.push(args);
-        if (cmd === 'get_settings') return { auto_check_updates: false };
+        if (cmd === 'get_settings') return { auto_check_updates: false, config_enabled: true };
         return null;
       },
       { shouldMockEvents: true },

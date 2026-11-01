@@ -8,7 +8,12 @@ import { SettingsView } from './components/settings/SettingsView';
 import { useIsland } from './hooks/useIsland';
 import { useTelemetry } from './hooks/useTelemetry';
 import { isMounted, isOpen } from './lib/island';
-import { OPEN_SETTINGS_EVENT, subscribeSettings, type Settings } from './settings';
+import {
+  OPEN_SETTINGS_EVENT,
+  subscribeSettings,
+  useSettingsStore,
+  type Settings,
+} from './settings';
 import { CHECK_UPDATE_EVENT, useUpdaterStore } from './updater';
 import { OPEN_SYSTEM_UPDATES_EVENT } from './systemUpdates';
 import { saveSectionCollapsed } from './lib/sections';
@@ -61,7 +66,10 @@ export default function App() {
   const islandRef = useRef<HTMLDivElement>(null);
   useFitWindow(islandRef, open);
 
-  useEffect(() => subscribeSettings(), []);
+  useEffect(() => {
+    void useSettingsStore.getState().load();
+    return subscribeSettings();
+  }, []);
 
   // Tray "Settings…" opens straight into the settings view.
   useEffect(() => {

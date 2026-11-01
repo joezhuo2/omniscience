@@ -66,6 +66,11 @@ impl GpuConfig {
                 let mut initial = true;
                 loop {
                     std::thread::sleep(std::time::Duration::from_secs(5));
+                    if !crate::config_gate::enabled() {
+                        previous = None;
+                        initial = true;
+                        continue;
+                    }
                     let Ok(mut prefs) = worker.prefs.lock() else {
                         continue;
                     };
@@ -150,6 +155,7 @@ pub async fn set_gpu_mode(
     mode: GpuMode,
     config: State<'_, Arc<GpuConfig>>,
 ) -> Result<GpuStatus, String> {
+    crate::config_gate::require()?;
     let config = config.inner().clone();
     tauri::async_runtime::spawn_blocking(move || config.set(mode))
         .await

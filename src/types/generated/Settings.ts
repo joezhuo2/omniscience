@@ -29,4 +29,8 @@ ping_target: string,
  * Look up the public IP (one DNS query to OpenDNS every ten minutes while open). Off by
  * default because it contacts a third party.
  */
-show_public_ip: boolean, };
+show_public_ip: boolean, 
+/**
+ * Shows the Config tab and allows GPU, power and display changes. Off by default.
+ */
+config_enabled: boolean, };

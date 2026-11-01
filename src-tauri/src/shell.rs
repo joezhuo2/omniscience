@@ -5,7 +5,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use tauri::menu::CheckMenuItem;
+use tauri::menu::{CheckMenuItem, Menu, MenuItem};
 use tauri::{AppHandle, Emitter, Manager, Wry};
 use tauri_plugin_autostart::ManagerExt as _;
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
@@ -22,6 +22,8 @@ pub struct TrayChecks {
     pub launch_at_startup: CheckMenuItem<Wry>,
     pub auto_check_updates: CheckMenuItem<Wry>,
     pub hide_over_fullscreen: CheckMenuItem<Wry>,
+    pub menu: Menu<Wry>,
+    pub system_updates: MenuItem<Wry>,
 }
 
 pub struct Shell {
@@ -59,6 +61,12 @@ impl Shell {
             let _ = t.launch_at_startup.set_checked(s.launch_at_startup);
             let _ = t.auto_check_updates.set_checked(s.auto_check_updates);
             let _ = t.hide_over_fullscreen.set_checked(s.hide_over_fullscreen);
+            let shown = t.menu.get(t.system_updates.id()).is_some();
+            if s.config_enabled && !shown {
+                let _ = t.menu.insert(&t.system_updates, 7);
+            } else if !s.config_enabled && shown {
+                let _ = t.menu.remove(&t.system_updates);
+            }
         }
     }
 
@@ -120,6 +128,7 @@ impl Shell {
         }
         app.state::<Arc<Telemetry>>().update(|c| new.apply(c));
         settings::save(app, &new)?;
+        crate::config_gate::set(new.config_enabled);
         *self.settings.lock().unwrap_or_else(|e| e.into_inner()) = new.clone();
         self.sync_tray();
         if !new.hide_over_fullscreen {

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.11] - 2026-10-31
+
+### Added
+
+- Add a **System config** switch in Settings (#58). Config (GPU mode, power limits, CPU boost, power mode, display and driver updates) is now off by default. While off, the Info/Config tab switch and the tray's "Check for system updates" are hidden and all Config automation and commands stop touching hardware. Saved preferences are kept, so turning it back on resumes them without a restart. The Battery charge limit is unaffected.
+
 ## [0.2.10] - 2026-10-31
 
 ### Added

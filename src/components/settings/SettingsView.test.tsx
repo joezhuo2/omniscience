@@ -14,6 +14,7 @@ const defaults: Settings = {
   hide_over_fullscreen: true,
   ping_target: '1.1.1.1',
   show_public_ip: false,
+  config_enabled: false,
 };
 
 describe('SettingsView', () => {
@@ -73,6 +74,14 @@ describe('SettingsView', () => {
     render(<SettingsView onBack={() => {}} />);
     fireEvent.click(await screen.findByLabelText('Show public IP'));
     await waitFor(() => expect(saved.at(-1)?.show_public_ip).toBe(true));
+  });
+
+  it('enables system config, which is off by default', async () => {
+    render(<SettingsView onBack={() => {}} />);
+    const toggle = await screen.findByLabelText('System config');
+    expect(toggle).toHaveAttribute('aria-checked', 'false');
+    fireEvent.click(toggle);
+    await waitFor(() => expect(saved.at(-1)?.config_enabled).toBe(true));
   });
 
   it('steps a threshold with the themed arrows', async () => {

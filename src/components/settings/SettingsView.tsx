@@ -7,10 +7,13 @@ import { useSettingsStore, type Settings } from '../../settings';
 const IS_MAC = typeof navigator !== 'undefined' && /Mac/i.test(navigator.platform);
 const INTERVALS = [500, 1000, 2000, 5000];
 
-function Row({ label, children }: { label: string; children: ReactNode }) {
+function Row({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
   return (
     <div className="flex min-h-9 items-center justify-between gap-3 py-1.5 text-[11px] text-island-text">
-      <span>{label}</span>
+      <span>
+        {label}
+        {hint && <span className="block text-[10px] text-island-muted">{hint}</span>}
+      </span>
       {children}
     </div>
   );
@@ -268,6 +271,16 @@ export function SettingsView({ onBack }: { onBack: () => void }) {
               label="Show public IP"
               checked={settings.show_public_ip}
               onChange={(v) => set({ show_public_ip: v })}
+            />
+          </Row>
+          <Row
+            label="System config (GPU, power, display)"
+            hint="Adds the Config tab, which changes hardware settings."
+          >
+            <Toggle
+              label="System config"
+              checked={settings.config_enabled}
+              onChange={(v) => set({ config_enabled: v })}
             />
           </Row>
           <Row label="Position">

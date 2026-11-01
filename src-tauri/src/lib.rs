@@ -2,6 +2,7 @@
 mod asus;
 mod charge_limit;
 mod commands;
+mod config_gate;
 mod cpu_boost;
 mod display;
 mod driver_updates;
@@ -80,12 +81,13 @@ pub fn run() {
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
 
+            let settings = settings::load(app.handle());
+            config_gate::set(settings.config_enabled);
             app.manage(gpu_mode::GpuConfig::start(app.handle())?);
             app.manage(power_limits::PowerLimits::start(app.handle())?);
             app.manage(power_mode::PowerConfig::start(app.handle())?);
             app.manage(display::DisplayConfig::start(app.handle())?);
             app.manage(charge_limit::ChargeLimit::start(app.handle())?);
-            let settings = settings::load(app.handle());
             telemetry.update(|c| settings.apply(c));
             let shell = shell::Shell::new(settings);
             app.manage(shell.clone());
