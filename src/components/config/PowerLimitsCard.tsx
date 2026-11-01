@@ -1,15 +1,18 @@
 import { useState } from 'react';
 import { Card } from '../dashboard/Card';
+import { SourceTabs } from './SourceTabs';
+import { useSourceTab } from './useSourceTab';
 import { useNativeControl } from './useNativeControl';
 
+type Limits = { spl: number; sppt: number };
+
 export type PowerLimitsStatus = {
-  spl: number | null;
-  sppt: number | null;
+  ac: boolean | null;
+  ac_limits: Limits | null;
+  battery_limits: Limits | null;
   supported: boolean;
   error: string | null;
 };
-
-type Limits = { spl: number; sppt: number };
 
 export function PowerLimitsCard({ active = true }: { active?: boolean }) {
   const { status, busy, error, apply } = useNativeControl<PowerLimitsStatus>(
@@ -17,11 +20,13 @@ export function PowerLimitsCard({ active = true }: { active?: boolean }) {
     active,
   );
   const [draft, setDraft] = useState<Limits | null>(null);
-  const value: Limits = draft ?? { spl: status?.spl ?? 45, sppt: status?.sppt ?? 65 };
+  const [ac, setAc] = useSourceTab(status?.ac);
+  const saved = ac ? status?.ac_limits : status?.battery_limits;
+  const value: Limits = draft ?? saved ?? { spl: 45, sppt: 65 };
   const disabled = !status?.supported || busy;
   const commit = async () => {
     if (!draft) return;
-    await apply('set_power_limits', draft);
+    await apply('set_power_limits', { ac, ...draft });
     setDraft(null);
   };
   const slider = (label: string, key: keyof Limits) => (
@@ -54,6 +59,15 @@ export function PowerLimitsCard({ active = true }: { active?: boolean }) {
   );
   return (
     <Card section="power-limits" title="Power limits">
+      <SourceTabs
+        label="Power limits profile"
+        ac={ac}
+        activeAc={status?.ac}
+        onChange={(next) => {
+          setDraft(null);
+          setAc(next);
+        }}
+      />
       <div className="flex flex-col gap-2">
         {slider('Sustained (SPL)', 'spl')}
         {slider('Boost (SPPT)', 'sppt')}
@@ -62,10 +76,10 @@ export function PowerLimitsCard({ active = true }: { active?: boolean }) {
         <button
           type="button"
           className="config-button"
-          disabled={disabled || (status?.spl == null && status?.sppt == null)}
+          disabled={disabled || !saved}
           onClick={() => {
             setDraft(null);
-            void apply('reset_power_limits', {});
+            void apply('reset_power_limits', { ac });
           }}
         >
           Reset
@@ -77,9 +91,11 @@ export function PowerLimitsCard({ active = true }: { active?: boolean }) {
               ? 'Reading power limit support…'
               : !status.supported
                 ? 'Requires a supported ASUS ROG laptop and ASUS System Control Interface.'
-                : status.spl == null
-                  ? 'Using firmware defaults.'
-                  : 'Reset clears the saved limits; firmware defaults apply after a restart or power-mode change.'}
+                : !saved
+                  ? 'No saved profile; firmware defaults apply.'
+                  : status.ac === ac
+                    ? 'Reset clears this profile; firmware defaults apply after a restart or power-mode change.'
+                    : 'Saved now and applied when the power source changes.'}
         </p>
       </div>
       {(error || status?.error) && (

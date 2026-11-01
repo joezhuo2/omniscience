@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.10] - 2026-10-31
+
+### Added
+
+- Power limits, CPU boost and Power mode now have Plugged in and Battery tabs, with the current power source's tab selected and marked (#56). Power limits and Power mode save a profile per source and apply the matching one at launch and whenever the power source changes; editing the other source's tab only saves. CPU boost reads and writes the plan's plugged-in or battery value per tab.
+
+### Changed
+
+- The Power mode Auto button is replaced by per-source profiles. A saved Auto becomes Performance when plugged in and Efficiency on battery; a saved manual mode applies to both.
+
 ## [0.2.9] - 2026-10-31
 
 ### Changed

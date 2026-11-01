@@ -57,17 +57,19 @@ Other manufacturers and macOS currently have no GPU-switching backend.
 Requires Windows 11. Sets the Windows power mode overlay, shown in Settings as Best power
 efficiency, Balanced and Best performance.
 
-| Mode        | Behavior                                            |
-| ----------- | --------------------------------------------------- |
-| Auto        | Efficiency on battery; Performance when plugged in. |
-| Efficiency  | Best power efficiency.                              |
-| Balanced    | Windows default balance of power and performance.   |
-| Performance | Best performance.                                   |
+| Mode        | Behavior                                          |
+| ----------- | ------------------------------------------------- |
+| Efficiency  | Best power efficiency.                            |
+| Balanced    | Windows default balance of power and performance. |
+| Performance | Best performance.                                 |
 
-Windows keeps a separate mode for battery and plugged in, so a manual choice applies to
-the current power source. The selection is saved and reapplied when Omniscience starts;
-Auto reapplies whenever the power source changes, even with the overlay closed. The card
-always shows the mode Windows reports, so changes made elsewhere are visible.
+The card has Plugged in and Battery tabs (the tab for the current power source is marked
+and selected by default). Each tab saves its own mode. Choosing a mode on the current
+source's tab applies it immediately and verifies it; choosing on the other tab only saves
+it. Saved profiles are applied when Omniscience starts and whenever the power source
+changes, even with the overlay closed. Until a mode is chosen nothing is written, and the
+card shows the mode Windows reports. A previously saved Auto becomes Performance plugged in
+and Efficiency on battery.
 
 The endpoint identifiers follow the public ASUS WMI protocol documented in
 [Linux's ASUS WMI header](https://github.com/torvalds/linux/blob/master/include/linux/platform_data/x86/asus-wmi.h).
@@ -75,10 +77,20 @@ The endpoint identifiers follow the public ASUS WMI protocol documented in
 ## CPU boost
 
 Off, On and Aggressive set the processor performance boost mode (PERFBOOSTMODE) of the
-active Windows power plan for both plugged-in and battery use. Omniscience stores nothing:
-it always shows the active plan's value, so switching plans changes what is shown. If the
-two values differ, the plugged-in value is shown with a notice. Other modes (such as
-Efficient enabled) are named with no button selected. Windows only.
+active Windows power plan. The Plugged in tab reads and writes only the plan's plugged-in
+value and the Battery tab only its battery value; the tab for the current power source is
+selected by default. Omniscience stores nothing: it always shows the active plan's values,
+so switching plans changes what is shown. Other modes (such as Efficient enabled) are named
+with no button selected. Windows only.
+
+## Power limits
+
+On supported ASUS ROG laptops, sets the CPU sustained (SPL) and boost (SPPT) wattage from
+5 to 80 W, with separate Plugged in and Battery tabs. Each tab's limits are saved. Releasing
+a slider on the current power source's tab writes to firmware immediately; on the other tab
+it only saves. The matching profile is applied at launch and whenever the power source
+changes. Reset clears the selected tab's profile. A previously saved single pair is used for
+both sources.
 
 ## Display
 

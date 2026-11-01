@@ -1,4 +1,4 @@
-//! Windows power mode overlay and opt-in AC/battery automation.
+//! Windows power mode overlay with separate plugged-in and battery profiles.
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
@@ -7,7 +7,6 @@ use tauri::{AppHandle, Manager, State};
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum PowerMode {
-    Auto,
     Efficiency,
     Balanced,
     Performance,
@@ -16,9 +15,41 @@ pub enum PowerMode {
 #[derive(Default, Clone, Serialize, Deserialize)]
 #[serde(default)]
 struct Preferences {
-    mode: Option<PowerMode>,
+    ac: Option<PowerMode>,
+    battery: Option<PowerMode>,
+    #[serde(skip_serializing)]
+    mode: Option<LegacyMode>,
     #[serde(skip)]
     error: Option<String>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "lowercase")]
+enum LegacyMode {
+    Auto,
+    Efficiency,
+    Balanced,
+    Performance,
+}
+
+impl Preferences {
+    fn migrate(mut self) -> Self {
+        let (ac, battery) = match self.mode.take() {
+            Some(LegacyMode::Auto) => (PowerMode::Performance, PowerMode::Efficiency),
+            Some(LegacyMode::Efficiency) => (PowerMode::Efficiency, PowerMode::Efficiency),
+            Some(LegacyMode::Balanced) => (PowerMode::Balanced, PowerMode::Balanced),
+            Some(LegacyMode::Performance) => (PowerMode::Performance, PowerMode::Performance),
+            None => return self,
+        };
+        self.ac = self.ac.or(Some(ac));
+        self.battery = self.battery.or(Some(battery));
+        self
+    }
+
+    #[cfg(any(windows, test))]
+    fn profile(&self, ac: bool) -> Option<PowerMode> {
+        if ac { self.ac } else { self.battery }
+    }
 }
 
 pub struct PowerConfig {
@@ -28,7 +59,9 @@ pub struct PowerConfig {
 
 #[derive(Serialize)]
 pub struct PowerStatus {
-    selected: Option<PowerMode>,
+    ac: Option<bool>,
+    ac_mode: Option<PowerMode>,
+    battery_mode: Option<PowerMode>,
     current: Option<PowerMode>,
     supported: bool,
     error: Option<String>,
@@ -48,10 +81,11 @@ impl PowerConfig {
             .app_config_dir()
             .map_err(|e| e.to_string())?
             .join("power-mode.json");
-        let prefs: Preferences = std::fs::read_to_string(&path)
+        let prefs = std::fs::read_to_string(&path)
             .ok()
-            .and_then(|s| serde_json::from_str(&s).ok())
-            .unwrap_or_default();
+            .and_then(|s| serde_json::from_str::<Preferences>(&s).ok())
+            .unwrap_or_default()
+            .migrate();
         let config = Arc::new(Self {
             path,
             prefs: Mutex::new(prefs),
@@ -61,25 +95,21 @@ impl PowerConfig {
             let worker = config.clone();
             std::thread::spawn(move || {
                 let mut previous = None;
-                let mut initial = true;
                 loop {
                     std::thread::sleep(std::time::Duration::from_secs(5));
                     let Ok(mut prefs) = worker.prefs.lock() else {
                         continue;
                     };
-                    if let Some(mode) = prefs.mode
-                        && (initial || mode == PowerMode::Auto)
-                    {
-                        match crate::gpu_mode::ac_power() {
-                            Ok(ac) if initial || previous != Some(ac) => {
-                                previous = Some(ac);
-                                prefs.error = apply(target(mode, ac)).err();
+                    match crate::gpu_mode::ac_power() {
+                        Ok(ac) if previous != Some(ac) => {
+                            previous = Some(ac);
+                            if let Some(mode) = prefs.profile(ac) {
+                                prefs.error = apply(mode).err();
                             }
-                            Err(e) => prefs.error = Some(e),
-                            _ => {}
                         }
+                        Err(e) => prefs.error = Some(e),
+                        _ => {}
                     }
-                    initial = false;
                 }
             });
         }
@@ -101,20 +131,28 @@ impl PowerConfig {
         let prefs = self.prefs.lock().map_err(|e| e.to_string())?;
         let (current, supported, hardware_error) = read_current();
         Ok(PowerStatus {
-            selected: prefs.mode,
+            ac: crate::gpu_mode::ac_power().ok(),
+            ac_mode: prefs.ac,
+            battery_mode: prefs.battery,
             current,
             supported,
             error: prefs.error.clone().or(hardware_error),
         })
     }
 
-    fn set(&self, mode: PowerMode) -> Result<PowerStatus, String> {
+    fn set(&self, ac: bool, mode: PowerMode) -> Result<PowerStatus, String> {
         let mut prefs = self.prefs.lock().map_err(|e| e.to_string())?;
-        apply(target(mode, crate::gpu_mode::ac_power()?))?;
-        prefs.mode = Some(mode);
+        if crate::gpu_mode::ac_power()? == ac {
+            apply(mode)?;
+        }
+        if ac {
+            prefs.ac = Some(mode);
+        } else {
+            prefs.battery = Some(mode);
+        }
         prefs.error = None;
         self.save(&prefs)
-            .map_err(|e| format!("Power mode applied, but could not save it: {e}"))?;
+            .map_err(|e| format!("Power mode was not saved: {e}"))?;
         drop(prefs);
         self.status()
     }
@@ -130,21 +168,14 @@ pub async fn get_power_mode(config: State<'_, Arc<PowerConfig>>) -> Result<Power
 
 #[tauri::command]
 pub async fn set_power_mode(
+    ac: bool,
     mode: PowerMode,
     config: State<'_, Arc<PowerConfig>>,
 ) -> Result<PowerStatus, String> {
     let config = config.inner().clone();
-    tauri::async_runtime::spawn_blocking(move || config.set(mode))
+    tauri::async_runtime::spawn_blocking(move || config.set(ac, mode))
         .await
         .map_err(|e| e.to_string())?
-}
-
-fn target(mode: PowerMode, ac: bool) -> PowerMode {
-    match mode {
-        PowerMode::Auto if ac => PowerMode::Performance,
-        PowerMode::Auto => PowerMode::Efficiency,
-        other => other,
-    }
 }
 
 #[cfg(any(windows, test))]
