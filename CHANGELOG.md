@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.8] - 2026-10-31
+
+### Changed
+
+- Clicking anywhere on a card's non-interactive surface now collapses or expands it on both the Info and Config tabs (#50). Press-and-hold or moving still drags the card, and a drag, text selection or click on a control inside the card never toggles it.
+
 ## [0.2.7] - 2026-10-31
 
 ### Added

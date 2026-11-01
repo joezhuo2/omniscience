@@ -1,8 +1,20 @@
 import { ChevronRight } from 'lucide-react';
 import { CSS } from '@dnd-kit/utilities';
 import { useSectionDrag } from './SectionDragContext';
-import { useCallback, useId, useState, type MouseEvent, type ReactNode } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type MouseEvent,
+  type ReactNode,
+} from 'react';
 import { readSectionCollapsed, saveSectionCollapsed, type CardSectionId } from '../../lib/sections';
+
+const INTERACTIVE =
+  'button, a, input, select, textarea, label, [role=slider], [role=tab], [contenteditable]';
+const DRAG_DISTANCE = 6;
 
 export function Card({
   title,
@@ -36,15 +48,29 @@ export function Card({
   );
   const [collapsed, setCollapsed] = useState(() => readSectionCollapsed(section));
   const [animate, setAnimate] = useState(false);
-  const toggle = (event: MouseEvent<HTMLButtonElement>) => {
+  const press = useRef<{ x: number; y: number } | null>(null);
+  const dragged = useRef(false);
+  useEffect(() => {
+    if (isDragging) dragged.current = true;
+  }, [isDragging]);
+  const toggle = (event: MouseEvent<HTMLElement>) => {
     setAnimate(event.detail > 0);
     const next = !collapsed;
     setCollapsed(next);
     if (section) saveSectionCollapsed(section, next);
   };
+  const surfaceClick = (event: MouseEvent<HTMLElement>) => {
+    if (!section || (event.target as Element).closest(INTERACTIVE)) return;
+    const from = press.current;
+    if (dragged.current || isDragging) return;
+    if (from && Math.hypot(event.clientX - from.x, event.clientY - from.y) > DRAG_DISTANCE) return;
+    if (window.getSelection()?.toString()) return;
+    toggle(event);
+  };
   return (
     <section
       ref={cardRef}
+      onClick={surfaceClick}
       data-section={section}
       data-collapsed={collapsed}
       data-animate={animate}
@@ -52,6 +78,14 @@ export function Card({
       tabIndex={attributes?.tabIndex}
       aria-describedby={attributes?.['aria-describedby']}
       aria-roledescription={attributes ? 'sortable section' : undefined}
+      onMouseDownCapture={(event) => {
+        press.current = { x: event.clientX, y: event.clientY };
+        dragged.current = false;
+      }}
+      onTouchStartCapture={() => {
+        press.current = null;
+        dragged.current = false;
+      }}
       onMouseDown={listeners ? (event) => listeners.onMouseDown?.(event) : undefined}
       onTouchStart={listeners ? (event) => listeners.onTouchStart?.(event) : undefined}
       onKeyDown={
