@@ -4,10 +4,12 @@ use tauri::command;
 
 #[derive(Serialize)]
 pub struct CpuBoostStatus {
-    current: Option<u32>,
-    label: Option<String>,
+    ac: Option<bool>,
+    plugged: Option<u32>,
+    plugged_label: Option<String>,
+    battery: Option<u32>,
+    battery_label: Option<String>,
     plan: Option<String>,
-    mismatch: bool,
     supported: bool,
     error: Option<String>,
 }
@@ -142,38 +144,35 @@ mod win {
             )?;
         }
         Ok(CpuBoostStatus {
-            current: Some(ac),
-            label: Some(label(ac)),
+            ac: crate::gpu_mode::ac_power().ok(),
+            plugged: Some(ac),
+            plugged_label: Some(label(ac)),
+            battery: Some(dc),
+            battery_label: Some(label(dc)),
             plan: plan_name(&scheme),
-            mismatch: ac != dc,
             supported: true,
             error: None,
         })
     }
 
-    pub fn write(mode: u32) -> Result<(), String> {
+    pub fn write(ac: bool, mode: u32) -> Result<(), String> {
         let scheme = Scheme::active()?;
         // SAFETY: scheme and the GUID constants are valid for the duration of the calls.
         unsafe {
+            let write = if ac {
+                PowerWriteACValueIndex
+            } else {
+                PowerWriteDCValueIndex
+            };
             check(
-                PowerWriteACValueIndex(
+                write(
                     std::ptr::null_mut(),
                     scheme.0,
                     &SUB_PROCESSOR,
                     &PERFBOOSTMODE,
                     mode,
                 ),
-                "Writing CPU boost (AC)",
-            )?;
-            check(
-                PowerWriteDCValueIndex(
-                    std::ptr::null_mut(),
-                    scheme.0,
-                    &SUB_PROCESSOR,
-                    &PERFBOOSTMODE,
-                    mode,
-                ),
-                "Writing CPU boost (battery)",
+                "Writing CPU boost",
             )?;
             check(
                 PowerSetActiveScheme(std::ptr::null_mut(), scheme.0),
@@ -193,17 +192,19 @@ mod win {
         Err(UNSUPPORTED.into())
     }
 
-    pub fn write(_mode: u32) -> Result<(), String> {
+    pub fn write(_ac: bool, _mode: u32) -> Result<(), String> {
         Err(UNSUPPORTED.into())
     }
 }
 
 fn read() -> CpuBoostStatus {
     win::read().unwrap_or_else(|error| CpuBoostStatus {
-        current: None,
-        label: None,
+        ac: None,
+        plugged: None,
+        plugged_label: None,
+        battery: None,
+        battery_label: None,
         plan: None,
-        mismatch: false,
         supported: false,
         error: Some(error),
     })
@@ -217,10 +218,10 @@ pub async fn get_cpu_boost() -> Result<CpuBoostStatus, String> {
 }
 
 #[command]
-pub async fn set_cpu_boost(mode: u32) -> Result<CpuBoostStatus, String> {
+pub async fn set_cpu_boost(ac: bool, mode: u32) -> Result<CpuBoostStatus, String> {
     let mode = validate(mode)?;
     tauri::async_runtime::spawn_blocking(move || {
-        win::write(mode)?;
+        win::write(ac, mode)?;
         Ok(read())
     })
     .await
@@ -245,6 +246,6 @@ mod tests {
     #[ignore = "read-only power plan probe"]
     fn cpu_boost_live() {
         let s = win::read().unwrap();
-        println!("{:?} {:?}", s.label, s.plan);
+        println!("{:?} {:?} {:?}", s.plugged_label, s.battery_label, s.plan);
     }
 }

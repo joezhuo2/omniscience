@@ -1,17 +1,22 @@
 use super::*;
 
+fn migrated(json: &str) -> Preferences {
+    serde_json::from_str::<Preferences>(json).unwrap().migrate()
+}
+
 #[test]
-fn automatic_uses_performance_on_ac_and_efficiency_on_battery() {
-    assert_eq!(target(PowerMode::Auto, true), PowerMode::Performance);
-    assert_eq!(target(PowerMode::Auto, false), PowerMode::Efficiency);
-    for mode in [
-        PowerMode::Efficiency,
-        PowerMode::Balanced,
-        PowerMode::Performance,
-    ] {
-        assert_eq!(target(mode, true), mode);
-        assert_eq!(target(mode, false), mode);
-    }
+fn migrates_saved_auto_and_manual_modes_to_both_sources() {
+    let auto = migrated(r#"{"mode":"auto"}"#);
+    assert_eq!(auto.profile(true), Some(PowerMode::Performance));
+    assert_eq!(auto.profile(false), Some(PowerMode::Efficiency));
+    let manual = migrated(r#"{"mode":"balanced"}"#);
+    assert_eq!(manual.profile(true), Some(PowerMode::Balanced));
+    assert_eq!(manual.profile(false), Some(PowerMode::Balanced));
+    let fresh = migrated("{}");
+    assert_eq!((fresh.profile(true), fresh.profile(false)), (None, None));
+    let saved = migrated(r#"{"ac":"efficiency","battery":"performance"}"#);
+    assert_eq!(saved.profile(true), Some(PowerMode::Efficiency));
+    assert_eq!(saved.profile(false), Some(PowerMode::Performance));
 }
 
 #[test]
@@ -33,10 +38,7 @@ fn guids_round_trip_and_unknown_is_none() {
 #[test]
 fn rejects_unknown_mode_names() {
     assert!(serde_json::from_str::<PowerMode>("\"turbo\"").is_err());
-    assert_eq!(
-        serde_json::from_str::<PowerMode>("\"auto\"").unwrap(),
-        PowerMode::Auto
-    );
+    assert!(serde_json::from_str::<PowerMode>("\"auto\"").is_err());
 }
 
 #[test]

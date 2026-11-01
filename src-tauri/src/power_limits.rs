@@ -7,13 +7,56 @@ use tauri::{AppHandle, Manager, State};
 const MIN_WATTS: u32 = 5;
 const MAX_WATTS: u32 = 80;
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+struct Limits {
+    spl: u32,
+    sppt: u32,
+}
+
 #[derive(Default, Clone, Serialize, Deserialize)]
 #[serde(default)]
 struct Preferences {
+    ac: Option<Limits>,
+    battery: Option<Limits>,
+    #[serde(skip_serializing)]
     spl: Option<u32>,
+    #[serde(skip_serializing)]
     sppt: Option<u32>,
     #[serde(skip)]
     error: Option<String>,
+}
+
+impl Preferences {
+    fn migrate(mut self) -> Self {
+        if let (Some(spl), Some(sppt)) = (self.spl.take(), self.sppt.take()) {
+            let legacy = Some(Limits { spl, sppt });
+            self.ac = self.ac.or(legacy);
+            self.battery = self.battery.or(legacy);
+        }
+        self.ac = self.ac.map(Limits::normalized);
+        self.battery = self.battery.map(Limits::normalized);
+        self
+    }
+
+    #[cfg(any(windows, test))]
+    fn profile(&self, ac: bool) -> Option<Limits> {
+        if ac { self.ac } else { self.battery }
+    }
+
+    fn set_profile(&mut self, ac: bool, limits: Option<Limits>) {
+        if ac {
+            self.ac = limits;
+        } else {
+            self.battery = limits;
+        }
+    }
+}
+
+impl Limits {
+    fn normalized(self) -> Self {
+        let (spl, sppt) = normalize(self.spl, self.sppt);
+        Self { spl, sppt }
+    }
 }
 
 pub struct PowerLimits {
@@ -23,8 +66,9 @@ pub struct PowerLimits {
 
 #[derive(Serialize)]
 pub struct PowerLimitsStatus {
-    spl: Option<u32>,
-    sppt: Option<u32>,
+    ac: Option<bool>,
+    ac_limits: Option<Limits>,
+    battery_limits: Option<Limits>,
     supported: bool,
     error: Option<String>,
 }
@@ -36,13 +80,11 @@ impl PowerLimits {
             .app_config_dir()
             .map_err(|e| e.to_string())?
             .join("power-limits.json");
-        let mut prefs: Preferences = std::fs::read_to_string(&path)
+        let prefs = std::fs::read_to_string(&path)
             .ok()
-            .and_then(|s| serde_json::from_str(&s).ok())
-            .unwrap_or_default();
-        let limits = prefs.spl.zip(prefs.sppt).map(|(a, b)| normalize(a, b));
-        prefs.spl = limits.map(|l| l.0);
-        prefs.sppt = limits.map(|l| l.1);
+            .and_then(|s| serde_json::from_str::<Preferences>(&s).ok())
+            .unwrap_or_default()
+            .migrate();
         let config = Arc::new(Self {
             path,
             prefs: Mutex::new(prefs),
@@ -58,9 +100,9 @@ impl PowerLimits {
                     {
                         previous = Some(ac);
                         if let Ok(mut prefs) = worker.prefs.lock()
-                            && let (Some(spl), Some(sppt)) = (prefs.spl, prefs.sppt)
+                            && let Some(limits) = prefs.profile(ac)
                         {
-                            prefs.error = apply(spl, sppt).err();
+                            prefs.error = apply(limits.spl, limits.sppt).err();
                         }
                     }
                     std::thread::sleep(std::time::Duration::from_secs(5));
@@ -88,29 +130,33 @@ impl PowerLimits {
             Err(e) => (false, Some(e)),
         };
         Ok(PowerLimitsStatus {
-            spl: prefs.spl,
-            sppt: prefs.sppt,
+            ac: crate::gpu_mode::ac_power().ok(),
+            ac_limits: prefs.ac,
+            battery_limits: prefs.battery,
             supported,
             error: prefs.error.clone().or(hardware_error),
         })
     }
 
-    fn set(&self, spl: u32, sppt: u32) -> Result<PowerLimitsStatus, String> {
+    fn set(&self, ac: bool, spl: u32, sppt: u32) -> Result<PowerLimitsStatus, String> {
         let (spl, sppt) = normalize(spl, sppt);
         let mut prefs = self.prefs.lock().map_err(|e| e.to_string())?;
-        apply(spl, sppt)?;
-        prefs.spl = Some(spl);
-        prefs.sppt = Some(sppt);
+        let live = crate::gpu_mode::ac_power().ok() == Some(ac);
+        if live {
+            apply(spl, sppt)?;
+        }
+        prefs.set_profile(ac, Some(Limits { spl, sppt }));
         prefs.error = None;
         self.save(&prefs)
-            .map_err(|e| format!("Power limits applied, but could not save them: {e}"))?;
+            .map_err(|e| format!("Power limits were not saved: {e}"))?;
         drop(prefs);
         self.status()
     }
 
-    fn reset(&self) -> Result<PowerLimitsStatus, String> {
+    fn reset(&self, ac: bool) -> Result<PowerLimitsStatus, String> {
         let mut prefs = self.prefs.lock().map_err(|e| e.to_string())?;
-        *prefs = Preferences::default();
+        prefs.set_profile(ac, None);
+        prefs.error = None;
         self.save(&prefs)?;
         drop(prefs);
         self.status()
@@ -129,22 +175,24 @@ pub async fn get_power_limits(
 
 #[tauri::command]
 pub async fn set_power_limits(
+    ac: bool,
     spl: u32,
     sppt: u32,
     config: State<'_, Arc<PowerLimits>>,
 ) -> Result<PowerLimitsStatus, String> {
     let config = config.inner().clone();
-    tauri::async_runtime::spawn_blocking(move || config.set(spl, sppt))
+    tauri::async_runtime::spawn_blocking(move || config.set(ac, spl, sppt))
         .await
         .map_err(|e| e.to_string())?
 }
 
 #[tauri::command]
 pub async fn reset_power_limits(
+    ac: bool,
     config: State<'_, Arc<PowerLimits>>,
 ) -> Result<PowerLimitsStatus, String> {
     let config = config.inner().clone();
-    tauri::async_runtime::spawn_blocking(move || config.reset())
+    tauri::async_runtime::spawn_blocking(move || config.reset(ac))
         .await
         .map_err(|e| e.to_string())?
 }
