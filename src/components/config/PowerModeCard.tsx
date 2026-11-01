@@ -1,20 +1,19 @@
 import { Card } from '../dashboard/Card';
+import { SourceTabs } from './SourceTabs';
+import { useSourceTab } from './useSourceTab';
 import { useNativeControl } from './useNativeControl';
 
-type Mode = 'auto' | 'efficiency' | 'balanced' | 'performance';
+type Mode = 'efficiency' | 'balanced' | 'performance';
 export type PowerStatus = {
-  selected: Mode | null;
-  current: Exclude<Mode, 'auto'> | null;
+  ac: boolean | null;
+  ac_mode: Mode | null;
+  battery_mode: Mode | null;
+  current: Mode | null;
   supported: boolean;
   error: string | null;
 };
 
 const modes: { value: Mode; label: string; description: string }[] = [
-  {
-    value: 'auto',
-    label: 'Auto',
-    description: 'Best power efficiency on battery, best performance when plugged in',
-  },
   { value: 'efficiency', label: 'Efficiency', description: 'Best power efficiency' },
   { value: 'balanced', label: 'Balanced', description: 'Balanced' },
   { value: 'performance', label: 'Performance', description: 'Best performance' },
@@ -22,10 +21,13 @@ const modes: { value: Mode; label: string; description: string }[] = [
 
 export function PowerModeCard({ active = true }: { active?: boolean }) {
   const { status, busy, error, apply } = useNativeControl<PowerStatus>('get_power_mode', active);
-  const selected = status?.selected === 'auto' ? 'auto' : status?.current;
+  const [ac, setAc] = useSourceTab(status?.ac);
+  const saved = ac ? status?.ac_mode : status?.battery_mode;
+  const selected = saved ?? (status?.ac === ac ? status.current : null);
   return (
     <Card section="power-mode" title="Power mode">
-      <div className="grid grid-cols-4 gap-1" role="group" aria-label="Power mode">
+      <SourceTabs label="Power mode profile" ac={ac} activeAc={status?.ac} onChange={setAc} />
+      <div className="grid grid-cols-3 gap-1" role="group" aria-label="Power mode">
         {modes.map(({ value, label, description }) => (
           <button
             type="button"
@@ -34,16 +36,15 @@ export function PowerModeCard({ active = true }: { active?: boolean }) {
             title={description}
             aria-pressed={selected === value}
             disabled={!status?.supported || busy}
-            onClick={() => void apply('set_power_mode', { mode: value })}
+            onClick={() => void apply('set_power_mode', { ac, mode: value })}
           >
             {label}
           </button>
         ))}
       </div>
       <p className="mt-2 text-[11px] text-island-muted">
-        Auto uses best power efficiency on battery and best performance when plugged in. Windows
-        keeps separate modes for battery and plugged in; a choice applies to the current power
-        source.
+        Each tab sets the mode used on that power source. The current source applies immediately;
+        the other is applied when the power source changes.
       </p>
       <p className="mt-2 text-xs" role="status" aria-live="polite">
         {busy

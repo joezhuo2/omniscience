@@ -4,7 +4,9 @@ import { expect, it } from 'vitest';
 import { PowerModeCard, type PowerStatus } from './PowerModeCard';
 
 const supported: PowerStatus = {
-  selected: null,
+  ac: true,
+  ac_mode: null,
+  battery_mode: null,
   current: 'balanced',
   supported: true,
   error: null,
@@ -27,7 +29,7 @@ it('shows the effective mode and waits for a write before changing selection', a
     'false',
   );
   expect(screen.getByRole('button', { name: 'Balanced' })).toBeDisabled();
-  finish({ ...supported, selected: 'performance', current: 'performance' });
+  finish({ ...supported, ac_mode: 'performance', current: 'performance' });
   await waitFor(() =>
     expect(screen.getByRole('button', { name: 'Performance' })).toHaveAttribute(
       'aria-pressed',
@@ -36,13 +38,33 @@ it('shows the effective mode and waits for a write before changing selection', a
   );
 });
 
-it('marks Auto when selected and disables controls when unsupported', async () => {
-  mockIPC(() => ({ ...supported, selected: 'auto', current: 'performance' }));
-  const { unmount } = render(<PowerModeCard />);
+it('selects tabs per source, saving the inactive source without touching the active one', async () => {
+  const calls: [string, unknown][] = [];
+  mockIPC((cmd, args) => {
+    calls.push([cmd, args]);
+    return { ...supported, ac: false, ac_mode: 'performance', battery_mode: 'efficiency' };
+  });
+  render(<PowerModeCard />);
   await waitFor(() =>
-    expect(screen.getByRole('button', { name: 'Auto' })).toHaveAttribute('aria-pressed', 'true'),
+    expect(screen.getByRole('tab', { name: 'Battery' })).toHaveAttribute('aria-selected', 'true'),
   );
-  unmount();
+  expect(screen.getByRole('button', { name: 'Efficiency' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  expect(screen.queryByRole('button', { name: 'Auto' })).toBeNull();
+  fireEvent.click(screen.getByRole('tab', { name: 'Plugged in' }));
+  expect(screen.getByRole('button', { name: 'Performance' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Balanced' }));
+  await waitFor(() =>
+    expect(calls).toContainEqual(['set_power_mode', { ac: true, mode: 'balanced' }]),
+  );
+});
+
+it('disables controls when unsupported', async () => {
   mockIPC(() => ({ ...supported, supported: false, current: null, error: 'No overlay' }));
   render(<PowerModeCard />);
   expect(await screen.findByRole('alert')).toHaveTextContent('No overlay');
