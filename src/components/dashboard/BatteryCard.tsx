@@ -3,6 +3,7 @@ import { formatDuration, formatWatts } from '../../lib/format';
 import { useTelemetryStore } from '../../store';
 import type { Battery } from '../../types/telemetry';
 import { Card } from './Card';
+import { ChargeLimitBar } from './ChargeLimitBar';
 import { Skeleton } from './Skeleton';
 
 /** Below this charge the bar turns amber, below half of it red. */
@@ -83,6 +84,7 @@ export function BatteryCard() {
             style={{ width: `${battery.percent}%`, background: barColor(battery) }}
           />
         </div>
+        <ChargeLimitBar />
       </div>
     </Card>
   );

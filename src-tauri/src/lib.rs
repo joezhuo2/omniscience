@@ -1,5 +1,6 @@
 #[cfg(windows)]
 mod asus;
+mod charge_limit;
 mod commands;
 mod cpu_boost;
 mod display;
@@ -60,7 +61,9 @@ pub fn run() {
             power_mode::set_power_mode,
             display::get_display_mode,
             display::set_display_refresh,
-            display::set_display_resolution
+            display::set_display_resolution,
+            charge_limit::get_charge_limit,
+            charge_limit::set_charge_limit
         ])
         .on_window_event(|window, event| {
             if let (tauri::WindowEvent::Moved(pos), Some(main)) =
@@ -81,6 +84,7 @@ pub fn run() {
             app.manage(power_limits::PowerLimits::start(app.handle())?);
             app.manage(power_mode::PowerConfig::start(app.handle())?);
             app.manage(display::DisplayConfig::start(app.handle())?);
+            app.manage(charge_limit::ChargeLimit::start(app.handle())?);
             let settings = settings::load(app.handle());
             telemetry.update(|c| settings.apply(c));
             let shell = shell::Shell::new(settings);
