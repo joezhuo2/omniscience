@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.12] - 2026-10-31
+
+### Changed
+
+- The Plugged in and Battery tabs now sit in the card header, on the same line as the title (#66).
+- Release notes now link to the changelog (#65).
+
 ## [0.2.11] - 2026-10-31
 
 ### Added

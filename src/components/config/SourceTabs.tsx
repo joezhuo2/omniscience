@@ -13,7 +13,7 @@ export function SourceTabs({
     <div
       role="tablist"
       aria-label={label}
-      className="mb-2 flex w-fit rounded-md bg-island-hover p-0.5 text-[10px]"
+      className="flex w-fitrounded-md bg-island-hover p-0.5 text-[10px]"
     >
       {[
         { value: true, name: 'Plugged in' },

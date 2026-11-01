@@ -58,16 +58,21 @@ export function PowerLimitsCard({ active = true }: { active?: boolean }) {
     </label>
   );
   return (
-    <Card section="power-limits" title="Power limits">
-      <SourceTabs
-        label="Power limits profile"
-        ac={ac}
-        activeAc={status?.ac}
-        onChange={(next) => {
-          setDraft(null);
-          setAc(next);
-        }}
-      />
+    <Card
+      section="power-limits"
+      title="Power limits"
+      aside={
+        <SourceTabs
+          label="Power limits profile"
+          ac={ac}
+          activeAc={status?.ac}
+          onChange={(next) => {
+            setDraft(null);
+            setAc(next);
+          }}
+        />
+      }
+    >
       <div className="flex flex-col gap-2">
         {slider('Sustained (SPL)', 'spl')}
         {slider('Boost (SPPT)', 'sppt')}

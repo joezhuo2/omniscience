@@ -27,8 +27,13 @@ export function CpuBoostCard({ active = true }: { active?: boolean }) {
   const currentLabel = ac ? status?.plugged_label : status?.battery_label;
   const custom = current != null && current > 2;
   return (
-    <Card section="cpu-boost" title="CPU boost">
-      <SourceTabs label="CPU boost profile" ac={ac} activeAc={status?.ac} onChange={setAc} />
+    <Card
+      section="cpu-boost"
+      title="CPU boost"
+      aside={
+        <SourceTabs label="CPU boost profile" ac={ac} activeAc={status?.ac} onChange={setAc} />
+      }
+    >
       <div className="grid grid-cols-3 gap-1" role="group" aria-label="CPU boost">
         {modes.map(({ value, label, description }) => (
           <button
