@@ -26,6 +26,7 @@ export function GpuModeCard({ active = true }: { active?: boolean }) {
   const { status, busy, error, apply } = useNativeControl<GpuStatus>('get_gpu_mode', active);
   const selected =
     status?.selected === 'auto' || status?.restart_required ? status.selected : status?.current;
+  const selectedMode = modes.find(({ value }) => value === selected);
   return (
     <Card section="gpu-mode" title="GPU mode">
       <div className="grid grid-cols-4 gap-1" role="group" aria-label="GPU mode">
@@ -48,10 +49,9 @@ export function GpuModeCard({ active = true }: { active?: boolean }) {
           </button>
         ))}
       </div>
-      <p className="mt-2 text-[11px] text-island-muted">
-        Auto uses the iGPU on battery and enables the dGPU when plugged in. Med keeps both GPUs
-        available; Min disables the dGPU; Max routes the display through the dGPU.
-      </p>
+      {selectedMode && (
+        <p className="mt-2 text-[11px] text-island-muted">{selectedMode.description}</p>
+      )}
       <p className="mt-2 text-xs" role="status" aria-live="polite">
         {busy
           ? 'Applying GPU mode…'

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.9] - 2026-10-31
+
+### Changed
+
+- The GPU mode card now describes only the currently selected mode instead of listing every mode (#51).
+
 ## [0.2.8] - 2026-10-31
 
 ### Changed

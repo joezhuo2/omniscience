@@ -72,6 +72,26 @@ it('shows firmware state when another utility overrides a saved manual selection
   expect(screen.getByRole('button', { name: 'Min' })).toHaveAttribute('aria-pressed', 'false');
 });
 
+it('describes only the selected GPU mode', async () => {
+  mockIPC(() => ({ ...supported, selected: 'min', current: 'min' }));
+  render(<GpuModeCard />);
+  expect(await screen.findByText('iGPU only: dGPU disabled')).toBeInTheDocument();
+  expect(screen.queryByText('Hybrid graphics: both GPUs available')).not.toBeInTheDocument();
+  expect(
+    screen.queryByText('iGPU on battery, hybrid graphics when plugged in'),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.queryByText('dGPU display mode: requires a supported MUX and Windows restart'),
+  ).not.toBeInTheDocument();
+});
+
+it('renders no mode description when nothing is selected', async () => {
+  mockIPC(() => ({ ...supported, selected: null, current: null, supported: false }));
+  render(<GpuModeCard />);
+  await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Requires a supported'));
+  expect(screen.queryByText(/GPUs available|dGPU disabled|on battery|display mode/)).toBeNull();
+});
+
 it('retains actual state and reports a refused write', async () => {
   mockIPC((cmd) => {
     if (cmd === 'get_gpu_mode') return supported;
