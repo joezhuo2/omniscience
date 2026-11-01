@@ -61,18 +61,12 @@ impl DisplayConfig {
         {
             let worker = config.clone();
             std::thread::spawn(move || {
-                let mut previous = None;
+                let mut watch = crate::config_gate::SourceWatch::default();
                 loop {
-                    if let Ok(mut prefs) = worker.prefs.lock()
-                        && prefs.auto
-                    {
-                        match crate::gpu_mode::ac_power() {
-                            Ok(ac) if previous != Some(ac) => {
-                                previous = Some(ac);
-                                prefs.error = read().and_then(|snap| apply_auto(&snap, ac)).err();
-                            }
-                            Err(e) => prefs.error = Some(e),
-                            _ => {}
+                    if let Ok(mut prefs) = worker.prefs.lock() {
+                        let on = crate::config_gate::enabled() && prefs.auto;
+                        if let Some(ac) = watch.changed(on, || crate::gpu_mode::ac_power().ok()) {
+                            prefs.error = read().and_then(|snap| apply_auto(&snap, ac)).err();
                         }
                     }
                     std::thread::sleep(std::time::Duration::from_secs(5));
@@ -165,6 +159,7 @@ pub async fn set_display_refresh(
     hz: Option<u32>,
     config: State<'_, Arc<DisplayConfig>>,
 ) -> Result<DisplayStatus, String> {
+    crate::config_gate::require()?;
     let config = config.inner().clone();
     tauri::async_runtime::spawn_blocking(move || config.set_refresh(hz))
         .await
@@ -177,6 +172,7 @@ pub async fn set_display_resolution(
     height: u32,
     config: State<'_, Arc<DisplayConfig>>,
 ) -> Result<DisplayStatus, String> {
+    crate::config_gate::require()?;
     let config = config.inner().clone();
     tauri::async_runtime::spawn_blocking(move || config.set_resolution(width, height))
         .await

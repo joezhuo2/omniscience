@@ -219,6 +219,7 @@ pub async fn get_cpu_boost() -> Result<CpuBoostStatus, String> {
 
 #[command]
 pub async fn set_cpu_boost(ac: bool, mode: u32) -> Result<CpuBoostStatus, String> {
+    crate::config_gate::require()?;
     let mode = validate(mode)?;
     tauri::async_runtime::spawn_blocking(move || {
         win::write(ac, mode)?;

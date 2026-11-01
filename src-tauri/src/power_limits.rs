@@ -93,17 +93,14 @@ impl PowerLimits {
         {
             let worker = config.clone();
             std::thread::spawn(move || {
-                let mut previous = None;
+                let mut watch = crate::config_gate::SourceWatch::default();
                 loop {
-                    if let Ok(ac) = crate::gpu_mode::ac_power()
-                        && previous != Some(ac)
+                    if let Some(ac) = watch.changed(crate::config_gate::enabled(), || {
+                        crate::gpu_mode::ac_power().ok()
+                    }) && let Ok(mut prefs) = worker.prefs.lock()
+                        && let Some(limits) = prefs.profile(ac)
                     {
-                        previous = Some(ac);
-                        if let Ok(mut prefs) = worker.prefs.lock()
-                            && let Some(limits) = prefs.profile(ac)
-                        {
-                            prefs.error = apply(limits.spl, limits.sppt).err();
-                        }
+                        prefs.error = apply(limits.spl, limits.sppt).err();
                     }
                     std::thread::sleep(std::time::Duration::from_secs(5));
                 }
@@ -180,6 +177,7 @@ pub async fn set_power_limits(
     sppt: u32,
     config: State<'_, Arc<PowerLimits>>,
 ) -> Result<PowerLimitsStatus, String> {
+    crate::config_gate::require()?;
     let config = config.inner().clone();
     tauri::async_runtime::spawn_blocking(move || config.set(ac, spl, sppt))
         .await
@@ -191,6 +189,7 @@ pub async fn reset_power_limits(
     ac: bool,
     config: State<'_, Arc<PowerLimits>>,
 ) -> Result<PowerLimitsStatus, String> {
+    crate::config_gate::require()?;
     let config = config.inner().clone();
     tauri::async_runtime::spawn_blocking(move || config.reset(ac))
         .await

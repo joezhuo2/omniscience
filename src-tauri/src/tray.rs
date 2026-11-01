@@ -22,32 +22,37 @@ const QUIT: &str = "quit";
 pub const CHECK_UPDATE_EVENT: &str = "omniscience://check-update";
 
 pub fn init(app: &AppHandle) -> tauri::Result<()> {
-    let checks = TrayChecks {
-        launch_at_startup: CheckMenuItem::with_id(
-            app,
-            LAUNCH_AT_STARTUP,
-            "Launch at startup",
-            true,
-            false,
-            None::<&str>,
-        )?,
-        auto_check_updates: CheckMenuItem::with_id(
-            app,
-            AUTO_CHECK_UPDATES,
-            "Auto-check for updates",
-            true,
-            false,
-            None::<&str>,
-        )?,
-        hide_over_fullscreen: CheckMenuItem::with_id(
-            app,
-            HIDE_OVER_FULLSCREEN,
-            "Hide over fullscreen apps",
-            true,
-            false,
-            None::<&str>,
-        )?,
-    };
+    let launch_at_startup = CheckMenuItem::with_id(
+        app,
+        LAUNCH_AT_STARTUP,
+        "Launch at startup",
+        true,
+        false,
+        None::<&str>,
+    )?;
+    let auto_check_updates = CheckMenuItem::with_id(
+        app,
+        AUTO_CHECK_UPDATES,
+        "Auto-check for updates",
+        true,
+        false,
+        None::<&str>,
+    )?;
+    let hide_over_fullscreen = CheckMenuItem::with_id(
+        app,
+        HIDE_OVER_FULLSCREEN,
+        "Hide over fullscreen apps",
+        true,
+        false,
+        None::<&str>,
+    )?;
+    let system_updates = MenuItem::with_id(
+        app,
+        SYSTEM_UPDATES,
+        "Check for system updates",
+        true,
+        None::<&str>,
+    )?;
     let menu = Menu::with_items(
         app,
         &[
@@ -59,9 +64,9 @@ pub fn init(app: &AppHandle) -> tauri::Result<()> {
                 None::<&str>,
             )?,
             &PredefinedMenuItem::separator(app)?,
-            &checks.launch_at_startup,
-            &checks.auto_check_updates,
-            &checks.hide_over_fullscreen,
+            &launch_at_startup,
+            &auto_check_updates,
+            &hide_over_fullscreen,
             &PredefinedMenuItem::separator(app)?,
             &MenuItem::with_id(
                 app,
@@ -70,18 +75,18 @@ pub fn init(app: &AppHandle) -> tauri::Result<()> {
                 true,
                 None::<&str>,
             )?,
-            &MenuItem::with_id(
-                app,
-                SYSTEM_UPDATES,
-                "Check for system updates",
-                true,
-                None::<&str>,
-            )?,
             &MenuItem::with_id(app, SETTINGS, "Settings…", true, None::<&str>)?,
             &PredefinedMenuItem::separator(app)?,
             &MenuItem::with_id(app, QUIT, "Quit", true, None::<&str>)?,
         ],
     )?;
+    let checks = TrayChecks {
+        launch_at_startup,
+        auto_check_updates,
+        hide_over_fullscreen,
+        menu: menu.clone(),
+        system_updates,
+    };
     let mut builder = TrayIconBuilder::with_id("main")
         .tooltip("Omniscience")
         .menu(&menu)

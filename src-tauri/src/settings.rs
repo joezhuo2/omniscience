@@ -31,6 +31,8 @@ pub struct Settings {
     /// Look up the public IP (one DNS query to OpenDNS every ten minutes while open). Off by
     /// default because it contacts a third party.
     pub show_public_ip: bool,
+    /// Shows the Config tab and allows GPU, power and display changes. Off by default.
+    pub config_enabled: bool,
 }
 
 impl Default for Settings {
@@ -45,6 +47,7 @@ impl Default for Settings {
             hide_over_fullscreen: true,
             ping_target: "1.1.1.1".into(),
             show_public_ip: false,
+            config_enabled: false,
         }
     }
 }

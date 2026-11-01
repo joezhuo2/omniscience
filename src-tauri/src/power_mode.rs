@@ -94,21 +94,15 @@ impl PowerConfig {
         {
             let worker = config.clone();
             std::thread::spawn(move || {
-                let mut previous = None;
+                let mut watch = crate::config_gate::SourceWatch::default();
                 loop {
                     std::thread::sleep(std::time::Duration::from_secs(5));
-                    let Ok(mut prefs) = worker.prefs.lock() else {
-                        continue;
-                    };
-                    match crate::gpu_mode::ac_power() {
-                        Ok(ac) if previous != Some(ac) => {
-                            previous = Some(ac);
-                            if let Some(mode) = prefs.profile(ac) {
-                                prefs.error = apply(mode).err();
-                            }
-                        }
-                        Err(e) => prefs.error = Some(e),
-                        _ => {}
+                    if let Some(ac) = watch.changed(crate::config_gate::enabled(), || {
+                        crate::gpu_mode::ac_power().ok()
+                    }) && let Ok(mut prefs) = worker.prefs.lock()
+                        && let Some(mode) = prefs.profile(ac)
+                    {
+                        prefs.error = apply(mode).err();
                     }
                 }
             });
@@ -172,6 +166,7 @@ pub async fn set_power_mode(
     mode: PowerMode,
     config: State<'_, Arc<PowerConfig>>,
 ) -> Result<PowerStatus, String> {
+    crate::config_gate::require()?;
     let config = config.inner().clone();
     tauri::async_runtime::spawn_blocking(move || config.set(ac, mode))
         .await
