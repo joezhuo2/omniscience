@@ -69,8 +69,9 @@ Helpers:
 ## Power mode
 
 - [ ] Config > Power mode shows the mode Windows reports (matches Settings > System > Power & battery). Changing it in Windows Settings shows up within a few seconds.
-- [ ] Efficiency, Balanced and Performance change the Windows mode for the current power source. Auto switches to Efficiency on battery and Performance when plugged in, even with the overlay closed.
-- [ ] Restart the app: the saved selection is reapplied.
+- [ ] The Plugged in / Battery tabs default to the current power source, which is marked. There is no Auto button.
+- [ ] Efficiency, Balanced and Performance on the current source's tab change the Windows mode immediately; on the other tab they only save, and apply when the power source changes, even with the overlay closed.
+- [ ] Restart the app: the saved profile for the current source is reapplied.
 
 ## GPU configuration
 
@@ -83,7 +84,13 @@ Helpers:
 ## CPU boost
 
 - [ ] Config > CPU boost shows the active power plan and highlights Off/On/Aggressive to match it; changing the mode in Windows power options is reflected within a few seconds.
-- [ ] Choosing a mode updates both plugged-in and battery values; a plan with differing values shows a mismatch notice.
+- [ ] The Plugged in tab shows and changes only the plugged-in value; the Battery tab only the battery value. The current power source's tab is selected by default.
+
+## Power limits
+
+- [ ] Config > Power limits has Plugged in / Battery tabs; the current source is marked and selected by default.
+- [ ] Releasing a slider on the current source's tab writes to firmware; on the other tab it only saves, and the profile applies when the power source changes (also after an app restart).
+- [ ] Reset clears only the selected tab's saved profile.
 
 ## Display configuration
 

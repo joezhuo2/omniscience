@@ -98,12 +98,12 @@ apps are not checked.
 On supported ASUS ROG laptops, Config also offers **GPU mode**: Auto switches between
 iGPU-only on battery and hybrid graphics when plugged in; Med, Min and Max select hybrid,
 iGPU-only and dGPU display modes. MUX changes require a Windows restart. **Power limits** sets
-the CPU sustained (SPL) and boost (SPPT) wattage from 5 to 80 W; the choice is saved and reapplied
-on launch and when the power source changes.
+the CPU sustained (SPL) and boost (SPPT) wattage from 5 to 80 W, separately for plugged in and
+battery; each profile is saved and applied on launch and when the power source changes.
 Config also offers **CPU boost** (Off, On, Aggressive), which sets the active Windows power
-plan for both plugged-in and battery use.
-**Power mode** sets the Windows 11 power mode (Efficiency, Balanced or Performance); Auto
-uses Efficiency on battery and Performance when plugged in.
+plan, with separate Plugged in and Battery tabs.
+**Power mode** sets the Windows 11 power mode (Efficiency, Balanced or Performance) per
+power source, applied when the source changes.
 **Display** switches the built-in panel's refresh rate (with an Auto mode that uses a lower
 rate on battery) and resolution.
 See [System configuration](docs/configuration.md) for coverage and usage.
