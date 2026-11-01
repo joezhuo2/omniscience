@@ -21,8 +21,11 @@ const order = () =>
     card.getAttribute('data-section'),
   );
 
-afterEach(() => {
+afterEach(async () => {
   vi.restoreAllMocks();
+  await act(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 60));
+  });
 });
 
 describe('section drag layout', () => {
@@ -117,6 +120,42 @@ describe('section drag layout', () => {
       expect(screen.queryByRole('button', { name: /Reorder/ })).not.toBeInTheDocument();
     },
   );
+
+  it('toggles collapse from a surface click but not from child controls or drags', async () => {
+    render(
+      <Card title="Network" section="network">
+        <button>inner</button>
+        <p>body text</p>
+      </Card>,
+    );
+    const card = screen.getByRole('region', { name: 'Network' });
+    const title = screen.getByRole('button', { name: /Network/ });
+    fireEvent.mouseDown(card, { button: 0, clientX: 5, clientY: 5 });
+    fireEvent.click(card, { clientX: 5, clientY: 5 });
+    expect(title).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(card, { clientX: 5, clientY: 5 });
+    expect(title).toHaveAttribute('aria-expanded', 'true');
+    fireEvent.click(screen.getByText('inner'));
+    expect(title).toHaveAttribute('aria-expanded', 'true');
+    fireEvent.mouseDown(card, { button: 0, clientX: 5, clientY: 5 });
+    fireEvent.click(card, { clientX: 5, clientY: 40 });
+    expect(title).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  it('does not toggle after a completed drag', async () => {
+    layout();
+    const card = screen.getByRole('region', { name: 'GPU & Power' });
+    fireEvent.mouseDown(card, { button: 0, buttons: 1, clientX: 20, clientY: 20 });
+    fireEvent.mouseMove(document, { buttons: 1, clientX: 20, clientY: 30 });
+    await waitFor(() => expect(card).toHaveAttribute('data-dragging', 'true'));
+    fireEvent.mouseUp(document, { button: 0, clientX: 20, clientY: 20 });
+    await waitFor(() => expect(card).not.toHaveAttribute('data-dragging', 'true'));
+    fireEvent.click(card, { clientX: 20, clientY: 20 });
+    expect(screen.getByRole('button', { name: 'GPU & Power' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
+  });
 
   it('keeps keyboard input in child controls from picking up a card', () => {
     layout();
