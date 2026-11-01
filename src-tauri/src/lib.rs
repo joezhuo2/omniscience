@@ -2,6 +2,7 @@
 mod asus;
 mod commands;
 mod cpu_boost;
+mod display;
 mod driver_updates;
 mod fullscreen;
 mod gpu_mode;
@@ -56,7 +57,10 @@ pub fn run() {
             cpu_boost::get_cpu_boost,
             cpu_boost::set_cpu_boost,
             power_mode::get_power_mode,
-            power_mode::set_power_mode
+            power_mode::set_power_mode,
+            display::get_display_mode,
+            display::set_display_refresh,
+            display::set_display_resolution
         ])
         .on_window_event(|window, event| {
             if let (tauri::WindowEvent::Moved(pos), Some(main)) =
@@ -76,6 +80,7 @@ pub fn run() {
             app.manage(gpu_mode::GpuConfig::start(app.handle())?);
             app.manage(power_limits::PowerLimits::start(app.handle())?);
             app.manage(power_mode::PowerConfig::start(app.handle())?);
+            app.manage(display::DisplayConfig::start(app.handle())?);
             let settings = settings::load(app.handle());
             telemetry.update(|c| settings.apply(c));
             let shell = shell::Shell::new(settings);

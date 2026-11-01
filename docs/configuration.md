@@ -80,5 +80,17 @@ it always shows the active plan's value, so switching plans changes what is show
 two values differ, the plugged-in value is shown with a notice. Other modes (such as
 Efficient enabled) are named with no button selected. Windows only.
 
+## Display
+
+Requires Windows. Config > Display controls the built-in panel (or the primary display if
+the panel cannot be identified) and shows its name. The refresh row has Auto plus one button
+per rate available at the current resolution. Auto uses the lowest rate of at least 60 Hz on
+battery and the highest rate when plugged in, and responds to power-source changes while
+Omniscience runs; it is off until you choose it, and picking a rate turns it off. The
+resolution row lists the resolutions Windows offers at the current color depth and
+orientation. Changing resolution keeps the refresh rate when available, otherwise uses the
+highest one (or Auto's choice). Windows remembers the resolution itself; Omniscience only
+saves whether Auto is on. Rejected modes are reported and the actual state is re-read.
+
 The update query uses Microsoft's
 [Windows Update Agent search API](https://learn.microsoft.com/en-us/windows/win32/api/wuapi/nf-wuapi-iupdatesearcher-search).
