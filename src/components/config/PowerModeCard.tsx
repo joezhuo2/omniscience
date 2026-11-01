@@ -25,8 +25,13 @@ export function PowerModeCard({ active = true }: { active?: boolean }) {
   const saved = ac ? status?.ac_mode : status?.battery_mode;
   const selected = saved ?? (status?.ac === ac ? status.current : null);
   return (
-    <Card section="power-mode" title="Power mode">
-      <SourceTabs label="Power mode profile" ac={ac} activeAc={status?.ac} onChange={setAc} />
+    <Card
+      section="power-mode"
+      title="Power mode"
+      aside={
+        <SourceTabs label="Power mode profile" ac={ac} activeAc={status?.ac} onChange={setAc} />
+      }
+    >
       <div className="grid grid-cols-3 gap-1" role="group" aria-label="Power mode">
         {modes.map(({ value, label, description }) => (
           <button
