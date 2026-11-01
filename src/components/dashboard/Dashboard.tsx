@@ -3,6 +3,7 @@ import { ConfigView } from '../config/ConfigView';
 import { BatteryCard } from './BatteryCard';
 import { CpuHeatmap } from './CpuHeatmap';
 import { GpuPowerCard } from './GpuPowerCard';
+import { useSettingsStore } from '../../settings';
 import { useTelemetryStore } from '../../store';
 import { SectionLayout } from './SectionLayout';
 import { Header } from './Header';
@@ -27,7 +28,11 @@ export function Dashboard({
   onSettings?: () => void;
   showSystemUpdates?: number;
 }) {
-  const [tab, setTab] = useState<'info' | 'config'>(showSystemUpdates > 0 ? 'config' : 'info');
+  const configEnabled = useSettingsStore((s) => s.settings?.config_enabled ?? false);
+  const [chosenTab, setTab] = useState<'info' | 'config'>(
+    showSystemUpdates > 0 ? 'config' : 'info',
+  );
+  const tab = configEnabled ? chosenTab : 'info';
   const [configOpened, setConfigOpened] = useState(showSystemUpdates > 0);
   const selectTab = (name: 'info' | 'config') => {
     if (name === 'config') setConfigOpened(true);
@@ -38,44 +43,46 @@ export function Dashboard({
   return (
     <div data-testid="dashboard" className="flex flex-col gap-2 pt-1">
       <Header onSettings={onSettings} />
-      <div
-        role="tablist"
-        aria-label="Dashboard"
-        className="flex gap-1 rounded-lg bg-island-hover p-1"
-      >
-        {(['info', 'config'] as const).map((name, index) => (
-          <button
-            key={name}
-            id={`${id}-${name}-tab`}
-            role="tab"
-            type="button"
-            aria-selected={tab === name}
-            aria-controls={`${id}-${name}-panel`}
-            tabIndex={tab === name ? 0 : -1}
-            onClick={() => selectTab(name)}
-            onKeyDown={(event) => {
-              const next =
-                event.key === 'Home'
-                  ? 'info'
-                  : event.key === 'End'
-                    ? 'config'
-                    : event.key === 'ArrowLeft' || event.key === 'ArrowRight'
-                      ? index === 0
-                        ? 'config'
-                        : 'info'
-                      : null;
-              if (next) {
-                event.preventDefault();
-                selectTab(next);
-                document.getElementById(`${id}-${next}-tab`)?.focus();
-              }
-            }}
-            className={`flex-1 rounded-md px-3 py-1.5 text-xs capitalize transition-colors hover:text-island-text focus-visible:outline-2 focus-visible:outline-island-muted ${tab === name ? 'bg-island-faint text-island-text' : 'text-island-muted'}`}
-          >
-            {name}
-          </button>
-        ))}
-      </div>
+      {configEnabled && (
+        <div
+          role="tablist"
+          aria-label="Dashboard"
+          className="flex gap-1 rounded-lg bg-island-hover p-1"
+        >
+          {(['info', 'config'] as const).map((name, index) => (
+            <button
+              key={name}
+              id={`${id}-${name}-tab`}
+              role="tab"
+              type="button"
+              aria-selected={tab === name}
+              aria-controls={`${id}-${name}-panel`}
+              tabIndex={tab === name ? 0 : -1}
+              onClick={() => selectTab(name)}
+              onKeyDown={(event) => {
+                const next =
+                  event.key === 'Home'
+                    ? 'info'
+                    : event.key === 'End'
+                      ? 'config'
+                      : event.key === 'ArrowLeft' || event.key === 'ArrowRight'
+                        ? index === 0
+                          ? 'config'
+                          : 'info'
+                        : null;
+                if (next) {
+                  event.preventDefault();
+                  selectTab(next);
+                  document.getElementById(`${id}-${next}-tab`)?.focus();
+                }
+              }}
+              className={`flex-1 rounded-md px-3 py-1.5 text-xs capitalize transition-colors hover:text-island-text focus-visible:outline-2 focus-visible:outline-island-muted ${tab === name ? 'bg-island-faint text-island-text' : 'text-island-muted'}`}
+            >
+              {name}
+            </button>
+          ))}
+        </div>
+      )}
       <div
         id={`${id}-info-panel`}
         role="tabpanel"
@@ -92,14 +99,16 @@ export function Dashboard({
           </SectionLayout>
         </div>
       </div>
-      <div
-        id={`${id}-config-panel`}
-        role="tabpanel"
-        aria-labelledby={`${id}-config-tab`}
-        hidden={tab !== 'config'}
-      >
-        {configOpened && <ConfigView key={showSystemUpdates} active={tab === 'config'} />}
-      </div>
+      {configEnabled && (
+        <div
+          id={`${id}-config-panel`}
+          role="tabpanel"
+          aria-labelledby={`${id}-config-tab`}
+          hidden={tab !== 'config'}
+        >
+          {configOpened && <ConfigView key={showSystemUpdates} active={tab === 'config'} />}
+        </div>
+      )}
       <Toasts />
     </div>
   );
