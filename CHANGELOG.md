@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.13] - 2026-11-02
+
+### Added
+
+- Add a **Battery saver** card to Config (#68): choose the battery percentage at which Windows turns battery saver on (Off, 100% to 20%), see whether it is on, and override it with an On/Off button. The override uses an undocumented Windows setting.
+
 ## [0.2.12] - 2026-10-31
 
 ### Changed
