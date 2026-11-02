@@ -1,3 +1,4 @@
+import { BatterySaverCard } from './BatterySaverCard';
 import { CpuBoostCard } from './CpuBoostCard';
 import { DriverUpdatesCard } from './DriverUpdatesCard';
 import { DisplayCard } from './DisplayCard';
@@ -13,6 +14,7 @@ export function ConfigView({ active = true }: { active?: boolean }) {
       <PowerLimitsCard active={active} />
       <CpuBoostCard active={active} />
       <PowerModeCard active={active} />
+      <BatterySaverCard active={active} />
       <DisplayCard active={active} />
     </div>
   );
