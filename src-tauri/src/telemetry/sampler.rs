@@ -47,6 +47,8 @@ struct Detail {
     io: Option<super::process_io::ProcessIo>,
     #[cfg(windows)]
     win: Option<super::windows::Query>,
+    #[cfg(windows)]
+    fans: super::fans::FanSource,
     pinger: Option<Pinger>,
     /// Process CPU% needs two samples; the first detail tick only primes.
     warm: bool,
@@ -223,6 +225,8 @@ impl Sampler {
             io: super::process_io::ProcessIo::start(),
             #[cfg(windows)]
             win: super::windows::Query::new(&win::DETAIL_COUNTERS),
+            #[cfg(windows)]
+            fans: super::fans::FanSource::start(),
             pinger: None,
             warm: false,
         });
@@ -297,6 +301,11 @@ impl Sampler {
         // Search must include quiet apps too; the frontend filters, sorts and limits rows.
         let groups = processes::groups(&procs, self.sys.cpus().len());
 
+        #[cfg(windows)]
+        let fans = detail.fans.latest();
+        #[cfg(not(windows))]
+        let fans = None;
+
         Some(DetailMetrics {
             cores,
             temps,
@@ -311,6 +320,7 @@ impl Sampler {
                 .and_then(PublicIp::latest)
                 .map(|ip| ip.to_string()),
             battery: battery::estimate(&battery::read()),
+            fans,
             processes: groups,
         })
     }

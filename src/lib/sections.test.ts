@@ -21,6 +21,7 @@ describe('section ordering', () => {
       'processes',
       'gpu-power',
       'battery',
+      'fans',
       'cpu-cores',
     ]);
     expect(normalizeSectionOrder({})).toEqual([...DEFAULT_SECTION_ORDER]);
@@ -31,7 +32,7 @@ describe('section ordering', () => {
   it('moves cards without losing hidden sections or changing minimize preferences', () => {
     const original = [...DEFAULT_SECTION_ORDER];
     const moved = moveSection(original, 'processes', 'gpu-power');
-    expect(moved).toEqual(['processes', 'gpu-power', 'battery', 'cpu-cores', 'network']);
+    expect(moved).toEqual(['processes', 'gpu-power', 'battery', 'fans', 'cpu-cores', 'network']);
     expect(original).toEqual([...DEFAULT_SECTION_ORDER]);
     saveSectionCollapsed('network', true);
     saveSectionOrder(moved);

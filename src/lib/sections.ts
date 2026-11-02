@@ -2,6 +2,7 @@
 export const DEFAULT_SECTION_ORDER = [
   'gpu-power',
   'battery',
+  'fans',
   'cpu-cores',
   'network',
   'processes',
@@ -22,6 +23,7 @@ export type CardSectionId = SectionId | ConfigSectionId;
 export const SECTION_LABELS: Record<SectionId, string> = {
   'gpu-power': 'GPU & Power',
   battery: 'Battery',
+  fans: 'Fans',
   'cpu-cores': 'CPU cores',
   network: 'Network',
   processes: 'Top processes',

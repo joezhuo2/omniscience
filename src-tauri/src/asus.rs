@@ -16,6 +16,8 @@ pub const PPT_SPL: u32 = 0x0012_00A3;
 pub const PPT_SPPT: u32 = 0x0012_00A0;
 pub const PPT_FPPT: u32 = 0x0012_00C1;
 pub const CHARGE_LIMIT: u32 = 0x0012_0057;
+pub const CPU_FAN: u32 = 0x0011_0022;
+pub const GPU_FAN: u32 = 0x0011_0032;
 
 pub struct Asus(HANDLE);
 
