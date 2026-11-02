@@ -1,5 +1,6 @@
 #[cfg(windows)]
 mod asus;
+mod battery_saver;
 mod charge_limit;
 mod commands;
 mod config_gate;
@@ -60,6 +61,9 @@ pub fn run() {
             cpu_boost::set_cpu_boost,
             power_mode::get_power_mode,
             power_mode::set_power_mode,
+            battery_saver::get_battery_saver,
+            battery_saver::set_battery_saver_threshold,
+            battery_saver::set_battery_saver,
             display::get_display_mode,
             display::set_display_refresh,
             display::set_display_resolution,

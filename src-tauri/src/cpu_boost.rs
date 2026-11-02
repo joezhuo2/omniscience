@@ -37,7 +37,7 @@ fn validate(mode: u32) -> Result<u32, String> {
 }
 
 #[cfg(windows)]
-mod win {
+pub(crate) mod win {
     use super::*;
     use windows_sys::Win32::Foundation::{ERROR_SUCCESS, LocalFree};
     use windows_sys::Win32::System::Power::{
@@ -49,7 +49,7 @@ mod win {
     const SUB_PROCESSOR: GUID = GUID::from_u128(0x54533251_82be_4824_96c1_47b60b740d00);
     const PERFBOOSTMODE: GUID = GUID::from_u128(0xbe337238_0d82_4146_a960_4f3749d470c7);
 
-    fn check(code: u32, what: &str) -> Result<(), String> {
+    pub(crate) fn check(code: u32, what: &str) -> Result<(), String> {
         if code == ERROR_SUCCESS {
             Ok(())
         } else {
@@ -57,9 +57,9 @@ mod win {
         }
     }
 
-    struct Scheme(*mut GUID);
+    pub(crate) struct Scheme(pub(crate) *mut GUID);
     impl Scheme {
-        fn active() -> Result<Self, String> {
+        pub(crate) fn active() -> Result<Self, String> {
             let mut guid = std::ptr::null_mut();
             // SAFETY: guid receives a LocalAlloc'd GUID that Scheme frees on drop.
             check(
