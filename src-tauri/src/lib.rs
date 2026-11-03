@@ -5,6 +5,7 @@ mod charge_limit;
 mod commands;
 mod config_gate;
 mod cpu_boost;
+mod diagnostics;
 mod display;
 mod driver_updates;
 mod fullscreen;
@@ -49,6 +50,7 @@ pub fn run() {
             commands::get_settings,
             commands::set_settings,
             commands::reset_position,
+            diagnostics::get_diagnostic_report,
             driver_updates::scan_driver_updates,
             driver_updates::get_system_update_status,
             driver_updates::open_update_download,

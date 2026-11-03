@@ -197,7 +197,7 @@ mod win {
     }
 }
 
-fn read() -> CpuBoostStatus {
+pub(crate) fn read() -> CpuBoostStatus {
     win::read().unwrap_or_else(|error| CpuBoostStatus {
         ac: None,
         plugged: None,

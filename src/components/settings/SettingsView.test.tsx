@@ -1,7 +1,8 @@
 import { mockIPC } from '@tauri-apps/api/mocks';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useSettingsStore, type Settings } from '../../settings';
+import { useToastStore } from '../../toasts';
 import { SettingsView } from './SettingsView';
 
 const defaults: Settings = {
@@ -19,9 +20,17 @@ const defaults: Settings = {
 
 describe('SettingsView', () => {
   let saved: Settings[];
+  let reportRequests: unknown[];
+  let reportResult: Promise<string>;
+  let writeText: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     saved = [];
+    reportRequests = [];
+    reportResult = Promise.resolve('{"app":{"version":"1.2.3"}}');
+    writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+    useToastStore.setState({ toasts: [] });
     useSettingsStore.setState({ settings: null, error: null });
     mockIPC((cmd, args) => {
       if (cmd === 'get_settings') return defaults;
@@ -29,6 +38,10 @@ describe('SettingsView', () => {
         const s = (args as { settings: Settings }).settings;
         saved.push(s);
         return s;
+      }
+      if (cmd === 'get_diagnostic_report') {
+        reportRequests.push(args);
+        return reportResult;
       }
       return null;
     });
@@ -105,5 +118,42 @@ describe('SettingsView', () => {
     expect(screen.getByLabelText('Show/hide hotkey')).toHaveTextContent('Press keys');
     fireEvent.keyDown(window, { key: 'K', code: 'KeyK', altKey: true, shiftKey: true });
     await waitFor(() => expect(saved.at(-1)?.hotkey).toBe('Alt+Shift+K'));
+  });
+
+  it('copies the diagnostic report without telemetry by default', async () => {
+    render(<SettingsView onBack={() => {}} />);
+    expect(await screen.findByLabelText('Include telemetry')).not.toBeChecked();
+    fireEvent.click(screen.getByRole('button', { name: 'Copy diagnostic report' }));
+    await waitFor(() => expect(writeText).toHaveBeenCalledWith('{"app":{"version":"1.2.3"}}'));
+    expect(reportRequests).toEqual([{ includeTelemetry: false }]);
+    expect(await screen.findByText('Diagnostic report copied to the clipboard.')).toBeVisible();
+  });
+
+  it('asks for telemetry when the checkbox is on', async () => {
+    render(<SettingsView onBack={() => {}} />);
+    fireEvent.click(await screen.findByLabelText('Include telemetry'));
+    fireEvent.click(screen.getByRole('button', { name: 'Copy diagnostic report' }));
+    await waitFor(() => expect(writeText).toHaveBeenCalled());
+    expect(reportRequests).toEqual([{ includeTelemetry: true }]);
+  });
+
+  it('reports a backend failure without touching the clipboard', async () => {
+    reportResult = Promise.reject('collector offline');
+    reportResult.catch(() => {});
+    render(<SettingsView onBack={() => {}} />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Copy diagnostic report' }));
+    expect(
+      await screen.findByText('Could not copy the diagnostic report: collector offline'),
+    ).toBeVisible();
+    expect(writeText).not.toHaveBeenCalled();
+  });
+
+  it('reports a clipboard failure', async () => {
+    writeText.mockRejectedValue(new Error('denied'));
+    render(<SettingsView onBack={() => {}} />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Copy diagnostic report' }));
+    expect(
+      await screen.findByText('Could not copy the diagnostic report: Error: denied'),
+    ).toBeVisible();
   });
 });

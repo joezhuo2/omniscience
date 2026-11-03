@@ -145,7 +145,7 @@ mod win {
     }
 }
 
-fn read() -> BatterySaverStatus {
+pub(crate) fn read() -> BatterySaverStatus {
     win::read().unwrap_or_else(|error| BatterySaverStatus {
         on: None,
         threshold: None,

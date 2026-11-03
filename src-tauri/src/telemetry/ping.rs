@@ -83,7 +83,7 @@ impl Pinger {
                 }
             });
         if let Err(e) = spawned {
-            eprintln!("spawn ping thread: {e}");
+            crate::diagnostics::log_error(format_args!("spawn ping thread: {e}"));
         }
         Self {
             target,

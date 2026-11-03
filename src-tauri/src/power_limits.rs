@@ -120,7 +120,7 @@ impl PowerLimits {
         .map_err(|e| e.to_string())
     }
 
-    fn status(&self) -> Result<PowerLimitsStatus, String> {
+    pub(crate) fn status(&self) -> Result<PowerLimitsStatus, String> {
         let prefs = self.prefs.lock().map_err(|e| e.to_string())?;
         let (supported, hardware_error) = match supported() {
             Ok(()) => (true, None),

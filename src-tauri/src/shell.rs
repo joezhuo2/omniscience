@@ -82,7 +82,7 @@ impl Shell {
                 window.hide()
             };
             if let Err(e) = result {
-                eprintln!("overlay visibility: {e}");
+                crate::diagnostics::log_error(format_args!("overlay visibility: {e}"));
             }
             if !visible {
                 webview::set_memory_low(&window, true);
@@ -147,7 +147,7 @@ impl Shell {
             s.hotkey.clone()
         };
         if let Err(e) = register_hotkey(app, &hotkey) {
-            eprintln!("{e}");
+            crate::diagnostics::log_error(e);
         }
         self.spawn_fullscreen_watch(app.clone());
     }

@@ -50,7 +50,7 @@ impl FanSource {
                 }
             });
         if let Err(e) = spawned {
-            eprintln!("spawn fan thread: {e}");
+            crate::diagnostics::log_error(format_args!("spawn fan thread: {e}"));
         }
         Self { latest, stop }
     }

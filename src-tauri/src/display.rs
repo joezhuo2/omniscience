@@ -87,7 +87,7 @@ impl DisplayConfig {
         .map_err(|e| e.to_string())
     }
 
-    fn status(&self) -> Result<DisplayStatus, String> {
+    pub(crate) fn status(&self) -> Result<DisplayStatus, String> {
         let prefs = self.prefs.lock().map_err(|e| e.to_string())?;
         Ok(match read() {
             Ok(snap) => DisplayStatus {
