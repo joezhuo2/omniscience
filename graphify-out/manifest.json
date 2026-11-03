@@ -1,0 +1,1214 @@
+{
+  ".prettierrc.json": {
+    "mtime": 1791697670.3817542,
+    "seen": 1793728095.443626,
+    "ast_hash": "20c483a535d28595b8130e91b3053d2b",
+    "semantic_hash": ""
+  },
+  "eslint.config.js": {
+    "mtime": 1791697670.397485,
+    "seen": 1793728095.4436376,
+    "ast_hash": "6d96f3c15c25339b859d55c8ba90f7b7",
+    "semantic_hash": ""
+  },
+  "package.json": {
+    "mtime": 1793677614.5866513,
+    "seen": 1793728095.443642,
+    "ast_hash": "ff472d9fdcfe180c7bc7b5a7b8c12794",
+    "semantic_hash": ""
+  },
+  "scripts/check-version.mjs": {
+    "mtime": 1791728401.8829887,
+    "seen": 1793728095.4436436,
+    "ast_hash": "83d1427dc89ad498aea0aacd9865c9dd",
+    "semantic_hash": ""
+  },
+  "scripts/measure.ps1": {
+    "mtime": 1791697670.4035013,
+    "seen": 1793728095.4436457,
+    "ast_hash": "af88d995a7a23b028c15343c1ce4bbe1",
+    "semantic_hash": ""
+  },
+  "scripts/window-style.ps1": {
+    "mtime": 1791697670.404883,
+    "seen": 1793728095.4436471,
+    "ast_hash": "f19c8a808fcf0cb7691842657739f7b4",
+    "semantic_hash": ""
+  },
+  "src-tauri/Cargo.toml": {
+    "mtime": 1793677614.5919971,
+    "seen": 1793728095.443649,
+    "ast_hash": "3dc906a2b78a15c032860afe8bed0a15",
+    "semantic_hash": ""
+  },
+  "src-tauri/build.rs": {
+    "mtime": 1791697670.4108906,
+    "seen": 1793728095.4436502,
+    "ast_hash": "1be34a5c61c2c35365de3dab14298f0b",
+    "semantic_hash": ""
+  },
+  "src-tauri/capabilities/default.json": {
+    "mtime": 1791697670.4120107,
+    "seen": 1793728095.443652,
+    "ast_hash": "f75b71b56ba1ea5e119096e10ceb579a",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/asus.rs": {
+    "mtime": 1793668558.803998,
+    "seen": 1793728095.443653,
+    "ast_hash": "2e5678bcaafb4cab2a7be45e20814564",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/battery_saver.rs": {
+    "mtime": 1793669923.7463763,
+    "seen": 1793728095.4436545,
+    "ast_hash": "17cdc636071b64cd6d576e89371cd5c4",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/charge_limit.rs": {
+    "mtime": 1793669923.7463763,
+    "seen": 1793728095.4436564,
+    "ast_hash": "a8c7b6bf1a0c753c6be9eded25cc48dd",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/commands.rs": {
+    "mtime": 1792852766.3779404,
+    "seen": 1793728095.4436579,
+    "ast_hash": "f6d75579066b73d3d95caa83cbfa2ea7",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/config_gate.rs": {
+    "mtime": 1793502617.6763139,
+    "seen": 1793728095.4436595,
+    "ast_hash": "67fe409555a008581a374b79097475ad",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/cpu_boost.rs": {
+    "mtime": 1793669923.7512271,
+    "seen": 1793728095.4436607,
+    "ast_hash": "c9a5b72a255020e32a93b40d6a2c4c3e",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/diagnostics.rs": {
+    "mtime": 1793669923.7512271,
+    "seen": 1793728095.4436624,
+    "ast_hash": "71af8718ff3ce2bc923bd7d3e03a8a16",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/display.rs": {
+    "mtime": 1793669923.7527363,
+    "seen": 1793728095.4436638,
+    "ast_hash": "24cca811d72b996c95507f68e64b2592",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/display/tests.rs": {
+    "mtime": 1793502617.6812937,
+    "seen": 1793728095.4436655,
+    "ast_hash": "c4157f467cdfd05516afe8925eb5befa",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/driver_updates.rs": {
+    "mtime": 1793502617.6818044,
+    "seen": 1793728095.4436672,
+    "ast_hash": "e36f24a4c099b7dcc04c1ebbbea9eb6f",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/fullscreen.rs": {
+    "mtime": 1791727857.9456148,
+    "seen": 1793728095.4436684,
+    "ast_hash": "97afe0d82a076f63bfd764a26bb904de",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/gpu_mode.rs": {
+    "mtime": 1793669923.7548306,
+    "seen": 1793728095.4436698,
+    "ast_hash": "829f0db61060b0bfc344089e26cb4c15",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/gpu_mode/tests.rs": {
+    "mtime": 1793502617.6865206,
+    "seen": 1793728095.4436712,
+    "ast_hash": "2b40d354e0709efc6316a1880b22fa73",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/hover.rs": {
+    "mtime": 1791730007.403596,
+    "seen": 1793728095.4436738,
+    "ast_hash": "fbad20cb46e56fdc838edee82671057d",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/lib.rs": {
+    "mtime": 1793673409.0696857,
+    "seen": 1793728095.4436753,
+    "ast_hash": "4e788d0450c42ce913cbcd89f94684f8",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/main.rs": {
+    "mtime": 1791697670.4385166,
+    "seen": 1793728095.4436767,
+    "ast_hash": "09c3e2aef0edbaaeef95493775c6d8f6",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/platform.rs": {
+    "mtime": 1792852766.379956,
+    "seen": 1793728095.4436781,
+    "ast_hash": "470d3f0f69ac7639a65b2f5f8b05fc8a",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/positions.rs": {
+    "mtime": 1792852766.381721,
+    "seen": 1793728095.4436796,
+    "ast_hash": "3878155e24e35088d080bbc342303e36",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/power_limits.rs": {
+    "mtime": 1793669923.7568417,
+    "seen": 1793728095.443681,
+    "ast_hash": "15d80b73325d0ece6adb6bd086eb1c4d",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/power_limits/tests.rs": {
+    "mtime": 1793502617.6921277,
+    "seen": 1793728095.4436822,
+    "ast_hash": "5c6826369e6f9c25d35770810c2a6fc6",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/power_mode.rs": {
+    "mtime": 1793669923.7604978,
+    "seen": 1793728095.4436839,
+    "ast_hash": "492c49c876c154abcb6edb1974477c9b",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/power_mode/tests.rs": {
+    "mtime": 1793502617.6960454,
+    "seen": 1793728095.4436853,
+    "ast_hash": "b3864f95ddd4093ab3ae0507629d4514",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/settings.rs": {
+    "mtime": 1793677614.5929954,
+    "seen": 1793728095.443687,
+    "ast_hash": "ee612b7e9d17a85902180c646cb784cb",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/shell.rs": {
+    "mtime": 1793669923.7613173,
+    "seen": 1793728095.4436882,
+    "ast_hash": "3778552c0036879e6aa9a8dd8fe749f2",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/system_command.rs": {
+    "mtime": 1793475773.3622782,
+    "seen": 1793728095.4436896,
+    "ast_hash": "412d9bcf2b611bb757b0f32c1a55f6c8",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/telemetry/alerts.rs": {
+    "mtime": 1793673409.0723343,
+    "seen": 1793728095.443691,
+    "ast_hash": "711ecbf4d88be4c7be2b7ae5b3e2cb6a",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/telemetry/battery.rs": {
+    "mtime": 1793671209.716281,
+    "seen": 1793728095.4436924,
+    "ast_hash": "bcd895abecf136ed5ecbc256f04f84f3",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/telemetry/fans.rs": {
+    "mtime": 1793669923.764379,
+    "seen": 1793728095.443694,
+    "ast_hash": "d2f6623b88de19eb3e44fa0a94c1cea7",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/telemetry/mod.rs": {
+    "mtime": 1793673409.0733337,
+    "seen": 1793728095.4436958,
+    "ast_hash": "739639c8d4d670a70dacd4b507d0fc28",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/telemetry/parse.rs": {
+    "mtime": 1793366197.1641276,
+    "seen": 1793728095.4436975,
+    "ast_hash": "f504ee3e069ba7a24256cf67e56dc281",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/telemetry/peak.rs": {
+    "mtime": 1791697670.4475832,
+    "seen": 1793728095.443699,
+    "ast_hash": "7aac3f2016c20d50353f92ec0e31d225",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/telemetry/ping.rs": {
+    "mtime": 1793669923.7659256,
+    "seen": 1793728095.4437003,
+    "ast_hash": "befb958e5fadc4a042767db9df0f8e9c",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/telemetry/process_io.rs": {
+    "mtime": 1793366197.1661413,
+    "seen": 1793728095.443702,
+    "ast_hash": "8317ae6f997f6879a12481aaef14005a",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/telemetry/processes.rs": {
+    "mtime": 1793366197.168155,
+    "seen": 1793728095.4437034,
+    "ast_hash": "d7935bc2cc2a739fd8e5c42febb78745",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/telemetry/public_ip.rs": {
+    "mtime": 1793669923.7692463,
+    "seen": 1793728095.4437056,
+    "ast_hash": "6a6634a5f9c3fd03bd5cef7e88f44cfd",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/telemetry/sampler.rs": {
+    "mtime": 1793668558.8092606,
+    "seen": 1793728095.4437072,
+    "ast_hash": "56b9383b63c4a529054bd7cabb87d497",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/telemetry/types.rs": {
+    "mtime": 1793671209.718877,
+    "seen": 1793728095.4437084,
+    "ast_hash": "e04cdf402be7e92533be2120bc4b51cd",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/telemetry/windows.rs": {
+    "mtime": 1792854176.3489075,
+    "seen": 1793728095.4437096,
+    "ast_hash": "48a4e9e35f5c998e6f91999e84a3e54d",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/tray.rs": {
+    "mtime": 1793669923.7704713,
+    "seen": 1793728095.4437113,
+    "ast_hash": "f8c45d6d39852a694f7b6b7315f144d9",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/webview.rs": {
+    "mtime": 1793669923.771498,
+    "seen": 1793728095.4437127,
+    "ast_hash": "f803a94d85a7357828f96be22cf5edc5",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/window.rs": {
+    "mtime": 1793387640.6524138,
+    "seen": 1793728095.4437144,
+    "ast_hash": "c5dea1a6a8dd71e9e95b86a450d0b48c",
+    "semantic_hash": ""
+  },
+  "src-tauri/tauri.conf.json": {
+    "mtime": 1793677614.5939977,
+    "seen": 1793728095.4437156,
+    "ast_hash": "b146f64fd937c52d40094702067214da",
+    "semantic_hash": ""
+  },
+  "src-tauri/tauri.release.conf.json": {
+    "mtime": 1791697670.4563684,
+    "seen": 1793728095.443717,
+    "ast_hash": "dd6c0dcdfaf06f0d02b6dc4792ff9944",
+    "semantic_hash": ""
+  },
+  "src/App.test.tsx": {
+    "mtime": 1793675366.8800704,
+    "seen": 1793728095.443719,
+    "ast_hash": "a6aa36f34b1c54a112cc6ff8c45bb0c2",
+    "semantic_hash": ""
+  },
+  "src/App.tsx": {
+    "mtime": 1793675366.8821392,
+    "seen": 1793728095.44372,
+    "ast_hash": "b83c23df7461ac5cc6688f0b987117ad",
+    "semantic_hash": ""
+  },
+  "src/components/Pill.test.tsx": {
+    "mtime": 1793366197.1768465,
+    "seen": 1793728095.4437215,
+    "ast_hash": "bff468c9f346f2f4dc7aae29b9d2f986",
+    "semantic_hash": ""
+  },
+  "src/components/Pill.tsx": {
+    "mtime": 1793366197.1805558,
+    "seen": 1793728095.4437227,
+    "ast_hash": "0dbf0e00aece7175e78803d2d928aaff",
+    "semantic_hash": ""
+  },
+  "src/components/Ring.test.tsx": {
+    "mtime": 1791730414.9405816,
+    "seen": 1793728095.4437244,
+    "ast_hash": "a216ccc4e547057db3fe60805bed94ca",
+    "semantic_hash": ""
+  },
+  "src/components/Ring.tsx": {
+    "mtime": 1791730414.9390097,
+    "seen": 1793728095.4437256,
+    "ast_hash": "4549de7cd02a6fe9b0a8d3a80dbb0ecd",
+    "semantic_hash": ""
+  },
+  "src/components/RingIcon.tsx": {
+    "mtime": 1791697670.4680028,
+    "seen": 1793728095.4437268,
+    "ast_hash": "1c9c310a7d355925b105023fc47715f2",
+    "semantic_hash": ""
+  },
+  "src/components/UpdateBanner.tsx": {
+    "mtime": 1791697670.4680028,
+    "seen": 1793728095.4437284,
+    "ast_hash": "b21f1d40c2ad504afd0500864cfa4bf1",
+    "semantic_hash": ""
+  },
+  "src/components/config/BatterySaverCard.test.tsx": {
+    "mtime": 1793643598.0503266,
+    "seen": 1793728095.4437299,
+    "ast_hash": "53df1611afb0b467547b55ccf86e8053",
+    "semantic_hash": ""
+  },
+  "src/components/config/BatterySaverCard.tsx": {
+    "mtime": 1793672111.5008862,
+    "seen": 1793728095.4437313,
+    "ast_hash": "a1c0b53588707df85db24cb6c952457e",
+    "semantic_hash": ""
+  },
+  "src/components/config/ConfigView.test.tsx": {
+    "mtime": 1793676473.3321583,
+    "seen": 1793728095.4437327,
+    "ast_hash": "65d3065441d7f322fac8b0c25dd84eff",
+    "semantic_hash": ""
+  },
+  "src/components/config/ConfigView.tsx": {
+    "mtime": 1793676473.333163,
+    "seen": 1793728095.4437342,
+    "ast_hash": "a3507215b286da53edc9ddbf359b297c",
+    "semantic_hash": ""
+  },
+  "src/components/config/CpuBoostCard.test.tsx": {
+    "mtime": 1793502617.7096272,
+    "seen": 1793728095.4437358,
+    "ast_hash": "b97c4aabe9643ab61a2c1fe9fafb636f",
+    "semantic_hash": ""
+  },
+  "src/components/config/CpuBoostCard.tsx": {
+    "mtime": 1793672111.5034063,
+    "seen": 1793728095.443737,
+    "ast_hash": "598602375cff9c89f604310de7541c98",
+    "semantic_hash": ""
+  },
+  "src/components/config/DisplayCard.test.tsx": {
+    "mtime": 1793502617.7129726,
+    "seen": 1793728095.4437385,
+    "ast_hash": "e05b261ef3f195dbe9958fc8f3a4c9b9",
+    "semantic_hash": ""
+  },
+  "src/components/config/DisplayCard.tsx": {
+    "mtime": 1793672111.5044062,
+    "seen": 1793728095.44374,
+    "ast_hash": "e033cd585051f3da3f13e5278fa4f80f",
+    "semantic_hash": ""
+  },
+  "src/components/config/DriverUpdatesCard.test.tsx": {
+    "mtime": 1793475773.3726459,
+    "seen": 1793728095.4437408,
+    "ast_hash": "4e3010a079ea01466277285f90795034",
+    "semantic_hash": ""
+  },
+  "src/components/config/DriverUpdatesCard.tsx": {
+    "mtime": 1793475773.3736668,
+    "seen": 1793728095.4437428,
+    "ast_hash": "3076fdd92c4c202e639271919f120f37",
+    "semantic_hash": ""
+  },
+  "src/components/config/GpuModeCard.test.tsx": {
+    "mtime": 1793502617.7156296,
+    "seen": 1793728095.4437437,
+    "ast_hash": "1a581a88e0b5fb8e86c8b58810d12cb7",
+    "semantic_hash": ""
+  },
+  "src/components/config/GpuModeCard.tsx": {
+    "mtime": 1793672111.5074115,
+    "seen": 1793728095.4437454,
+    "ast_hash": "5a2df2281b3cc4181b16dc8106279202",
+    "semantic_hash": ""
+  },
+  "src/components/config/Navigation.test.tsx": {
+    "mtime": 1793502617.7190962,
+    "seen": 1793728095.4437466,
+    "ast_hash": "bf6939a7f682800b023a5f42ff0f510b",
+    "semantic_hash": ""
+  },
+  "src/components/config/PowerLimitsCard.test.tsx": {
+    "mtime": 1793502617.7201824,
+    "seen": 1793728095.443748,
+    "ast_hash": "24c55b84964db7772aed187e3d51e1da",
+    "semantic_hash": ""
+  },
+  "src/components/config/PowerLimitsCard.tsx": {
+    "mtime": 1793672111.5084126,
+    "seen": 1793728095.4437494,
+    "ast_hash": "fcbd41171005d336e260e094960aeb72",
+    "semantic_hash": ""
+  },
+  "src/components/config/PowerModeCard.test.tsx": {
+    "mtime": 1793502617.722892,
+    "seen": 1793728095.4437509,
+    "ast_hash": "ddbb8f5d25bb07720d71ba13b9dbdd64",
+    "semantic_hash": ""
+  },
+  "src/components/config/PowerModeCard.tsx": {
+    "mtime": 1793672111.5094051,
+    "seen": 1793728095.4437523,
+    "ast_hash": "04c7508f05da9031ceb2ebc5cb1d1bb0",
+    "semantic_hash": ""
+  },
+  "src/components/config/SectionToggle.tsx": {
+    "mtime": 1793676473.3341594,
+    "seen": 1793728095.4437537,
+    "ast_hash": "3cc264343fed325b5a7a18fd145fee72",
+    "semantic_hash": ""
+  },
+  "src/components/config/SourceTabs.tsx": {
+    "mtime": 1793503819.8329332,
+    "seen": 1793728095.4437551,
+    "ast_hash": "f4332f69c24af1cb3ac449863f7ba61d",
+    "semantic_hash": ""
+  },
+  "src/components/config/UndoButton.test.tsx": {
+    "mtime": 1793672111.5106735,
+    "seen": 1793728095.4437566,
+    "ast_hash": "cc5dd9219fef53f50a950e6bb459bd66",
+    "semantic_hash": ""
+  },
+  "src/components/config/UndoButton.tsx": {
+    "mtime": 1793672111.5118139,
+    "seen": 1793728095.4437578,
+    "ast_hash": "e87a098255cd16f32afc02be88f15aea",
+    "semantic_hash": ""
+  },
+  "src/components/config/sectionToggleContext.ts": {
+    "mtime": 1793676473.335194,
+    "seen": 1793728095.4437594,
+    "ast_hash": "fb0bc7b2e9e3413873b5124abce03ec1",
+    "semantic_hash": ""
+  },
+  "src/components/config/useNativeControl.ts": {
+    "mtime": 1793672111.5130455,
+    "seen": 1793728095.4437609,
+    "ast_hash": "473f709083527b024bf95123ab1e40fe",
+    "semantic_hash": ""
+  },
+  "src/components/config/useSourceTab.ts": {
+    "mtime": 1793502617.7295046,
+    "seen": 1793728095.443762,
+    "ast_hash": "1d9827208e89d43293c03a63d0c698ae",
+    "semantic_hash": ""
+  },
+  "src/components/dashboard/BatteryCard.test.tsx": {
+    "mtime": 1793671209.7214184,
+    "seen": 1793728095.4437635,
+    "ast_hash": "ab85e91d81f8ce394e59d5c9cbf36910",
+    "semantic_hash": ""
+  },
+  "src/components/dashboard/BatteryCard.tsx": {
+    "mtime": 1793671209.723439,
+    "seen": 1793728095.443765,
+    "ast_hash": "7ca92316da05e9a0c60bcee7bd89adaa",
+    "semantic_hash": ""
+  },
+  "src/components/dashboard/Card.test.tsx": {
+    "mtime": 1793383907.7385833,
+    "seen": 1793728095.4437678,
+    "ast_hash": "5c8bffb542eabe2b798716274c4e6a0d",
+    "semantic_hash": ""
+  },
+  "src/components/dashboard/Card.tsx": {
+    "mtime": 1793676473.3373742,
+    "seen": 1793728095.4437695,
+    "ast_hash": "2dc204312fc9325d83db45f5567994ac",
+    "semantic_hash": ""
+  },
+  "src/components/dashboard/ChargeLimitBar.test.tsx": {
+    "mtime": 1793502617.7359645,
+    "seen": 1793728095.4437706,
+    "ast_hash": "f3c66034990e45dca1cb6e67569c76be",
+    "semantic_hash": ""
+  },
+  "src/components/dashboard/ChargeLimitBar.tsx": {
+    "mtime": 1793502617.7376056,
+    "seen": 1793728095.4437718,
+    "ast_hash": "be22a63ec57f7818068b04e996b55585",
+    "semantic_hash": ""
+  },
+  "src/components/dashboard/CpuHeatmap.tsx": {
+    "mtime": 1793377734.9533026,
+    "seen": 1793728095.4437735,
+    "ast_hash": "de5f5933e3a0677a3bfbf7d164765a80",
+    "semantic_hash": ""
+  },
+  "src/components/dashboard/Dashboard.test.tsx": {
+    "mtime": 1793677614.5965867,
+    "seen": 1793728095.443775,
+    "ast_hash": "f7b50e16a4fde20ee66d383435ef0e2a",
+    "semantic_hash": ""
+  },
+  "src/components/dashboard/Dashboard.tsx": {
+    "mtime": 1793677614.5987377,
+    "seen": 1793728095.4437764,
+    "ast_hash": "cb2afa156917fb5c954c1444e6538e47",
+    "semantic_hash": ""
+  },
+  "src/components/dashboard/FanCard.test.tsx": {
+    "mtime": 1793668558.816296,
+    "seen": 1793728095.4437778,
+    "ast_hash": "e339bc264f102d9ed444dd46c141d035",
+    "semantic_hash": ""
+  },
+  "src/components/dashboard/FanCard.tsx": {
+    "mtime": 1793668558.8192983,
+    "seen": 1793728095.443779,
+    "ast_hash": "fbc3e9cfd83a44013ae457b5e0909066",
+    "semantic_hash": ""
+  },
+  "src/components/dashboard/GpuPowerCard.tsx": {
+    "mtime": 1793377734.9553125,
+    "seen": 1793728095.4437807,
+    "ast_hash": "55e26653116a32e40ce6b3b5d5378e16",
+    "semantic_hash": ""
+  },
+  "src/components/dashboard/Header.tsx": {
+    "mtime": 1793675366.885106,
+    "seen": 1793728095.4437819,
+    "ast_hash": "34acf8a043f22853c2381df81bab7637",
+    "semantic_hash": ""
+  },
+  "src/components/dashboard/MetricStrip.tsx": {
+    "mtime": 1793364962.3969388,
+    "seen": 1793728095.4437833,
+    "ast_hash": "8b17725e2ee3716f510213194c32e75d",
+    "semantic_hash": ""
+  },
+  "src/components/dashboard/NetworkCard.tsx": {
+    "mtime": 1793377734.9553125,
+    "seen": 1793728095.4437847,
+    "ast_hash": "e7156f11f4b16d4263f5f7b116ddad31",
+    "semantic_hash": ""
+  },
+  "src/components/dashboard/ProcessList.tsx": {
+    "mtime": 1793377734.9621942,
+    "seen": 1793728095.4437861,
+    "ast_hash": "0521121dedc8f9181541c27d115044c7",
+    "semantic_hash": ""
+  },
+  "src/components/dashboard/SectionDragContext.ts": {
+    "mtime": 1793379212.2125375,
+    "seen": 1793728095.4437878,
+    "ast_hash": "8a2e54041c61a0e3585faf91d8add9f1",
+    "semantic_hash": ""
+  },
+  "src/components/dashboard/SectionLayout.test.tsx": {
+    "mtime": 1793668558.8217804,
+    "seen": 1793728095.443789,
+    "ast_hash": "6e889aaa49d1632743ef38166106b058",
+    "semantic_hash": ""
+  },
+  "src/components/dashboard/SectionLayout.tsx": {
+    "mtime": 1793379212.218423,
+    "seen": 1793728095.4437907,
+    "ast_hash": "d6b7620619696ac57bf5c5eeac85e3e1",
+    "semantic_hash": ""
+  },
+  "src/components/dashboard/SensorDetails.tsx": {
+    "mtime": 1793677614.5998247,
+    "seen": 1793728095.4437919,
+    "ast_hash": "917f11913ac3a889116255b59a47bcbb",
+    "semantic_hash": ""
+  },
+  "src/components/dashboard/Skeleton.tsx": {
+    "mtime": 1791697670.4796977,
+    "seen": 1793728095.4437933,
+    "ast_hash": "7c89032c9eb5a5eff9fb09149bc4990d",
+    "semantic_hash": ""
+  },
+  "src/components/dashboard/StaleDot.tsx": {
+    "mtime": 1793677614.6008184,
+    "seen": 1793728095.4437947,
+    "ast_hash": "bf2c9b9358368be7d596f5f4dbc997a9",
+    "semantic_hash": ""
+  },
+  "src/components/dashboard/Toasts.tsx": {
+    "mtime": 1791697670.4796977,
+    "seen": 1793728095.4437962,
+    "ast_hash": "f5d1a61edf7394db08370076fede7e0f",
+    "semantic_hash": ""
+  },
+  "src/components/settings/SettingsView.test.tsx": {
+    "mtime": 1793677614.6018155,
+    "seen": 1793728095.4437976,
+    "ast_hash": "e24fb641f8be1ebbf7377824121ea33b",
+    "semantic_hash": ""
+  },
+  "src/components/settings/SettingsView.tsx": {
+    "mtime": 1793677614.603727,
+    "seen": 1793728095.443799,
+    "ast_hash": "9b326d663af5ca6d993c277d564bed67",
+    "semantic_hash": ""
+  },
+  "src/hooks/useIsland.ts": {
+    "mtime": 1793675366.887087,
+    "seen": 1793728095.4438002,
+    "ast_hash": "49983d1f0f7cc8a82ec1fc62fcad9d87",
+    "semantic_hash": ""
+  },
+  "src/hooks/useStaleness.ts": {
+    "mtime": 1793677614.6054082,
+    "seen": 1793728095.4438016,
+    "ast_hash": "b00c25000f17e12ac2e380a0bf7594fa",
+    "semantic_hash": ""
+  },
+  "src/hooks/useTelemetry.ts": {
+    "mtime": 1791697670.4876525,
+    "seen": 1793728095.4438033,
+    "ast_hash": "b935cd5c46aff002d609b7fa969990ba",
+    "semantic_hash": ""
+  },
+  "src/index.css.test.ts": {
+    "mtime": 1793366197.197386,
+    "seen": 1793728095.4438047,
+    "ast_hash": "42577fd8e056485603b637e80a087960",
+    "semantic_hash": ""
+  },
+  "src/lib/format.test.ts": {
+    "mtime": 1793671209.7264354,
+    "seen": 1793728095.4438064,
+    "ast_hash": "955a92cab7c12719e81f41088978d081",
+    "semantic_hash": ""
+  },
+  "src/lib/format.ts": {
+    "mtime": 1793671209.7274375,
+    "seen": 1793728095.443808,
+    "ast_hash": "9633e99b463b168754da4ac0f5a5506f",
+    "semantic_hash": ""
+  },
+  "src/lib/hotkey.test.ts": {
+    "mtime": 1791697670.495238,
+    "seen": 1793728095.4438093,
+    "ast_hash": "58e20ec8b1add7451f20e555c37377ad",
+    "semantic_hash": ""
+  },
+  "src/lib/hotkey.ts": {
+    "mtime": 1791697670.4977999,
+    "seen": 1793728095.4438105,
+    "ast_hash": "7706de06a3cd507cba881c23fbcd9469",
+    "semantic_hash": ""
+  },
+  "src/lib/island.test.ts": {
+    "mtime": 1791697670.4977999,
+    "seen": 1793728095.443812,
+    "ast_hash": "9ea23ff892afcb1efbe1cbfc0a81ec45",
+    "semantic_hash": ""
+  },
+  "src/lib/island.ts": {
+    "mtime": 1791697670.5002916,
+    "seen": 1793728095.443813,
+    "ast_hash": "c90677f978afb967dc30ce1d0bc5f435",
+    "semantic_hash": ""
+  },
+  "src/lib/levels.test.ts": {
+    "mtime": 1791697670.5013013,
+    "seen": 1793728095.4438148,
+    "ast_hash": "dfb347ae89ced05378bb4d84d98c34e9",
+    "semantic_hash": ""
+  },
+  "src/lib/levels.ts": {
+    "mtime": 1791697670.5020216,
+    "seen": 1793728095.4438162,
+    "ast_hash": "1669c40182dc7b323692eacc8c25ecd8",
+    "semantic_hash": ""
+  },
+  "src/lib/metrics.test.ts": {
+    "mtime": 1793674579.3392558,
+    "seen": 1793728095.4438174,
+    "ast_hash": "8f7c78c32f45df8b90703604bd777674",
+    "semantic_hash": ""
+  },
+  "src/lib/metrics.ts": {
+    "mtime": 1793674579.3417993,
+    "seen": 1793728095.4438193,
+    "ast_hash": "8f8fceb701cbab35f2596fb64b6decc3",
+    "semantic_hash": ""
+  },
+  "src/lib/processes.test.ts": {
+    "mtime": 1793366197.200815,
+    "seen": 1793728095.4438207,
+    "ast_hash": "3c5c2a3f9d501795cd848a71dd1f0c02",
+    "semantic_hash": ""
+  },
+  "src/lib/processes.ts": {
+    "mtime": 1793366197.200815,
+    "seen": 1793728095.4438221,
+    "ast_hash": "a14440345ac2eab49263fc9c998d0dfb",
+    "semantic_hash": ""
+  },
+  "src/lib/ring.ts": {
+    "mtime": 1791731090.550258,
+    "seen": 1793728095.4438236,
+    "ast_hash": "3d119e15084175d63f8bb190bfeaddea",
+    "semantic_hash": ""
+  },
+  "src/lib/sections.test.ts": {
+    "mtime": 1793676473.3383756,
+    "seen": 1793728095.443825,
+    "ast_hash": "e96078736d4b6b633b619e908ebecd36",
+    "semantic_hash": ""
+  },
+  "src/lib/sections.ts": {
+    "mtime": 1793676473.3393817,
+    "seen": 1793728095.4438262,
+    "ast_hash": "51739a67b26369a30c2a7c04a2472f2a",
+    "semantic_hash": ""
+  },
+  "src/lib/sensors.test.ts": {
+    "mtime": 1793677614.6061072,
+    "seen": 1793728095.4438276,
+    "ast_hash": "d7bd702b2825e8be4087c2e297e3e95e",
+    "semantic_hash": ""
+  },
+  "src/lib/sensors.ts": {
+    "mtime": 1793677614.6082892,
+    "seen": 1793728095.4438293,
+    "ast_hash": "f968b8409ac2191985e25209f77f92b9",
+    "semantic_hash": ""
+  },
+  "src/main.tsx": {
+    "mtime": 1791697670.5053017,
+    "seen": 1793728095.4438305,
+    "ast_hash": "ae191a0bc28107c214f2c8b8c2be9890",
+    "semantic_hash": ""
+  },
+  "src/settings.ts": {
+    "mtime": 1791697670.508647,
+    "seen": 1793728095.443832,
+    "ast_hash": "ee1dc9de6491eb60fe4c246cdecbce67",
+    "semantic_hash": ""
+  },
+  "src/store.ts": {
+    "mtime": 1791697670.5099618,
+    "seen": 1793728095.4438334,
+    "ast_hash": "b44e27539cafb2d50ef6d4cb751622bb",
+    "semantic_hash": ""
+  },
+  "src/systemUpdates.ts": {
+    "mtime": 1793475773.382968,
+    "seen": 1793728095.4438348,
+    "ast_hash": "dd0e64acb8633b0c0df06d752db4463e",
+    "semantic_hash": ""
+  },
+  "src/test/fixtures.ts": {
+    "mtime": 1793671209.7284281,
+    "seen": 1793728095.4438362,
+    "ast_hash": "bb15dba958f424b9799a19fd94748af7",
+    "semantic_hash": ""
+  },
+  "src/test/setup.ts": {
+    "mtime": 1793377734.9637966,
+    "seen": 1793728095.4438376,
+    "ast_hash": "7a6723dd868203cb47f18f35ddac01a9",
+    "semantic_hash": ""
+  },
+  "src/toasts.ts": {
+    "mtime": 1791697670.5152624,
+    "seen": 1793728095.443839,
+    "ast_hash": "5d5abf2ebe3b8704f0c987af00b72211",
+    "semantic_hash": ""
+  },
+  "src/types/generated/Battery.ts": {
+    "mtime": 1793671209.7304287,
+    "seen": 1793728095.4438407,
+    "ast_hash": "9fa2f161ed61565d9381d22bb88931b8",
+    "semantic_hash": ""
+  },
+  "src/types/generated/BatteryState.ts": {
+    "mtime": 1793644041.6722207,
+    "seen": 1793728095.443842,
+    "ast_hash": "4948648420e4e38fa7372f457e3d00d1",
+    "semantic_hash": ""
+  },
+  "src/types/generated/CoreMetrics.ts": {
+    "mtime": 1793644041.6683362,
+    "seen": 1793728095.4438434,
+    "ast_hash": "e815c7fc77ac34dd97cd3821bfd0ae2a",
+    "semantic_hash": ""
+  },
+  "src/types/generated/CoreSample.ts": {
+    "mtime": 1793644041.6767826,
+    "seen": 1793728095.4438448,
+    "ast_hash": "bf151530d6da2580d207cce00d20af8a",
+    "semantic_hash": ""
+  },
+  "src/types/generated/DetailMetrics.ts": {
+    "mtime": 1793668558.826975,
+    "seen": 1793728095.4438465,
+    "ast_hash": "4770ea8bf058dbfa87c3a6424b050f43",
+    "semantic_hash": ""
+  },
+  "src/types/generated/FanSpeeds.ts": {
+    "mtime": 1793668558.8279748,
+    "seen": 1793728095.4438477,
+    "ast_hash": "47a6de269bd44b1905585625f5d98315",
+    "semantic_hash": ""
+  },
+  "src/types/generated/GpuDetail.ts": {
+    "mtime": 1793644041.684442,
+    "seen": 1793728095.4438493,
+    "ast_hash": "c5c51316e41557615a561ca820dcf893",
+    "semantic_hash": ""
+  },
+  "src/types/generated/GpuKind.ts": {
+    "mtime": 1793644041.6767826,
+    "seen": 1793728095.4438505,
+    "ast_hash": "5f34d1638289d3f18356f814124424ec",
+    "semantic_hash": ""
+  },
+  "src/types/generated/KillOutcome.ts": {
+    "mtime": 1793644041.6902654,
+    "seen": 1793728095.443852,
+    "ast_hash": "6e01089696f0a38962500cb9b76519d2",
+    "semantic_hash": ""
+  },
+  "src/types/generated/KillReport.ts": {
+    "mtime": 1793644041.6938112,
+    "seen": 1793728095.4438536,
+    "ast_hash": "e046b00742305c4da85444ffe7fbf12e",
+    "semantic_hash": ""
+  },
+  "src/types/generated/KillResult.ts": {
+    "mtime": 1793644041.699844,
+    "seen": 1793728095.4438548,
+    "ast_hash": "ed4d2abaff4ec532a5ae9e66a754d99b",
+    "semantic_hash": ""
+  },
+  "src/types/generated/Level.ts": {
+    "mtime": 1793644041.6821525,
+    "seen": 1793728095.4438565,
+    "ast_hash": "7393ec770a22121f053f5131c2fd481d",
+    "semantic_hash": ""
+  },
+  "src/types/generated/MemoryMetric.ts": {
+    "mtime": 1793644041.7026374,
+    "seen": 1793728095.443858,
+    "ast_hash": "70ffeaab94a6f02fcf1fb8f4c06de829",
+    "semantic_hash": ""
+  },
+  "src/types/generated/Metric.ts": {
+    "mtime": 1793644041.6958213,
+    "seen": 1793728095.4438593,
+    "ast_hash": "0cc26620566f2e3af584fec439e29672",
+    "semantic_hash": ""
+  },
+  "src/types/generated/NetAdapter.ts": {
+    "mtime": 1793644041.7303226,
+    "seen": 1793728095.443861,
+    "ast_hash": "9eceeb840b7f172b76a4b4550b166f7a",
+    "semantic_hash": ""
+  },
+  "src/types/generated/NetMetric.ts": {
+    "mtime": 1793644041.7166214,
+    "seen": 1793728095.4438622,
+    "ast_hash": "850f07e3b2564b16ed3e99c7b65fa8ba",
+    "semantic_hash": ""
+  },
+  "src/types/generated/PowerBreakdown.ts": {
+    "mtime": 1793644041.709578,
+    "seen": 1793728095.4438639,
+    "ast_hash": "b217b1b30ff6107d018257583ed65b9a",
+    "semantic_hash": ""
+  },
+  "src/types/generated/ProcessGroup.ts": {
+    "mtime": 1793644041.7135997,
+    "seen": 1793728095.443865,
+    "ast_hash": "d2b2753ef29d6fae984008ee32cf5b34",
+    "semantic_hash": ""
+  },
+  "src/types/generated/Settings.ts": {
+    "mtime": 1793677614.609812,
+    "seen": 1793728095.4438667,
+    "ast_hash": "c83e5cff1dd280ccfd5f99ed03fd2c31",
+    "semantic_hash": ""
+  },
+  "src/types/generated/Snapshot.ts": {
+    "mtime": 1793644041.7061617,
+    "seen": 1793728095.4438682,
+    "ast_hash": "622c2df13be1b8e771fb9b3a5c53fbe1",
+    "semantic_hash": ""
+  },
+  "src/types/generated/TempSample.ts": {
+    "mtime": 1793644041.726185,
+    "seen": 1793728095.44387,
+    "ast_hash": "7345003487f01739c22a8b44c27c74b6",
+    "semantic_hash": ""
+  },
+  "src/types/telemetry.ts": {
+    "mtime": 1793668558.8294854,
+    "seen": 1793728095.4438713,
+    "ast_hash": "5429447a6379cf7d33310a27a663e85e",
+    "semantic_hash": ""
+  },
+  "src/undo.test.ts": {
+    "mtime": 1793672111.514318,
+    "seen": 1793728095.4438727,
+    "ast_hash": "70e6a79ffbc5633b0487fac72c55292b",
+    "semantic_hash": ""
+  },
+  "src/undo.ts": {
+    "mtime": 1793672111.515316,
+    "seen": 1793728095.4438741,
+    "ast_hash": "88f98dd8044bcb7d6a9e5412b646d63e",
+    "semantic_hash": ""
+  },
+  "src/updater.test.ts": {
+    "mtime": 1791697670.5430665,
+    "seen": 1793728095.4438753,
+    "ast_hash": "1363479f129312f2909aa752454247de",
+    "semantic_hash": ""
+  },
+  "src/updater.ts": {
+    "mtime": 1791697670.5446084,
+    "seen": 1793728095.4438765,
+    "ast_hash": "e7a453123a9703486353a0cb236bf253",
+    "semantic_hash": ""
+  },
+  "tsconfig.json": {
+    "mtime": 1791697670.5461795,
+    "seen": 1793728095.4438782,
+    "ast_hash": "5436e2d534f5118eaa876578bd4fedbb",
+    "semantic_hash": ""
+  },
+  "tsconfig.node.json": {
+    "mtime": 1791697670.5476923,
+    "seen": 1793728095.4438794,
+    "ast_hash": "5b428cc7dbfe3fe74e8b827c89b9c7c3",
+    "semantic_hash": ""
+  },
+  "vite.config.ts": {
+    "mtime": 1791697670.5490224,
+    "seen": 1793728095.443881,
+    "ast_hash": "15d4ff63966313de5401e22b6353b657",
+    "semantic_hash": ""
+  },
+  ".github/workflows/ci.yml": {
+    "mtime": 1791728403.736592,
+    "seen": 1793728095.4438822,
+    "ast_hash": "ab92c505b92530253b6185dcda8241bc",
+    "semantic_hash": ""
+  },
+  ".github/workflows/release.yml": {
+    "mtime": 1793503819.8204002,
+    "seen": 1793728095.4438834,
+    "ast_hash": "3116dc9418842473f531edd2b6fd4f37",
+    "semantic_hash": ""
+  },
+  ".serena/project.yml": {
+    "mtime": 1793364735.416147,
+    "seen": 1793728095.443885,
+    "ast_hash": "e0411cd519ed08aef1cf4fa270dca9fb",
+    "semantic_hash": ""
+  },
+  "CHANGELOG.md": {
+    "mtime": 1793677614.5826313,
+    "seen": 1793728095.4438863,
+    "ast_hash": "6e8d8e07b41915cbd764472b6593a03f",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1793502617.6567886,
+    "seen": 1793728095.443888,
+    "ast_hash": "4cdbf81269b6af182269c6e9c1c76df2",
+    "semantic_hash": ""
+  },
+  "docs/assets/README.md": {
+    "mtime": 1793386890.4958878,
+    "seen": 1793728095.4438913,
+    "ast_hash": "cf330037aca38690962817fe3167e0dd",
+    "semantic_hash": ""
+  },
+  "docs/configuration.md": {
+    "mtime": 1793502617.659137,
+    "seen": 1793728095.4438927,
+    "ast_hash": "169a9d71255763f5fa311e9a1ed269dc",
+    "semantic_hash": ""
+  },
+  "docs/perf.md": {
+    "mtime": 1791731687.6644437,
+    "seen": 1793728095.4438944,
+    "ast_hash": "8477493a63cb226fa3710a839b932cea",
+    "semantic_hash": ""
+  },
+  "docs/releasing.md": {
+    "mtime": 1793144745.7768562,
+    "seen": 1793728095.4438956,
+    "ast_hash": "7d7e6ea053cca392b13578eef294e210",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/plans/2026-10-10-feat-scaffold.md": {
+    "mtime": 1791697670.3929255,
+    "seen": 1793728095.4438972,
+    "ast_hash": "c49817c6dd1ddb05ef2090be8dd16289",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/specs/2026-10-10-omniscience-design.md": {
+    "mtime": 1791697670.3938127,
+    "seen": 1793728095.4438987,
+    "ast_hash": "5ddc1d985635b212398cf48def98b08e",
+    "semantic_hash": ""
+  },
+  "docs/testing.md": {
+    "mtime": 1793502617.6607816,
+    "seen": 1793728095.4439,
+    "ast_hash": "0107a424d3fac0a0daa1526d612bfa44",
+    "semantic_hash": ""
+  },
+  "index.html": {
+    "mtime": 1791697670.3985305,
+    "seen": 1793728095.4439015,
+    "ast_hash": "45292b0230695dcd484b590b9281606e",
+    "semantic_hash": ""
+  },
+  "app-icon.svg": {
+    "mtime": 1791697670.3879523,
+    "seen": 1793728095.4439027,
+    "ast_hash": "d1a836e7054895e0ea3d507a8d0c2abb",
+    "semantic_hash": ""
+  },
+  "docs/assets/dashboard-details.png": {
+    "mtime": 1793386890.4969006,
+    "seen": 1793728095.443904,
+    "ast_hash": "296d94db93658725f6fc4f244e09459d",
+    "semantic_hash": ""
+  },
+  "docs/assets/dashboard.png": {
+    "mtime": 1793386890.4987617,
+    "seen": 1793728095.4439056,
+    "ast_hash": "8283f2462b59df8d8d179fd308621a85",
+    "semantic_hash": ""
+  },
+  "docs/assets/demo.gif": {
+    "mtime": 1793386890.5036042,
+    "seen": 1793728095.4439068,
+    "ast_hash": "41cb8c35650bce9c25682ae3f0fe4a6c",
+    "semantic_hash": ""
+  },
+  "docs/assets/omniscience-banner.png": {
+    "mtime": 1793386890.506576,
+    "seen": 1793728095.4439082,
+    "ast_hash": "e8ed133b8f4df9cdab3247d92385ee7b",
+    "semantic_hash": ""
+  },
+  "docs/assets/pill.png": {
+    "mtime": 1793386890.506576,
+    "seen": 1793728095.4439094,
+    "ast_hash": "b18115e1bcdf35225ff8daa8604e6cfa",
+    "semantic_hash": ""
+  },
+  "docs/assets/settings.png": {
+    "mtime": 1793386890.5093968,
+    "seen": 1793728095.4439108,
+    "ast_hash": "d9d2f9a8cd81f41e53da8db7d423ea95",
+    "semantic_hash": ""
+  },
+  "src-tauri/icons/128x128.png": {
+    "mtime": 1791697670.4139044,
+    "seen": 1793728095.4439123,
+    "ast_hash": "45b074fc2170c845f1b02ec3b08a0383",
+    "semantic_hash": ""
+  },
+  "src-tauri/icons/128x128@2x.png": {
+    "mtime": 1791697670.415088,
+    "seen": 1793728095.4439135,
+    "ast_hash": "50353dd02acc62ffc53daaee37976488",
+    "semantic_hash": ""
+  },
+  "src-tauri/icons/32x32.png": {
+    "mtime": 1791697670.415088,
+    "seen": 1793728095.4439147,
+    "ast_hash": "f79affdf3be8fbd1af5c94054dda668a",
+    "semantic_hash": ""
+  },
+  "src-tauri/icons/64x64.png": {
+    "mtime": 1791697670.417624,
+    "seen": 1793728095.4439163,
+    "ast_hash": "62be5916cb88af003c8cc4c8dbc8b71c",
+    "semantic_hash": ""
+  },
+  "src-tauri/icons/Square107x107Logo.png": {
+    "mtime": 1791697670.417624,
+    "seen": 1793728095.4439173,
+    "ast_hash": "6b9dd97783ef4bf7ccd7d1dfee3e0ab3",
+    "semantic_hash": ""
+  },
+  "src-tauri/icons/Square142x142Logo.png": {
+    "mtime": 1791697670.417624,
+    "seen": 1793728095.4439187,
+    "ast_hash": "358f71a0ed4b04d02815fdd19a9679d3",
+    "semantic_hash": ""
+  },
+  "src-tauri/icons/Square150x150Logo.png": {
+    "mtime": 1791697670.417624,
+    "seen": 1793728095.44392,
+    "ast_hash": "d3079d98d9afdad335d6cbc3cfcd7678",
+    "semantic_hash": ""
+  },
+  "src-tauri/icons/Square284x284Logo.png": {
+    "mtime": 1791697670.4223082,
+    "seen": 1793728095.4439213,
+    "ast_hash": "838a4cbbf28f6decedd31c9df19c65cd",
+    "semantic_hash": ""
+  },
+  "src-tauri/icons/Square30x30Logo.png": {
+    "mtime": 1791697670.4223082,
+    "seen": 1793728095.4439228,
+    "ast_hash": "7cbdf7d4ea232b7b339e2afff1c7b96a",
+    "semantic_hash": ""
+  },
+  "src-tauri/icons/Square310x310Logo.png": {
+    "mtime": 1791697670.425313,
+    "seen": 1793728095.443924,
+    "ast_hash": "05dae1e6e3f0e78b1e4b1ec47870c034",
+    "semantic_hash": ""
+  },
+  "src-tauri/icons/Square44x44Logo.png": {
+    "mtime": 1791697670.425313,
+    "seen": 1793728095.4439251,
+    "ast_hash": "87cfc00ad1ef192610a73091b704c3f4",
+    "semantic_hash": ""
+  },
+  "src-tauri/icons/Square71x71Logo.png": {
+    "mtime": 1791697670.4269753,
+    "seen": 1793728095.4439268,
+    "ast_hash": "5f87d1db641033193eb5ca83aab6ac45",
+    "semantic_hash": ""
+  },
+  "src-tauri/icons/Square89x89Logo.png": {
+    "mtime": 1791697670.4278252,
+    "seen": 1793728095.443928,
+    "ast_hash": "1b87d48fd7bad468af94f5f012b9d2d1",
+    "semantic_hash": ""
+  },
+  "src-tauri/icons/StoreLogo.png": {
+    "mtime": 1791697670.4278252,
+    "seen": 1793728095.4439294,
+    "ast_hash": "3dcab6550b92c964c0f2c01391c1d21f",
+    "semantic_hash": ""
+  },
+  "src-tauri/icons/icon.png": {
+    "mtime": 1791697670.431549,
+    "seen": 1793728095.4439306,
+    "ast_hash": "380adc26da7d9dc41a5e722bd21b1237",
+    "semantic_hash": ""
+  },
+  "package-lock.json": {
+    "mtime": 1793677614.5846324,
+    "seen": 1793728137.325218,
+    "ast_hash": "39bfef06d78dce710417145146181596",
+    "semantic_hash": ""
+  }
+}
