@@ -29,7 +29,7 @@ pub fn set_memory_low(window: &WebviewWindow, low: bool) {
         }
     });
     if let Err(e) = result {
-        eprintln!("webview memory level: {e}");
+        crate::diagnostics::log_error(format_args!("webview memory level: {e}"));
     }
 }
 

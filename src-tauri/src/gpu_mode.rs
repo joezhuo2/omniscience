@@ -113,7 +113,7 @@ impl GpuConfig {
         .map_err(|e| e.to_string())
     }
 
-    fn status(&self) -> Result<GpuStatus, String> {
+    pub(crate) fn status(&self) -> Result<GpuStatus, String> {
         let prefs = self.prefs.lock().map_err(|e| e.to_string())?;
         let (current, mux_supported, hardware_error) = read_hardware();
         Ok(GpuStatus {

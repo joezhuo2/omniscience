@@ -121,7 +121,7 @@ impl PowerConfig {
         .map_err(|e| e.to_string())
     }
 
-    fn status(&self) -> Result<PowerStatus, String> {
+    pub(crate) fn status(&self) -> Result<PowerStatus, String> {
         let prefs = self.prefs.lock().map_err(|e| e.to_string())?;
         let (current, supported, hardware_error) = read_current();
         Ok(PowerStatus {

@@ -64,7 +64,7 @@ impl ChargeLimit {
         Ok(config)
     }
 
-    fn status(&self) -> ChargeLimitStatus {
+    pub(crate) fn status(&self) -> ChargeLimitStatus {
         match read_hardware() {
             Ok(limit) => ChargeLimitStatus {
                 limit: clamp(limit),

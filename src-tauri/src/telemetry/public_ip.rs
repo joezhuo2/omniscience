@@ -92,7 +92,7 @@ impl PublicIp {
                 *out.lock().unwrap_or_else(|e| e.into_inner()) = ip;
             });
         if let Err(e) = spawned {
-            eprintln!("spawn public IP lookup: {e}");
+            crate::diagnostics::log_error(format_args!("spawn public IP lookup: {e}"));
         }
     }
 

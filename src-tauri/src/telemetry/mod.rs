@@ -23,7 +23,7 @@ use std::time::Duration;
 
 use tauri::{AppHandle, Emitter};
 
-use types::Thresholds;
+use types::{Snapshot, Thresholds};
 
 pub const TICK_EVENT: &str = "telemetry://tick";
 
@@ -56,6 +56,7 @@ impl Default for Control {
 pub struct Telemetry {
     control: Mutex<Control>,
     wake: Condvar,
+    latest: Mutex<Option<Snapshot>>,
 }
 
 impl Telemetry {
@@ -63,7 +64,15 @@ impl Telemetry {
         Arc::new(Self {
             control: Mutex::new(control),
             wake: Condvar::new(),
+            latest: Mutex::new(None),
         })
+    }
+
+    pub fn latest(&self) -> Option<Snapshot> {
+        self.latest
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .clone()
     }
 
     pub fn control(&self) -> Control {
@@ -91,7 +100,7 @@ impl Telemetry {
                     if run.is_ok() {
                         return;
                     }
-                    eprintln!("telemetry collector panicked; restarting");
+                    crate::diagnostics::log_error("telemetry collector panicked; restarting");
                     std::thread::sleep(Duration::from_secs(1));
                 }
             })
@@ -112,8 +121,9 @@ impl Telemetry {
             sampler.set_network(control.ping_target.clone(), control.public_ip);
             let snapshot = sampler.sample(control.thresholds, control.expanded);
             if let Err(e) = app.emit(TICK_EVENT, &snapshot) {
-                eprintln!("emit telemetry: {e}");
+                crate::diagnostics::log_error(format_args!("emit telemetry: {e}"));
             }
+            *self.latest.lock().unwrap_or_else(|e| e.into_inner()) = Some(snapshot);
             let c = self.control.lock().unwrap_or_else(|e| e.into_inner());
             // Woken early by any control change (e.g. expand), otherwise once per interval.
             let _ = self

@@ -3,6 +3,8 @@ import { ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
 import { acceleratorFromEvent, displayAccelerator } from '../../lib/hotkey';
 import { useSettingsStore, type Settings } from '../../settings';
+import { useToastStore } from '../../toasts';
+import { Toasts } from '../dashboard/Toasts';
 
 const IS_MAC = typeof navigator !== 'undefined' && /Mac/i.test(navigator.platform);
 const INTERVALS = [500, 1000, 2000, 5000];
@@ -175,6 +177,18 @@ export function SettingsView({ onBack }: { onBack: () => void }) {
 
   const set = (patch: Partial<Settings>) => void update(patch);
 
+  const push = useToastStore((s) => s.push);
+  const [includeTelemetry, setIncludeTelemetry] = useState(false);
+  const copyReport = async () => {
+    try {
+      const report = await invoke<string>('get_diagnostic_report', { includeTelemetry });
+      await navigator.clipboard.writeText(report);
+      push('Diagnostic report copied to the clipboard.');
+    } catch (e) {
+      push(`Could not copy the diagnostic report: ${String(e)}`);
+    }
+  };
+
   return (
     <div data-testid="settings" className="px-1 pb-1">
       <header className="flex h-9 items-center gap-2">
@@ -291,9 +305,31 @@ export function SettingsView({ onBack }: { onBack: () => void }) {
               Reset to top center
             </button>
           </Row>
+          <Row
+            label="Diagnostic report"
+            hint="App version, sensor and control availability, recent errors. Telemetry leaves out process names and IP addresses."
+          >
+            <div className="flex shrink-0 flex-col items-end gap-1.5">
+              <label className="flex items-center gap-1.5 text-[10px] text-island-muted">
+                <input
+                  type="checkbox"
+                  checked={includeTelemetry}
+                  onChange={(e) => setIncludeTelemetry(e.target.checked)}
+                />
+                Include telemetry
+              </label>
+              <button
+                onClick={() => void copyReport()}
+                className="rounded border border-island-faint px-2 py-0.5 text-[10px] text-island-text hover:border-island-muted"
+              >
+                Copy diagnostic report
+              </button>
+            </div>
+          </Row>
         </div>
       )}
       {error && <p className="pt-2 text-[11px] text-island-crit">{error}</p>}
+      <Toasts />
     </div>
   );
 }

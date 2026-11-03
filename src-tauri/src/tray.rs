@@ -147,7 +147,7 @@ fn on_menu(app: &AppHandle, id: &str) {
         _ => return,
     }
     if let Err(e) = shell.update_settings(app, s) {
-        eprintln!("tray setting: {e}");
+        crate::diagnostics::log_error(format_args!("tray setting: {e}"));
         // The menu already toggled its checkmark; put it back to the unchanged setting.
         shell.sync_tray();
     }
