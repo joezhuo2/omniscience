@@ -326,6 +326,16 @@ export function SettingsView({ onBack }: { onBack: () => void }) {
             />
           </Row>
           <Row
+            label="Sensor details"
+            hint="Shows each reading's source, age and whether it is a proxy. Problems always show."
+          >
+            <Toggle
+              label="Show sensor details"
+              checked={settings.sensor_details}
+              onChange={(v) => set({ sensor_details: v })}
+            />
+          </Row>
+          <Row
             label="System config (GPU, power, display)"
             hint="Adds the Config tab, which changes hardware settings."
           >

@@ -12,6 +12,7 @@ import { Header } from './Header';
 import { MetricStrip } from './MetricStrip';
 import { NetworkCard } from './NetworkCard';
 import { ProcessList } from './ProcessList';
+import { SensorDetails } from './SensorDetails';
 import { Toasts } from './Toasts';
 
 /** Expanded view. Mounted on expand and unmounted on collapse. */
@@ -102,6 +103,7 @@ export function Dashboard({
       >
         <div className="flex flex-col gap-2">
           <MetricStrip />
+          <SensorDetails />
           <SectionLayout hidden={hiddenSections}>
             {(id) => {
               const Component = SECTIONS[id];

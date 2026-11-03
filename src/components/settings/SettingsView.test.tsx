@@ -19,6 +19,7 @@ const defaults: Settings = {
   show_public_ip: false,
   config_enabled: false,
   sustained_alerts: true,
+  sensor_details: false,
 };
 
 describe('SettingsView', () => {
@@ -99,6 +100,12 @@ describe('SettingsView', () => {
     render(<SettingsView onBack={() => {}} />);
     fireEvent.click(await screen.findByLabelText('Show public IP'));
     await waitFor(() => expect(saved.at(-1)?.show_public_ip).toBe(true));
+  });
+
+  it('turns sensor details on', async () => {
+    render(<SettingsView onBack={() => {}} />);
+    fireEvent.click(await screen.findByLabelText('Show sensor details'));
+    await waitFor(() => expect(saved.at(-1)?.sensor_details).toBe(true));
   });
 
   it('enables system config, which is off by default', async () => {

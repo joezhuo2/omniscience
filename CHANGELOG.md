@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.22] - 2026-11-02
+
+### Added
+
+- Add sensor explanations (#84): each reading's source, proxy status, last update and why it may be missing; always shown when a source has a problem, otherwise toggled by Show sensor details in Settings.
+
 ## [0.2.21] - 2026-11-02
 
 ### Added
