@@ -16,6 +16,7 @@ const defaults: Settings = {
   ping_target: '1.1.1.1',
   show_public_ip: false,
   config_enabled: false,
+  sustained_alerts: true,
 };
 
 describe('SettingsView', () => {

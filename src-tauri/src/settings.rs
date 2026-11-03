@@ -33,6 +33,8 @@ pub struct Settings {
     pub show_public_ip: bool,
     /// Shows the Config tab and allows GPU, power and display changes. Off by default.
     pub config_enabled: bool,
+    /// Desktop notification when CPU, memory, disk or a GPU stays above 90% for 30 seconds.
+    pub sustained_alerts: bool,
 }
 
 impl Default for Settings {
@@ -48,6 +50,7 @@ impl Default for Settings {
             ping_target: "1.1.1.1".into(),
             show_public_ip: false,
             config_enabled: false,
+            sustained_alerts: true,
         }
     }
 }
@@ -90,6 +93,7 @@ impl Settings {
         c.interval = self.interval();
         c.ping_target = self.ping_target.as_str().into();
         c.public_ip = self.show_public_ip;
+        c.sustained_alerts = self.sustained_alerts;
     }
 }
 

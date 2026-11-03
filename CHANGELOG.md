@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.18] - 2026-11-02
+
+### Added
+
+- Send a native desktop notification when CPU, memory, disk or GPU usage stays above 90% for 30 seconds (#74); toggle in Settings.
+
 ## [0.2.17] - 2026-11-02
 
 ### Added
