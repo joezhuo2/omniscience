@@ -1,18 +1,9 @@
-import { useEffect, useState } from 'react';
-import { useTelemetryStore } from '../../store';
-
-/** No tick for this long means the collector stalled. */
-const STALE_MS = 3000;
+import { useStaleness } from '../../hooks/useStaleness';
 
 /** Amber dot shown when telemetry stops arriving. Ticks once a second while mounted. */
 export function StaleDot() {
-  const lastTickAt = useTelemetryStore((s) => s.lastTickAt);
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(t);
-  }, []);
-  if (lastTickAt == null || now - lastTickAt < STALE_MS) return null;
+  const { stale } = useStaleness();
+  if (!stale) return null;
   return (
     <span
       role="status"

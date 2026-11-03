@@ -388,3 +388,61 @@ describe('Dashboard', () => {
     expect(rows()).toHaveLength(3);
   });
 });
+
+describe('sensor details', () => {
+  const setSettings = (sensor_details: boolean) =>
+    useSettingsStore.setState({
+      settings: { sensor_details } as Settings,
+    });
+
+  beforeEach(() => {
+    useTelemetryStore.setState({ snapshot: null, lastTickAt: null });
+    setSettings(false);
+  });
+
+  it('stays hidden when everything is fine and the setting is off', () => {
+    act(() => useTelemetryStore.getState().setSnapshot(sampleSnapshot));
+    render(<Dashboard />);
+    expect(screen.queryByTestId('sensor-details')).not.toBeInTheDocument();
+  });
+
+  it('shows source, age and proxy status when the setting is on', () => {
+    setSettings(true);
+    act(() => useTelemetryStore.getState().setSnapshot(sampleSnapshot));
+    render(<Dashboard />);
+    const details = screen.getByTestId('sensor-details');
+    expect(details).toHaveTextContent('CPU temperature: Hottest ACPI thermal zone');
+    expect(details).toHaveTextContent('(proxy measurement)');
+    expect(details).toHaveTextContent('Updated 0s ago');
+    expect(details).not.toHaveTextContent('Discrete GPU');
+    expect(details.querySelector('[data-problem]')).toBeNull();
+  });
+
+  it('always explains a missing reading with a warning', () => {
+    act(() =>
+      useTelemetryStore
+        .getState()
+        .setSnapshot({ ...sampleSnapshot, core: { ...sampleSnapshot.core, cpu_temp_c: null } }),
+    );
+    render(<Dashboard />);
+    const problems = screen.getByTestId('sensor-details').querySelectorAll('[data-problem]');
+    expect(problems).toHaveLength(1);
+    expect(problems[0]).toHaveTextContent('Missing: This machine exposes no ACPI thermal zone');
+  });
+
+  it('warns on every reading when telemetry is stale', () => {
+    vi.useFakeTimers();
+    try {
+      act(() => useTelemetryStore.getState().setSnapshot(sampleSnapshot));
+      render(<Dashboard />);
+      act(() => {
+        vi.advanceTimersByTime(5000);
+      });
+      const details = screen.getByTestId('sensor-details');
+      expect(details.querySelectorAll('[data-problem]').length).toBeGreaterThan(3);
+      expect(details).toHaveTextContent('No update for 5s');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
