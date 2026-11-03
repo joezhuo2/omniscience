@@ -1,5 +1,5 @@
 import { BatteryCharging, BatteryMedium, PlugZap } from 'lucide-react';
-import { formatDuration, formatWatts } from '../../lib/format';
+import { formatDuration, formatWatts, formatWh } from '../../lib/format';
 import { useTelemetryStore } from '../../store';
 import type { Battery } from '../../types/telemetry';
 import { Card } from './Card';
@@ -24,6 +24,26 @@ function barColor(b: Battery): string {
   if (b.state !== 'discharging') return 'var(--color-island-ok)';
   if (b.percent < LOW_PCT / 2) return 'var(--color-island-crit)';
   return b.percent < LOW_PCT ? 'var(--color-island-warn)' : 'var(--color-island-ok)';
+}
+
+/** Laptop battery. Not rendered on machines without one. */
+function HealthRow({ battery }: { battery: Battery }) {
+  const { design_capacity_mwh, full_charge_capacity_mwh, wear_pct, cycle_count } = battery;
+  const capacity =
+    design_capacity_mwh != null && full_charge_capacity_mwh != null
+      ? `${formatWh(full_charge_capacity_mwh)} / ${formatWh(design_capacity_mwh)}`
+      : null;
+  if (wear_pct == null && capacity == null && cycle_count == null) return null;
+  return (
+    <div
+      data-testid="battery-health"
+      className="flex items-baseline justify-between gap-2 text-[11px] text-island-muted tabular-nums"
+    >
+      {wear_pct != null && <span title="Capacity lost since new">Wear {wear_pct.toFixed(1)}%</span>}
+      {capacity != null && <span title="Full-charge / design capacity">{capacity}</span>}
+      {cycle_count != null && <span>{cycle_count} cycles</span>}
+    </div>
+  );
 }
 
 /** Laptop battery. Not rendered on machines without one. */
@@ -84,6 +104,7 @@ export function BatteryCard() {
             style={{ width: `${battery.percent}%`, background: barColor(battery) }}
           />
         </div>
+        <HealthRow battery={battery} />
         <ChargeLimitBar />
       </div>
     </Card>

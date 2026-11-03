@@ -11,6 +11,7 @@ import {
   formatTemp,
   formatUsedTotal,
   formatWatts,
+  formatWh,
 } from './format';
 
 describe('format', () => {
@@ -37,6 +38,13 @@ describe('format', () => {
     expect(formatWatts(8.22)).toBe('8.2 W');
     expect(formatWatts(45.6)).toBe('46 W');
     expect(formatTemp(47.6)).toBe('48°C');
+  });
+
+  it('formats milliwatt-hours as watt-hours', () => {
+    expect(formatWh(50_000)).toBe('50.0 Wh');
+    expect(formatWh(56_432)).toBe('56.4 Wh');
+    expect(formatWh(null)).toBe('--');
+    expect(formatWh(-1)).toBe('--');
   });
 
   it('formats used over total in whole GB with no spaces around the slash', () => {

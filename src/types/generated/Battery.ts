@@ -9,4 +9,4 @@ watts: number | null,
 /**
  * Time to empty (discharging) or to full (charging), in seconds.
  */
-secs_remaining: number | null, };
+secs_remaining: number | null, design_capacity_mwh: number | null, full_charge_capacity_mwh: number | null, wear_pct: number | null, cycle_count: number | null, };
