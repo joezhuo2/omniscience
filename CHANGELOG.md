@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.21] - 2026-11-02
+
+### Added
+
+- Add an on/off switch to each Config card header (#70); the choice is saved locally and a card that is off stops polling.
+
 ## [0.2.20] - 2026-11-02
 
 ### Added
