@@ -43,7 +43,15 @@ export function GpuModeCard({ active = true }: { active?: boolean }) {
               status.restart_required ||
               (value === 'max' && !status.mux_supported)
             }
-            onClick={() => void apply('set_gpu_mode', { mode: value })}
+            onClick={() =>
+              void apply(
+                'set_gpu_mode',
+                { mode: value },
+                selected
+                  ? { label: 'GPU mode', command: 'set_gpu_mode', args: { mode: selected } }
+                  : undefined,
+              )
+            }
           >
             {label}
           </button>

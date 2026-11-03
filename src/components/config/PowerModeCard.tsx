@@ -41,7 +41,15 @@ export function PowerModeCard({ active = true }: { active?: boolean }) {
             title={description}
             aria-pressed={selected === value}
             disabled={!status?.supported || busy}
-            onClick={() => void apply('set_power_mode', { ac, mode: value })}
+            onClick={() =>
+              void apply(
+                'set_power_mode',
+                { ac, mode: value },
+                selected
+                  ? { label: 'Power mode', command: 'set_power_mode', args: { ac, mode: selected } }
+                  : undefined,
+              )
+            }
           >
             {label}
           </button>

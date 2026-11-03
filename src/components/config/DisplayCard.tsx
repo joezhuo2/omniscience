@@ -1,5 +1,5 @@
 import { Card } from '../dashboard/Card';
-import { useNativeControl } from './useNativeControl';
+import { useNativeControl, type Undo } from './useNativeControl';
 
 export type DisplayStatus = {
   device: string | null;
@@ -18,6 +18,14 @@ export function DisplayCard({ active = true }: { active?: boolean }) {
   );
   const disabled = !status?.supported || busy;
   const current = status?.current;
+  const undoRefresh: Undo | undefined =
+    status?.auto || current
+      ? {
+          label: 'Refresh rate',
+          command: 'set_display_refresh',
+          args: { hz: status?.auto ? null : current?.hz },
+        }
+      : undefined;
   return (
     <Card section="display" title="Display">
       {status?.device && <p className="mb-2 text-xs text-island-muted">{status.device}</p>}
@@ -29,7 +37,7 @@ export function DisplayCard({ active = true }: { active?: boolean }) {
           title="Lowest rate of at least 60 Hz on battery, highest when plugged in"
           aria-pressed={!!status?.auto}
           disabled={disabled}
-          onClick={() => void apply('set_display_refresh', { hz: null })}
+          onClick={() => void apply('set_display_refresh', { hz: null }, undoRefresh)}
         >
           Auto
         </button>
@@ -40,7 +48,7 @@ export function DisplayCard({ active = true }: { active?: boolean }) {
             className="config-button"
             aria-pressed={!status.auto && current?.hz === hz}
             disabled={disabled}
-            onClick={() => void apply('set_display_refresh', { hz })}
+            onClick={() => void apply('set_display_refresh', { hz }, undoRefresh)}
           >
             {hz} Hz
           </button>
@@ -55,7 +63,19 @@ export function DisplayCard({ active = true }: { active?: boolean }) {
             className="config-button"
             aria-pressed={current?.width === width && current.height === height}
             disabled={disabled}
-            onClick={() => void apply('set_display_resolution', { width, height })}
+            onClick={() =>
+              void apply(
+                'set_display_resolution',
+                { width, height },
+                current
+                  ? {
+                      label: 'Resolution',
+                      command: 'set_display_resolution',
+                      args: { width: current.width, height: current.height },
+                    }
+                  : undefined,
+              )
+            }
           >
             {width}×{height}
           </button>

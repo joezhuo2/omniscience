@@ -26,7 +26,16 @@ export function PowerLimitsCard({ active = true }: { active?: boolean }) {
   const disabled = !status?.supported || busy;
   const commit = async () => {
     if (!draft) return;
-    await apply('set_power_limits', { ac, ...draft });
+    await apply(
+      'set_power_limits',
+      { ac, ...draft },
+      {
+        label: 'Power limits',
+        ...(saved
+          ? { command: 'set_power_limits', args: { ac, ...saved } }
+          : { command: 'reset_power_limits', args: { ac } }),
+      },
+    );
     setDraft(null);
   };
   const slider = (label: string, key: keyof Limits) => (
@@ -84,7 +93,17 @@ export function PowerLimitsCard({ active = true }: { active?: boolean }) {
           disabled={disabled || !saved}
           onClick={() => {
             setDraft(null);
-            void apply('reset_power_limits', { ac });
+            void apply(
+              'reset_power_limits',
+              { ac },
+              saved
+                ? {
+                    label: 'Power limits reset',
+                    command: 'set_power_limits',
+                    args: { ac, ...saved },
+                  }
+                : undefined,
+            );
           }}
         >
           Reset

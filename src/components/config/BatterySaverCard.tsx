@@ -39,7 +39,17 @@ export function BatterySaverCard({ active = true }: { active?: boolean }) {
             value={threshold ?? ''}
             disabled={disabled || threshold == null}
             onChange={(e) =>
-              void apply('set_battery_saver_threshold', { threshold: Number(e.target.value) })
+              void apply(
+                'set_battery_saver_threshold',
+                { threshold: Number(e.target.value) },
+                threshold != null
+                  ? {
+                      label: 'Battery saver threshold',
+                      command: 'set_battery_saver_threshold',
+                      args: { threshold },
+                    }
+                  : undefined,
+              )
             }
           >
             {threshold == null && <option value="" />}
@@ -54,7 +64,15 @@ export function BatterySaverCard({ active = true }: { active?: boolean }) {
           type="button"
           className="config-button"
           disabled={disabled || status?.on == null}
-          onClick={() => void apply('set_battery_saver', { on: !status?.on })}
+          onClick={() =>
+            void apply(
+              'set_battery_saver',
+              { on: !status?.on },
+              status?.on != null
+                ? { label: 'Battery saver', command: 'set_battery_saver', args: { on: status.on } }
+                : undefined,
+            )
+          }
         >
           {status?.on ? 'Turn off' : 'Turn on'}
         </button>
