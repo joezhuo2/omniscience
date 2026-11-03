@@ -11,18 +11,17 @@ export function temperatureArc(
   celsius: number | null | undefined,
   accent: string,
   settings?: Pick<Settings, 'warn_threshold' | 'crit_threshold'> | null,
+  limitsC?: { warn: number; crit: number } | null,
 ): Arc | undefined {
   if (celsius == null || !Number.isFinite(celsius)) return undefined;
   const percent = Math.min(100, Math.max(0, (celsius / 105) * 100));
+  const [value, warn, crit] = limitsC
+    ? [celsius, limitsC.warn, limitsC.crit]
+    : [percent, settings?.warn_threshold ?? 70, settings?.crit_threshold ?? 90];
   return {
     percent,
     accent,
-    level:
-      percent > (settings?.crit_threshold ?? 90)
-        ? 'critical'
-        : percent > (settings?.warn_threshold ?? 70)
-          ? 'warning'
-          : 'normal',
+    level: value > crit ? 'critical' : value > warn ? 'warning' : 'normal',
   };
 }
 
@@ -53,7 +52,10 @@ function arc(m: Metric | null | undefined, accent: string): Arc {
 /** The six rings in display order. With no data yet, every ring is in the missing state. */
 export function ringSpecs(
   core: CoreMetrics | null | undefined,
-  settings?: Pick<Settings, 'warn_threshold' | 'crit_threshold'> | null,
+  settings?: Pick<
+    Settings,
+    'warn_threshold' | 'crit_threshold' | 'cpu_temp_warn_c' | 'cpu_temp_crit_c'
+  > | null,
 ): RingSpec[] {
   const net = core?.net;
   return [
@@ -61,7 +63,12 @@ export function ringSpecs(
       key: 'cpu',
       label: 'CPU',
       outer: arc(core?.cpu, ACCENTS.cpu),
-      inner: temperatureArc(core?.cpu_temp_c, ACCENTS.cpu, settings),
+      inner: temperatureArc(
+        core?.cpu_temp_c,
+        ACCENTS.cpu,
+        settings,
+        settings && { warn: settings.cpu_temp_warn_c, crit: settings.cpu_temp_crit_c },
+      ),
     },
     {
       key: 'ram',

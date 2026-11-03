@@ -28,6 +28,23 @@ describe('temperature rings', () => {
     );
   });
 
+  it('grades CPU temperature by its own °C limits only', () => {
+    const settings = {
+      warn_threshold: 70,
+      crit_threshold: 90,
+      cpu_temp_warn_c: 60,
+      cpu_temp_crit_c: 75,
+    };
+    const level = (key: string, temp: number) => {
+      const core = { ...sampleSnapshot.core, cpu_temp_c: temp, igpu_temp_c: temp };
+      return ringSpecs(core, settings).find((r) => r.key === key)?.inner?.level;
+    };
+    expect(level('cpu', 61)).toBe('warning');
+    expect(level('cpu', 76)).toBe('critical');
+    expect(level('cpu', 55)).toBe('normal');
+    expect(level('igpu', 61)).toBe('normal');
+  });
+
   it('keeps the expanded dashboard dGPU slot even when unavailable', () => {
     expect(ringSpecs(undefined).map((r) => r.key)).toContain('dgpu');
     expect(ringSpecs(sampleSnapshot.core).map((r) => r.key)).toContain('dgpu');

@@ -8,6 +8,8 @@ import { SettingsView } from './SettingsView';
 const defaults: Settings = {
   warn_threshold: 70,
   crit_threshold: 90,
+  cpu_temp_warn_c: 80,
+  cpu_temp_crit_c: 90,
   poll_interval_ms: 1000,
   hotkey: 'CommandOrControl+Shift+O',
   launch_at_startup: false,
@@ -73,6 +75,15 @@ describe('SettingsView', () => {
     fireEvent.blur(input);
     await waitFor(() => expect(saved.at(-1)?.crit_threshold).toBe(85));
     expect(saved).toHaveLength(1);
+  });
+
+  it('saves the CPU temperature limits', async () => {
+    render(<SettingsView onBack={() => {}} />);
+    const input = await screen.findByLabelText('CPU temperature critical');
+    expect(input).toHaveValue(90);
+    fireEvent.change(input, { target: { value: '95' } });
+    fireEvent.blur(input);
+    await waitFor(() => expect(saved.at(-1)?.cpu_temp_crit_c).toBe(95));
   });
 
   it('commits a trimmed ping target on Enter', async () => {
