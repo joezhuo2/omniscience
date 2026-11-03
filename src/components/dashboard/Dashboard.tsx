@@ -2,8 +2,10 @@ import { useId, useState } from 'react';
 import { ConfigView } from '../config/ConfigView';
 import { BatteryCard } from './BatteryCard';
 import { CpuHeatmap } from './CpuHeatmap';
+import { FanCard } from './FanCard';
 import { GpuPowerCard } from './GpuPowerCard';
 import { useSettingsStore } from '../../settings';
+import type { SectionId } from '../../lib/sections';
 import { useTelemetryStore } from '../../store';
 import { SectionLayout } from './SectionLayout';
 import { Header } from './Header';
@@ -16,6 +18,7 @@ import { Toasts } from './Toasts';
 const SECTIONS = {
   'gpu-power': GpuPowerCard,
   battery: BatteryCard,
+  fans: FanCard,
   'cpu-cores': CpuHeatmap,
   network: NetworkCard,
   processes: ProcessList,
@@ -40,6 +43,10 @@ export function Dashboard({
   };
   const id = useId();
   const hasBattery = useTelemetryStore((state) => state.snapshot?.detail?.battery !== null);
+  const hasFans = useTelemetryStore((state) => state.snapshot?.detail?.fans != null);
+  const hiddenSections: SectionId[] = [];
+  if (!hasBattery) hiddenSections.push('battery');
+  if (!hasFans) hiddenSections.push('fans');
   return (
     <div data-testid="dashboard" className="flex flex-col gap-2 pt-1">
       <Header onSettings={onSettings} />
@@ -91,7 +98,7 @@ export function Dashboard({
       >
         <div className="flex flex-col gap-2">
           <MetricStrip />
-          <SectionLayout hidden={hasBattery ? [] : ['battery']}>
+          <SectionLayout hidden={hiddenSections}>
             {(id) => {
               const Component = SECTIONS[id];
               return <Component />;

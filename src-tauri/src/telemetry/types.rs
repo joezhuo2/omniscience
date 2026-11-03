@@ -102,6 +102,14 @@ pub struct Battery {
     pub secs_remaining: Option<u64>,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, TS)]
+#[ts(export)]
+#[cfg_attr(not(windows), allow(dead_code))]
+pub struct FanSpeeds {
+    pub cpu_rpm: Option<u32>,
+    pub gpu_rpm: Option<u32>,
+}
+
 /// One network interface's throughput.
 #[derive(Debug, Clone, PartialEq, Serialize, TS)]
 #[ts(export)]
@@ -230,6 +238,7 @@ pub struct DetailMetrics {
     pub public_ip: Option<String>,
     /// `None` on machines without a battery.
     pub battery: Option<Battery>,
+    pub fans: Option<FanSpeeds>,
     pub processes: Vec<ProcessGroup>,
 }
 

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.14] - 2026-11-02
+
+### Added
+
+- CPU and GPU fan RPM on ASUS laptops (#69).
+
 ## [0.2.13] - 2026-11-02
 
 ### Added

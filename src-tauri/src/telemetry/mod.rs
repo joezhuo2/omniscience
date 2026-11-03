@@ -3,6 +3,8 @@
 
 mod battery;
 #[cfg(any(windows, test))]
+mod fans;
+#[cfg(any(windows, test))]
 mod parse;
 mod peak;
 mod ping;

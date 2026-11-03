@@ -4,6 +4,7 @@ export type { BatteryState } from './generated/BatteryState';
 export type { CoreMetrics } from './generated/CoreMetrics';
 export type { CoreSample } from './generated/CoreSample';
 export type { DetailMetrics } from './generated/DetailMetrics';
+export type { FanSpeeds } from './generated/FanSpeeds';
 export type { GpuDetail } from './generated/GpuDetail';
 export type { GpuKind } from './generated/GpuKind';
 export type { KillOutcome } from './generated/KillOutcome';
