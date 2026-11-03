@@ -59,8 +59,12 @@ export default function App() {
       setFading(false);
     }, VIEW_FADE_MS);
   };
-  const { phase, onClosed } = useIsland(settingsPinned, banner != null, () =>
-    setSettingsPinned(false),
+  const [dashboardPinned, setDashboardPinned] = useState(false);
+  const { phase, onClosed } = useIsland(
+    settingsPinned,
+    banner != null,
+    () => setSettingsPinned(false),
+    dashboardPinned,
   );
   const open = isOpen(phase);
   const islandRef = useRef<HTMLDivElement>(null);
@@ -118,6 +122,8 @@ export default function App() {
       key={systemUpdatesRequest}
       showSystemUpdates={systemUpdatesRequest}
       onSettings={() => switchView('settings')}
+      pinned={dashboardPinned}
+      onTogglePin={() => setDashboardPinned((p) => !p)}
     />
   );
 

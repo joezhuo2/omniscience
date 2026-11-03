@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.20] - 2026-11-02
+
+### Added
+
+- Add a pin button to the dashboard header (#72) that keeps the dashboard open until unpinned.
+
 ## [0.2.19] - 2026-11-02
 
 ### Added

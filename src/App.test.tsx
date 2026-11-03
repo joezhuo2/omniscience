@@ -117,6 +117,25 @@ describe('App', () => {
     expect(island()).toHaveAttribute('data-phase', 'expanded');
   });
 
+  it('stays open on leave and Escape while pinned, and closes once unpinned away from it', async () => {
+    render(<App />);
+    await flush(0);
+    await hover(true);
+    await flush(0);
+    fireEvent.click(screen.getByRole('button', { name: 'Pin dashboard open' }));
+    expect(screen.getByRole('button', { name: 'Unpin dashboard' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await hover(false);
+    fireEvent.keyDown(window, { key: 'Escape' });
+    await flush(COLLAPSE_FALLBACK_MS + 10);
+    expect(island()).toHaveAttribute('data-phase', 'expanded');
+    fireEvent.click(screen.getByRole('button', { name: 'Unpin dashboard' }));
+    await flush(0);
+    expect(island()).toHaveAttribute('data-phase', 'collapsing');
+  });
+
   it('leaves consumed Escape events to inner controls and closes on an ordinary Escape', async () => {
     render(<App />);
     await flush(0);
