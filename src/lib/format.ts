@@ -57,6 +57,11 @@ export function formatWatts(w: number | null | undefined): string {
   return `${w < 10 ? w.toFixed(1) : Math.round(w)} W`;
 }
 
+export function formatWh(mwh: number | null | undefined): string {
+  if (mwh == null || !Number.isFinite(mwh) || mwh < 0) return '--';
+  return `${(mwh / 1000).toFixed(1)} Wh`;
+}
+
 export function formatTemp(c: number | null | undefined): string {
   if (c == null || !Number.isFinite(c)) return '--';
   return `${Math.round(c)}°C`;

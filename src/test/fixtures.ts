@@ -39,7 +39,16 @@ export const sampleDetail: DetailMetrics = {
   cpu_limit_pct: 0,
   ping_ms: 14,
   public_ip: null,
-  battery: { percent: 78, state: 'discharging', watts: 12.4, secs_remaining: 9000 },
+  battery: {
+    percent: 78,
+    state: 'discharging',
+    watts: 12.4,
+    secs_remaining: 9000,
+    design_capacity_mwh: 60000,
+    full_charge_capacity_mwh: 50000,
+    wear_pct: 16.7,
+    cycle_count: 212,
+  },
   fans: { cpu_rpm: 3200, gpu_rpm: 2800 },
   net_adapters: [
     { name: 'Wi-Fi', down_bps: 1258291, up_bps: 81920, ipv4: '192.168.1.20' },

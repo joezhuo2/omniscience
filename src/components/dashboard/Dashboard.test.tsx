@@ -176,6 +176,12 @@ describe('Dashboard', () => {
     expect(screen.getByText('−12 W')).toBeInTheDocument();
   });
 
+  it('shows battery health beside the charge readings', () => {
+    act(() => useTelemetryStore.getState().setSnapshot(withDetail));
+    render(<Dashboard />);
+    expect(screen.getByTestId('battery-health')).toHaveTextContent('Wear 16.7%');
+  });
+
   it('shows charging and plugged-in states, and nothing without a battery', () => {
     const show = (battery: DetailMetrics['battery']) => {
       act(() =>
@@ -185,10 +191,11 @@ describe('Dashboard', () => {
       );
       return render(<Dashboard />);
     };
-    let view = show({ percent: 60, state: 'charging', watts: 30, secs_remaining: 1800 });
+    const base = sampleDetail.battery!;
+    let view = show({ ...base, percent: 60, state: 'charging', watts: 30, secs_remaining: 1800 });
     expect(screen.getByTestId('battery-summary')).toHaveTextContent('30m to full');
     view.unmount();
-    view = show({ percent: 80, state: 'idle', watts: null, secs_remaining: null });
+    view = show({ ...base, percent: 80, state: 'idle', watts: null, secs_remaining: null });
     expect(screen.getByTestId('battery-summary')).toHaveTextContent('Plugged in, not charging');
     view.unmount();
     show(null);

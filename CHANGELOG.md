@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.16] - 2026-11-02
+
+### Added
+
+- Show battery health on the Battery card (#76): design vs full-charge capacity, wear and cycle count where the battery reports them.
+
 ## [0.2.15] - 2026-11-02
 
 ### Added

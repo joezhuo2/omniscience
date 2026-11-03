@@ -100,6 +100,10 @@ pub struct Battery {
     /// Time to empty (discharging) or to full (charging), in seconds.
     #[ts(type = "number | null")]
     pub secs_remaining: Option<u64>,
+    pub design_capacity_mwh: Option<u32>,
+    pub full_charge_capacity_mwh: Option<u32>,
+    pub wear_pct: Option<f32>,
+    pub cycle_count: Option<u32>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, TS)]

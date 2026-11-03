@@ -15,6 +15,20 @@ pub struct Reading {
     pub full_mwh: Option<u32>,
     /// Charge (+) or discharge (-) rate in mW.
     pub rate_mw: Option<i32>,
+    pub design_mwh: Option<u32>,
+    pub health_full_mwh: Option<u32>,
+    pub cycle_count: Option<u32>,
+}
+
+#[cfg(windows)]
+#[derive(Default)]
+struct DriverStatus {
+    capacity_mwh: Option<u32>,
+    full_mwh: Option<u32>,
+    rate_mw: Option<i32>,
+    design_mwh: Option<u32>,
+    health_full_mwh: Option<u32>,
+    cycle_count: Option<u32>,
 }
 
 /// Charge, AC and Windows' time estimate from `GetSystemPowerStatus`.
@@ -33,22 +47,26 @@ pub fn read() -> Reading {
     {
         return Reading::default();
     }
-    let (capacity_mwh, full_mwh, rate_mw) = driver_status();
+    let d = driver_status();
     Reading {
         percent: Some(f32::from(s.BatteryLifePercent)),
         on_ac: s.ACLineStatus == 1,
         charging: s.BatteryFlag & CHARGING != 0,
         os_secs_left: (s.BatteryLifeTime != u32::MAX).then_some(u64::from(s.BatteryLifeTime)),
-        capacity_mwh,
-        full_mwh,
-        rate_mw,
+        capacity_mwh: d.capacity_mwh,
+        full_mwh: d.full_mwh,
+        rate_mw: d.rate_mw,
+        design_mwh: d.design_mwh,
+        health_full_mwh: d.health_full_mwh,
+        cycle_count: d.cycle_count,
     }
 }
 
 /// Remaining capacity, full-charge capacity (mWh) and rate (mW), each summed over the batteries
-/// that report it, from the battery class driver's IOCTLs. No admin rights needed.
+/// that report it, plus design capacity and cycle count, from the battery class driver's IOCTLs.
+/// No admin rights needed.
 #[cfg(windows)]
-fn driver_status() -> (Option<u32>, Option<u32>, Option<i32>) {
+fn driver_status() -> DriverStatus {
     use windows_sys::Win32::Devices::DeviceAndDriverInstallation::{
         DIGCF_DEVICEINTERFACE, DIGCF_PRESENT, GUID_DEVCLASS_BATTERY, SP_DEVICE_INTERFACE_DATA,
         SP_DEVICE_INTERFACE_DETAIL_DATA_W, SetupDiDestroyDeviceInfoList,
@@ -85,7 +103,7 @@ fn driver_status() -> (Option<u32>, Option<u32>, Option<i32>) {
         }
     }
 
-    let (mut capacity, mut full, mut rate) = (None::<u32>, None::<u32>, None::<i32>);
+    let mut out = DriverStatus::default();
     // SAFETY: the device info set and every opened handle are released before returning; the
     // interface detail buffer is u64-aligned and as large as SetupDi asked for.
     unsafe {
@@ -96,7 +114,7 @@ fn driver_status() -> (Option<u32>, Option<u32>, Option<i32>) {
             DIGCF_PRESENT | DIGCF_DEVICEINTERFACE,
         );
         if set == -1 {
-            return (None, None, None);
+            return out;
         }
         for index in 0..8 {
             let mut iface = SP_DEVICE_INTERFACE_DATA {
@@ -178,16 +196,25 @@ fn driver_status() -> (Option<u32>, Option<u32>, Option<i32>) {
                 continue;
             }
             if status.Capacity != BATTERY_UNKNOWN_CAPACITY {
-                *capacity.get_or_insert(0) += status.Capacity;
-                *full.get_or_insert(0) += info.FullChargedCapacity;
+                *out.capacity_mwh.get_or_insert(0) += status.Capacity;
+                *out.full_mwh.get_or_insert(0) += info.FullChargedCapacity;
             }
             if status.Rate != BATTERY_UNKNOWN_RATE as i32 {
-                *rate.get_or_insert(0) += status.Rate;
+                *out.rate_mw.get_or_insert(0) += status.Rate;
+            }
+            let known = |mwh: u32| mwh != 0 && mwh != BATTERY_UNKNOWN_CAPACITY;
+            if known(info.DesignedCapacity) && known(info.FullChargedCapacity) {
+                *out.design_mwh.get_or_insert(0) += info.DesignedCapacity;
+                *out.health_full_mwh.get_or_insert(0) += info.FullChargedCapacity;
+            }
+            if info.CycleCount != 0 {
+                let cycles = out.cycle_count.get_or_insert(0);
+                *cycles = (*cycles).max(info.CycleCount);
             }
         }
         SetupDiDestroyDeviceInfoList(set);
     }
-    (capacity, full, rate)
+    out
 }
 
 #[cfg(not(windows))]
@@ -215,12 +242,25 @@ pub fn estimate(r: &Reading) -> Option<Battery> {
             .and_then(|(full, now)| secs(full.saturating_sub(now))),
         BatteryState::Idle => None,
     };
+    let health = r
+        .design_mwh
+        .zip(r.health_full_mwh)
+        .filter(|(design, _)| *design > 0);
     Some(Battery {
         percent: percent.clamp(0.0, 100.0),
         state,
         watts: rate.map(|mw| (mw as f32 / 100.0).round() / 10.0),
         secs_remaining,
+        design_capacity_mwh: health.map(|(design, _)| design),
+        full_charge_capacity_mwh: health.map(|(_, full)| full),
+        wear_pct: health.map(|(design, full)| wear_pct(design, full)),
+        cycle_count: r.cycle_count,
     })
+}
+
+fn wear_pct(design: u32, full: u32) -> f32 {
+    let lost = 1.0 - f64::from(full) / f64::from(design);
+    ((lost * 1000.0).round() / 10.0).clamp(0.0, 100.0) as f32
 }
 
 #[cfg(test)]
@@ -235,11 +275,68 @@ mod tests {
         capacity_mwh: Some(40_000),
         full_mwh: Some(50_000),
         rate_mw: Some(-10_000),
+        design_mwh: Some(60_000),
+        health_full_mwh: Some(50_000),
+        cycle_count: Some(212),
     };
 
     #[test]
     fn no_battery_no_metric() {
         assert_eq!(estimate(&Reading::default()), None);
+    }
+
+    #[test]
+    fn health_from_design_and_full_charge_capacity() {
+        let b = estimate(&DRAINING).unwrap();
+        assert_eq!(b.design_capacity_mwh, Some(60_000));
+        assert_eq!(b.full_charge_capacity_mwh, Some(50_000));
+        assert_eq!(b.wear_pct, Some(16.7));
+        assert_eq!(b.cycle_count, Some(212));
+    }
+
+    #[test]
+    fn no_health_without_design_capacity() {
+        let r = Reading {
+            design_mwh: None,
+            health_full_mwh: None,
+            cycle_count: None,
+            ..DRAINING
+        };
+        let b = estimate(&r).unwrap();
+        assert_eq!(b.design_capacity_mwh, None);
+        assert_eq!(b.full_charge_capacity_mwh, None);
+        assert_eq!(b.wear_pct, None);
+        assert_eq!(b.cycle_count, None);
+    }
+
+    #[test]
+    fn zero_design_capacity_is_ignored() {
+        let r = Reading {
+            design_mwh: Some(0),
+            ..DRAINING
+        };
+        let b = estimate(&r).unwrap();
+        assert_eq!(b.wear_pct, None);
+        assert_eq!(b.design_capacity_mwh, None);
+    }
+
+    #[test]
+    fn cycle_count_without_capacity_data() {
+        let r = Reading {
+            design_mwh: None,
+            health_full_mwh: None,
+            ..DRAINING
+        };
+        let b = estimate(&r).unwrap();
+        assert_eq!(b.wear_pct, None);
+        assert_eq!(b.cycle_count, Some(212));
+    }
+
+    #[test]
+    fn wear_never_negative_when_full_exceeds_design() {
+        assert_eq!(wear_pct(50_000, 52_000), 0.0);
+        assert_eq!(wear_pct(50_000, 50_000), 0.0);
+        assert_eq!(wear_pct(50_000, 0), 100.0);
     }
 
     #[test]
