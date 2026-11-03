@@ -10,6 +10,7 @@ import {
   type MouseEvent,
   type ReactNode,
 } from 'react';
+import { useSectionToggle } from '../config/sectionToggleContext';
 import { readSectionCollapsed, saveSectionCollapsed, type CardSectionId } from '../../lib/sections';
 
 const INTERACTIVE =
@@ -30,6 +31,8 @@ export function Card({
   children: ReactNode;
 }) {
   const id = useId();
+  const power = useSectionToggle();
+  const off = power?.enabled === false;
   const {
     attributes,
     listeners,
@@ -130,13 +133,33 @@ export function Card({
             title
           )}
         </h2>
-        {collapsed ? (summary ?? aside) : aside}
-      </header>
-      <div id={`${id}-body`} className="card-body" aria-hidden={collapsed} inert={collapsed}>
-        <div className="card-body-clip">
-          <div className="pt-2">{children}</div>
+        <div className="flex items-center gap-2">
+          {!off && (collapsed ? (summary ?? aside) : aside)}
+          {power && (
+            <button
+              type="button"
+              role="switch"
+              aria-checked={!off}
+              aria-label={`${title} enabled`}
+              title={`${off ? 'Enable' : 'Disable'} ${title}`}
+              onClick={() => power.setEnabled(off)}
+              className={`relative h-4 w-7 shrink-0 rounded-full transition-colors focus-visible:ring-1 focus-visible:ring-island-muted focus-visible:outline-none ${off ? 'bg-island-faint' : 'bg-emerald-500'}`}
+            >
+              <span
+                aria-hidden
+                className={`absolute top-0.5 left-0.5 h-3 w-3 rounded-full bg-white transition-transform ${off ? '' : 'translate-x-3'}`}
+              />
+            </button>
+          )}
         </div>
-      </div>
+      </header>
+      {!off && (
+        <div id={`${id}-body`} className="card-body" aria-hidden={collapsed} inert={collapsed}>
+          <div className="card-body-clip">
+            <div className="pt-2">{children}</div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

@@ -83,3 +83,20 @@ export function saveSectionCollapsed(section: CardSectionId, collapsed: boolean)
     // The disclosure still works for this session if storage is unavailable.
   }
 }
+
+export function readSectionEnabled(section: CardSectionId): boolean {
+  try {
+    return localStorage.getItem(`${PREFIX}${section}:off`) !== 'true';
+  } catch {
+    return true;
+  }
+}
+
+export function saveSectionEnabled(section: CardSectionId, enabled: boolean): void {
+  try {
+    if (enabled) localStorage.removeItem(`${PREFIX}${section}:off`);
+    else localStorage.setItem(`${PREFIX}${section}:off`, 'true');
+  } catch {
+    // The toggle still works for this session if storage is unavailable.
+  }
+}

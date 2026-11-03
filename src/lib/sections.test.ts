@@ -7,6 +7,8 @@ import {
   saveSectionOrder,
   readSectionCollapsed,
   saveSectionCollapsed,
+  readSectionEnabled,
+  saveSectionEnabled,
 } from './sections';
 
 afterEach(() => {
@@ -83,5 +85,24 @@ describe('section preferences', () => {
     expect(readSectionCollapsed('network')).toBe(false);
     expect(() => saveSectionCollapsed('network', true)).not.toThrow();
     expect(() => saveSectionCollapsed('network', false)).not.toThrow();
+  });
+});
+
+describe('section enabled state', () => {
+  it('defaults on, persists off, and tolerates unavailable storage', () => {
+    expect(readSectionEnabled('display')).toBe(true);
+    saveSectionEnabled('display', false);
+    expect(readSectionEnabled('display')).toBe(false);
+    expect(readSectionEnabled('gpu-mode')).toBe(true);
+    saveSectionEnabled('display', true);
+    expect(readSectionEnabled('display')).toBe(true);
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('blocked');
+    });
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('blocked');
+    });
+    expect(readSectionEnabled('display')).toBe(true);
+    expect(() => saveSectionEnabled('display', false)).not.toThrow();
   });
 });

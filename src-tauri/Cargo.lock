@@ -2697,7 +2697,7 @@ dependencies = [
 
 [[package]]
 name = "omniscience"
-version = "0.2.20"
+version = "0.2.21"
 dependencies = [
  "ferrisetw",
  "serde",
