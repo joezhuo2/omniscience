@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.19] - 2026-11-02
+
+### Added
+
+- Add CPU temperature warning and critical limits (°C) to Settings (#73); they set the CPU temperature ring levels.
+
 ## [0.2.18] - 2026-11-02
 
 ### Added

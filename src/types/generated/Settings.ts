@@ -10,6 +10,14 @@ warn_threshold: number,
  */
 crit_threshold: number, 
 /**
+ * CPU temperature in °C above which the temperature ring is "warning".
+ */
+cpu_temp_warn_c: number, 
+/**
+ * CPU temperature in °C above which the temperature ring is "critical".
+ */
+cpu_temp_crit_c: number, 
+/**
  * Telemetry interval in milliseconds (500-5000).
  */
 poll_interval_ms: number, 

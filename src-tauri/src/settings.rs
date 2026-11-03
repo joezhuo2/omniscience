@@ -18,6 +18,10 @@ pub struct Settings {
     pub warn_threshold: f32,
     /// Percent above which a reading is "critical" (red).
     pub crit_threshold: f32,
+    /// CPU temperature in °C above which the temperature ring is "warning".
+    pub cpu_temp_warn_c: f32,
+    /// CPU temperature in °C above which the temperature ring is "critical".
+    pub cpu_temp_crit_c: f32,
     /// Telemetry interval in milliseconds (500-5000).
     pub poll_interval_ms: u32,
     /// Global show/hide shortcut in Tauri accelerator syntax, e.g. `CommandOrControl+Shift+O`.
@@ -42,6 +46,8 @@ impl Default for Settings {
         Self {
             warn_threshold: 70.0,
             crit_threshold: 90.0,
+            cpu_temp_warn_c: 80.0,
+            cpu_temp_crit_c: 90.0,
             poll_interval_ms: 1000,
             hotkey: "CommandOrControl+Shift+O".into(),
             launch_at_startup: false,
@@ -67,6 +73,16 @@ impl Settings {
         }
         self.warn_threshold = self.warn_threshold.clamp(1.0, 98.0);
         self.crit_threshold = self.crit_threshold.clamp(self.warn_threshold + 1.0, 99.0);
+        if !self.cpu_temp_warn_c.is_finite() {
+            self.cpu_temp_warn_c = d.cpu_temp_warn_c;
+        }
+        if !self.cpu_temp_crit_c.is_finite() {
+            self.cpu_temp_crit_c = d.cpu_temp_crit_c;
+        }
+        self.cpu_temp_warn_c = self.cpu_temp_warn_c.clamp(30.0, 109.0);
+        self.cpu_temp_crit_c = self
+            .cpu_temp_crit_c
+            .clamp(self.cpu_temp_warn_c + 1.0, 110.0);
         self.poll_interval_ms = self.poll_interval_ms.clamp(500, 5000);
         if self.hotkey.trim().is_empty() {
             self.hotkey = d.hotkey;
@@ -154,6 +170,36 @@ mod tests {
         }
         .sanitized();
         assert_eq!(nan.warn_threshold, 70.0);
+    }
+
+    #[test]
+    fn sanitizes_cpu_temp_limits() {
+        let s = Settings::default();
+        assert_eq!((s.cpu_temp_warn_c, s.cpu_temp_crit_c), (80.0, 90.0));
+        let swapped = Settings {
+            cpu_temp_warn_c: 100.0,
+            cpu_temp_crit_c: 50.0,
+            ..Settings::default()
+        }
+        .sanitized();
+        assert_eq!(swapped.cpu_temp_warn_c, 100.0);
+        assert_eq!(swapped.cpu_temp_crit_c, 101.0);
+        let low = Settings {
+            cpu_temp_warn_c: 0.0,
+            cpu_temp_crit_c: f32::NAN,
+            ..Settings::default()
+        }
+        .sanitized();
+        assert_eq!(low.cpu_temp_warn_c, 30.0);
+        assert_eq!(low.cpu_temp_crit_c, 90.0);
+        let top = Settings {
+            cpu_temp_warn_c: 500.0,
+            cpu_temp_crit_c: 500.0,
+            ..Settings::default()
+        }
+        .sanitized();
+        assert_eq!(top.cpu_temp_warn_c, 109.0);
+        assert_eq!(top.cpu_temp_crit_c, 110.0);
     }
 
     #[test]

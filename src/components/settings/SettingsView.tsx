@@ -93,10 +93,16 @@ function ThresholdInput({
   value,
   label,
   onCommit,
+  min = 1,
+  max = 99,
+  unit = '%',
 }: {
   value: number;
   label: string;
   onCommit: (v: number) => void;
+  min?: number;
+  max?: number;
+  unit?: string;
 }) {
   // Remounted (via `key`) when the applied value changes, which resets the draft.
   const [draft, setDraft] = useState(String(value));
@@ -106,7 +112,7 @@ function ThresholdInput({
     else setDraft(String(value));
   };
   const step = (delta: number) => {
-    const n = Math.min(99, Math.max(1, value + delta));
+    const n = Math.min(max, Math.max(min, value + delta));
     if (n !== value) onCommit(n);
   };
   const stepButton =
@@ -124,15 +130,15 @@ function ThresholdInput({
       <input
         aria-label={label}
         type="number"
-        min={1}
-        max={99}
+        min={min}
+        max={max}
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
         onBlur={commit}
         onKeyDown={(e) => e.key === 'Enter' && commit()}
         className="w-12 rounded border border-island-faint bg-island-hover px-1.5 py-0.5 text-right text-island-text tabular-nums"
       />
-      %
+      {unit}
     </span>
   );
 }
@@ -219,6 +225,28 @@ export function SettingsView({ onBack }: { onBack: () => void }) {
               label="Critical threshold"
               value={settings.crit_threshold}
               onCommit={(v) => set({ crit_threshold: v })}
+            />
+          </Row>
+          <Row label="CPU temp warning above">
+            <ThresholdInput
+              key={`cpu-warn-${settings.cpu_temp_warn_c}`}
+              label="CPU temperature warning"
+              value={settings.cpu_temp_warn_c}
+              min={30}
+              max={109}
+              unit="°C"
+              onCommit={(v) => set({ cpu_temp_warn_c: v })}
+            />
+          </Row>
+          <Row label="CPU temp critical above">
+            <ThresholdInput
+              key={`cpu-crit-${settings.cpu_temp_crit_c}`}
+              label="CPU temperature critical"
+              value={settings.cpu_temp_crit_c}
+              min={31}
+              max={110}
+              unit="°C"
+              onCommit={(v) => set({ cpu_temp_crit_c: v })}
             />
           </Row>
           <Row label="Update every">
