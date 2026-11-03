@@ -14,18 +14,20 @@ type Timer = ReturnType<typeof setTimeout> | undefined;
  * While `pinned` (tray Settings…) it opens without hover and stays open until hovered and left,
  * or Esc. While `sticky` (update prompt) it stays open regardless, until the prompt goes away.
  */
-export function useIsland(pinned: boolean, sticky: boolean, onUnpin: () => void) {
+export function useIsland(pinned: boolean, sticky: boolean, onUnpin: () => void, locked = false) {
   const [phase, dispatch] = useReducer(nextPhase, 'collapsed' as Phase);
   const [hovered, setHovered] = useState(false);
   const fallbackTimer = useRef<Timer>(undefined);
   const previous = useRef<Phase>(phase);
   const unpin = useRef(onUnpin);
   const stickyRef = useRef(sticky);
+  const lockedRef = useRef(locked);
   const hoveredRef = useRef(false);
   useEffect(() => {
     unpin.current = onUnpin;
     stickyRef.current = sticky;
-  }, [onUnpin, sticky]);
+    lockedRef.current = locked;
+  }, [onUnpin, sticky, locked]);
 
   // Backend side effects on phase transitions.
   useEffect(() => {
@@ -46,7 +48,7 @@ export function useIsland(pinned: boolean, sticky: boolean, onUnpin: () => void)
   }, [phase]);
 
   // Pinned or sticky opens right away; when both are released away from the cursor, close.
-  const held = pinned || sticky;
+  const held = pinned || sticky || locked;
   useEffect(() => {
     if (held) {
       dispatch('expand');
@@ -65,11 +67,12 @@ export function useIsland(pinned: boolean, sticky: boolean, onUnpin: () => void)
       } else {
         // Leaving after a pinned open releases the pin.
         unpin.current();
-        if (!stickyRef.current) dispatch('collapse');
+        if (!stickyRef.current && !lockedRef.current) dispatch('collapse');
       }
     });
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape' || e.defaultPrevented || stickyRef.current) return;
+      if (e.key !== 'Escape' || e.defaultPrevented || stickyRef.current || lockedRef.current)
+        return;
       unpin.current();
       dispatch('collapse');
     };

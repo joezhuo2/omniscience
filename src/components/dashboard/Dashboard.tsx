@@ -26,9 +26,13 @@ const SECTIONS = {
 
 export function Dashboard({
   onSettings,
+  pinned,
+  onTogglePin,
   showSystemUpdates = 0,
 }: {
   onSettings?: () => void;
+  pinned?: boolean;
+  onTogglePin?: () => void;
   showSystemUpdates?: number;
 }) {
   const configEnabled = useSettingsStore((s) => s.settings?.config_enabled ?? false);
@@ -49,7 +53,7 @@ export function Dashboard({
   if (!hasFans) hiddenSections.push('fans');
   return (
     <div data-testid="dashboard" className="flex flex-col gap-2 pt-1">
-      <Header onSettings={onSettings} />
+      <Header onSettings={onSettings} pinned={pinned} onTogglePin={onTogglePin} />
       {configEnabled && (
         <div
           role="tablist"
