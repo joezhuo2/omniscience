@@ -33,4 +33,8 @@ show_public_ip: boolean,
 /**
  * Shows the Config tab and allows GPU, power and display changes. Off by default.
  */
-config_enabled: boolean, };
+config_enabled: boolean, 
+/**
+ * Desktop notification when CPU, memory, disk or a GPU stays above 90% for 30 seconds.
+ */
+sustained_alerts: boolean, };

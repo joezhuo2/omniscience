@@ -1,6 +1,6 @@
 [package]
 name = "omniscience"
-version = "0.2.17"
+version = "0.2.18"
 description = "Dynamic Island-style system monitor overlay"
 authors = ["Omniscience contributors"]
 license = "MIT"
@@ -23,6 +23,7 @@ sysinfo = { version = "0.39", default-features = false, features = ["system", "n
 ts-rs = "12"
 tauri-plugin-autostart = "2"
 tauri-plugin-global-shortcut = "2"
+tauri-plugin-notification = "2"
 tauri-plugin-process = "2"
 tauri-plugin-single-instance = "2"
 tauri-plugin-updater = "2"

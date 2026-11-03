@@ -1,6 +1,7 @@
 //! Telemetry engine: a single background thread samples sensors on a fixed interval and emits one
 //! [`types::Snapshot`] per tick as the `telemetry://tick` event.
 
+mod alerts;
 mod battery;
 #[cfg(any(windows, test))]
 mod fans;
@@ -22,6 +23,7 @@ use std::sync::{Arc, Condvar, Mutex};
 use std::time::Duration;
 
 use tauri::{AppHandle, Emitter};
+use tauri_plugin_notification::NotificationExt;
 
 use types::{Snapshot, Thresholds};
 
@@ -38,6 +40,7 @@ pub struct Control {
     pub ping_target: Arc<str>,
     /// Whether to look up the public IP while expanded.
     pub public_ip: bool,
+    pub sustained_alerts: bool,
 }
 
 impl Default for Control {
@@ -49,6 +52,7 @@ impl Default for Control {
             thresholds: Thresholds::default(),
             ping_target: "".into(),
             public_ip: false,
+            sustained_alerts: false,
         }
     }
 }
@@ -109,11 +113,13 @@ impl Telemetry {
 
     fn run(&self, app: &AppHandle) {
         let mut sampler = sampler::Sampler::new();
+        let mut sustained = alerts::Sustained::default();
         loop {
             let control = {
                 let mut c = self.control.lock().unwrap_or_else(|e| e.into_inner());
                 while !c.visible {
                     sampler.suspend_detail();
+                    sustained.reset();
                     c = self.wake.wait(c).unwrap_or_else(|e| e.into_inner());
                 }
                 c.clone()
@@ -122,6 +128,21 @@ impl Telemetry {
             let snapshot = sampler.sample(control.thresholds, control.expanded);
             if let Err(e) = app.emit(TICK_EVENT, &snapshot) {
                 crate::diagnostics::log_error(format_args!("emit telemetry: {e}"));
+            }
+            if control.sustained_alerts {
+                for label in sustained.check(snapshot.timestamp_ms, &snapshot.core) {
+                    let shown = app
+                        .notification()
+                        .builder()
+                        .title("High sustained usage")
+                        .body(format!("{label} has been above 90% for 30 seconds."))
+                        .show();
+                    if let Err(e) = shown {
+                        crate::diagnostics::log_error(format_args!("notify: {e}"));
+                    }
+                }
+            } else {
+                sustained.reset();
             }
             *self.latest.lock().unwrap_or_else(|e| e.into_inner()) = Some(snapshot);
             let c = self.control.lock().unwrap_or_else(|e| e.into_inner());

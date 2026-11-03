@@ -288,6 +288,16 @@ export function SettingsView({ onBack }: { onBack: () => void }) {
             />
           </Row>
           <Row
+            label="Sustained usage alerts"
+            hint="Notifies when usage stays above 90% for 30 seconds."
+          >
+            <Toggle
+              label="Sustained usage alerts"
+              checked={settings.sustained_alerts}
+              onChange={(v) => set({ sustained_alerts: v })}
+            />
+          </Row>
+          <Row
             label="System config (GPU, power, display)"
             hint="Adds the Config tab, which changes hardware settings."
           >
