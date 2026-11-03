@@ -45,4 +45,8 @@ config_enabled: boolean,
 /**
  * Desktop notification when CPU, memory, disk or a GPU stays above 90% for 30 seconds.
  */
-sustained_alerts: boolean, };
+sustained_alerts: boolean, 
+/**
+ * Shows each reading's source, age and proxy status on the dashboard. Problems always show.
+ */
+sensor_details: boolean, };

@@ -39,6 +39,8 @@ pub struct Settings {
     pub config_enabled: bool,
     /// Desktop notification when CPU, memory, disk or a GPU stays above 90% for 30 seconds.
     pub sustained_alerts: bool,
+    /// Shows each reading's source, age and proxy status on the dashboard. Problems always show.
+    pub sensor_details: bool,
 }
 
 impl Default for Settings {
@@ -57,6 +59,7 @@ impl Default for Settings {
             show_public_ip: false,
             config_enabled: false,
             sustained_alerts: true,
+            sensor_details: false,
         }
     }
 }
@@ -148,6 +151,7 @@ mod tests {
         assert_eq!(s.warn_threshold, 60.0);
         assert_eq!(s.crit_threshold, 90.0);
         assert!(s.hide_over_fullscreen);
+        assert!(!s.sensor_details);
     }
 
     #[test]
