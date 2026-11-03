@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import { useUndoStore } from '../../undo';
+
+type Args = Record<string, unknown>;
+export type Undo = { label: string; command: string; args: Args };
+
+const sameArgs = (a: Args, b: Args) => JSON.stringify(a) === JSON.stringify(b);
 
 /** Refresh real device state; never optimistically claim that a hardware write succeeded. */
 export function useNativeControl<T>(readCommand: string, active = true) {
@@ -30,7 +36,13 @@ export function useNativeControl<T>(readCommand: string, active = true) {
       clearInterval(timer);
     };
   }, [active, refresh]);
-  const apply = async (command: string, args: Record<string, unknown>) => {
+  const undone = useUndoStore((s) => s.revision);
+  useEffect(() => {
+    if (!active || !undone) return;
+    const t = setTimeout(() => void refresh(), 0);
+    return () => clearTimeout(t);
+  }, [active, undone, refresh]);
+  const apply = async (command: string, args: Args, undo?: Undo) => {
     if (writing.current) return;
     writing.current = true;
     generation.current++;
@@ -38,6 +50,11 @@ export function useNativeControl<T>(readCommand: string, active = true) {
     setError('');
     try {
       setStatus(await invoke<T>(command, args));
+      if (undo && !(undo.command === command && sameArgs(undo.args, args))) {
+        useUndoStore
+          .getState()
+          .record(undo.label, async () => void (await invoke(undo.command, undo.args)));
+      }
     } catch (e) {
       setError(String(e));
       // A failed multi-step write may have changed part of the device state.

@@ -43,7 +43,15 @@ export function CpuBoostCard({ active = true }: { active?: boolean }) {
             title={description}
             aria-pressed={current === value}
             disabled={!status?.supported || busy}
-            onClick={() => void apply('set_cpu_boost', { ac, mode: value })}
+            onClick={() =>
+              void apply(
+                'set_cpu_boost',
+                { ac, mode: value },
+                current != null
+                  ? { label: 'CPU boost', command: 'set_cpu_boost', args: { ac, mode: current } }
+                  : undefined,
+              )
+            }
           >
             {label}
           </button>
