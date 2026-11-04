@@ -7,7 +7,6 @@ const supported: GpuStatus = {
   selected: null,
   current: 'med',
   supported: true,
-  mux_supported: true,
   restart_required: false,
   error: null,
 };
@@ -47,15 +46,22 @@ it('disables unavailable controls and reports firmware failures', async () => {
     expect(button).toBeDisabled();
 });
 
+it('does not offer Max', async () => {
+  mockIPC(() => supported);
+  render(<GpuModeCard />);
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Med' })).toBeEnabled());
+  expect(screen.queryByRole('button', { name: 'Max' })).not.toBeInTheDocument();
+});
+
 it('requires restart after a MUX change and prevents further GPU writes', async () => {
   mockIPC((cmd) =>
     cmd === 'get_gpu_mode'
       ? supported
-      : { ...supported, selected: 'max', current: 'max', restart_required: true },
+      : { ...supported, selected: 'med', current: 'med', restart_required: true },
   );
   render(<GpuModeCard />);
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Max' })).toBeEnabled());
-  fireEvent.click(screen.getByRole('button', { name: 'Max' }));
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Med' })).toBeEnabled());
+  fireEvent.click(screen.getByRole('button', { name: 'Med' }));
   expect(await screen.findByText(/Auto switching is paused/)).toBeInTheDocument();
   for (const button of within(screen.getByRole('group', { name: 'GPU mode' })).getAllByRole(
     'button',
@@ -80,16 +86,13 @@ it('describes only the selected GPU mode', async () => {
   expect(
     screen.queryByText('iGPU on battery, hybrid graphics when plugged in'),
   ).not.toBeInTheDocument();
-  expect(
-    screen.queryByText('dGPU display mode: requires a supported MUX and Windows restart'),
-  ).not.toBeInTheDocument();
 });
 
 it('renders no mode description when nothing is selected', async () => {
   mockIPC(() => ({ ...supported, selected: null, current: null, supported: false }));
   render(<GpuModeCard />);
   await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Requires a supported'));
-  expect(screen.queryByText(/GPUs available|dGPU disabled|on battery|display mode/)).toBeNull();
+  expect(screen.queryByText(/GPUs available|dGPU disabled|on battery/)).toBeNull();
 });
 
 it('retains actual state and reports a refused write', async () => {

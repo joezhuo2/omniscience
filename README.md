@@ -65,7 +65,7 @@ close it.
   Throttling chip when a GPU reaches its thermal limit, and package watts broken down into APU, CPU,
   GPU and NPU where the hardware reports them.
 - 🔋 **Battery card** (laptops): charge, charging or draining with the rate in watts, and time left or
-  time to full, read from the battery driver. On supported ASUS laptops a draggable bar sets the maximum charge
+  time to full, read from the battery driver. With System config on, supported ASUS laptops get a draggable bar that sets the maximum charge
   (20-100%), saved and reapplied at launch. A skeleton appears while battery data loads; the card hides on machines without a battery.
 - 🔥 **CPU heatmap:** one cell per logical core. Hover a cell for its usage, clock, per-core watts and
   the package temperature. A performance-limit chip reports lost CPU performance headroom from
@@ -99,8 +99,8 @@ the dashboard closes; reopening Config shows progress or the finished results. T
 **Check for system updates** action starts the same check and opens the card. Other third-party
 apps are not checked.
 On supported ASUS ROG laptops, Config also offers **GPU mode**: Auto switches between
-iGPU-only on battery and hybrid graphics when plugged in; Med, Min and Max select hybrid,
-iGPU-only and dGPU display modes. MUX changes require a Windows restart. **Power limits** sets
+iGPU-only on battery and hybrid graphics when plugged in; Med and Min select hybrid and
+iGPU-only. Leaving dGPU display routing set elsewhere requires a Windows restart. **Power limits** sets
 the CPU sustained (SPL) and boost (SPPT) wattage from 5 to 80 W, separately for plugged in and
 battery; each profile is saved and applied on launch and when the power source changes.
 Config also offers **CPU boost** (Off, On, Aggressive), which sets the active Windows power

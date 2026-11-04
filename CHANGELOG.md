@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- Remove GPU **Max** mode. Omniscience no longer routes the display through the dGPU. A saved Max choice becomes Med, which switches back to hybrid routing and asks for a Windows restart the next time System config is on.
+
 ### Fixed
 
 - The Battery charge limit now obeys the **System config** switch: while off, the slider is hidden, `set_charge_limit` is rejected and the saved limit is not reapplied. It resumes when System config is turned back on.

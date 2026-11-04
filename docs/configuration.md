@@ -41,17 +41,16 @@ up-to-date result. This check is currently available on Windows only.
 Requires Windows and an ASUS ROG laptop whose installed ASUS System Control Interface
 exposes the GPU controls. Unsupported controls are disabled with an explanation.
 
-| Mode | Behavior                                                                    |
-| ---- | --------------------------------------------------------------------------- |
-| Auto | iGPU only on battery; hybrid graphics when plugged in.                      |
-| Med  | Both GPUs available through hybrid graphics.                                |
-| Min  | iGPU only, with the dGPU disabled. Close apps using the dGPU first.         |
-| Max  | Routes the display through the dGPU on laptops with a supported MUX switch. |
+| Mode | Behavior                                                            |
+| ---- | ------------------------------------------------------------------- |
+| Auto | iGPU only on battery; hybrid graphics when plugged in.              |
+| Med  | Both GPUs available through hybrid graphics.                        |
+| Min  | iGPU only, with the dGPU disabled. Close apps using the dGPU first. |
 
-MUX changes require a Windows restart. Omniscience reports this and pauses further GPU
-changes until a restart; it does not restart Windows for you. Selecting Min or Auto from
-Max first switches back to hybrid display routing, then completes the requested mode
-after restart.
+Omniscience never routes the display through the dGPU. If firmware is already in that state,
+the card says so, and any mode switches back to hybrid display routing. That MUX change
+requires a Windows restart: Omniscience reports this and pauses further GPU changes until a
+restart; it does not restart Windows for you. Min or Auto completes after the restart.
 
 The selected mode is saved. Auto responds to power-source changes while Omniscience runs,
 including when the overlay is closed or hidden. It is off until you choose it. Firmware
