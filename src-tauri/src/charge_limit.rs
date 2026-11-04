@@ -1,4 +1,4 @@
-//! Battery charge limit via ASUS firmware, persisted and reapplied at launch.
+//! Battery charge limit via ASUS firmware, persisted and reapplied while system config is on.
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
@@ -48,14 +48,21 @@ impl ChargeLimit {
         {
             let worker = config.clone();
             std::thread::spawn(move || {
-                let saved = worker.prefs.lock().ok().and_then(|p| p.limit);
-                let Some(limit) = saved.map(clamp) else {
-                    return;
-                };
                 // The ASUS service may not be ready right after login.
-                for _ in 0..6 {
-                    if write_hardware(limit).is_ok() {
-                        return;
+                let mut attempts = 6;
+                loop {
+                    if !crate::config_gate::enabled() {
+                        attempts = 6;
+                    } else if attempts > 0
+                        && let Ok(prefs) = worker.prefs.lock()
+                    {
+                        attempts -= 1;
+                        let failed = prefs
+                            .limit
+                            .is_some_and(|l| write_hardware(clamp(l)).is_err());
+                        if !failed {
+                            attempts = 0;
+                        }
                     }
                     std::thread::sleep(std::time::Duration::from_secs(5));
                 }
@@ -112,6 +119,7 @@ pub async fn set_charge_limit(
     limit: u32,
     config: State<'_, Arc<ChargeLimit>>,
 ) -> Result<ChargeLimitStatus, String> {
+    crate::config_gate::require()?;
     let config = config.inner().clone();
     tauri::async_runtime::spawn_blocking(move || config.set(limit))
         .await

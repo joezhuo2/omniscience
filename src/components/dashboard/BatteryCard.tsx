@@ -1,5 +1,6 @@
 import { BatteryCharging, BatteryMedium, PlugZap } from 'lucide-react';
 import { formatDuration, formatWatts, formatWh } from '../../lib/format';
+import { useSettingsStore } from '../../settings';
 import { useTelemetryStore } from '../../store';
 import type { Battery } from '../../types/telemetry';
 import { Card } from './Card';
@@ -49,6 +50,7 @@ function HealthRow({ battery }: { battery: Battery }) {
 /** Laptop battery. Not rendered on machines without one. */
 export function BatteryCard() {
   const detail = useTelemetryStore((s) => s.snapshot?.detail);
+  const configEnabled = useSettingsStore((s) => s.settings?.config_enabled ?? false);
   if (!detail) {
     return (
       <Card section="battery" title="Battery">
@@ -105,7 +107,7 @@ export function BatteryCard() {
           />
         </div>
         <HealthRow battery={battery} />
-        <ChargeLimitBar />
+        {configEnabled && <ChargeLimitBar />}
       </div>
     </Card>
   );

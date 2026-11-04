@@ -2,10 +2,10 @@
 
 Config is off by default. Turn on **System config** in Settings (gear icon) to show the
 **Info**/**Config** switch and the tray's **Check for system updates**. While it is off, the
-switch is hidden, Config commands are rejected, and GPU mode, power limits, power mode and
-display automation do nothing. Saved Config choices stay on disk and resume when it is turned
-back on; nothing is reset on disable. The Battery card's charge limit is not part of Config and
-keeps working.
+switch and the Battery card's charge limit are hidden, Config commands are rejected, and GPU
+mode, power limits, power mode, display and charge limit automation do nothing. Saved Config choices stay on disk and resume when it is turned
+back on; nothing is reset on disable, though ASUS firmware drops the charge limit at the next reboot
+until System config is back on.
 
 Open the dashboard and choose **Config**. **Info** contains the live monitoring cards;
 switching tabs keeps the process search, sorting and card state for that dashboard session.

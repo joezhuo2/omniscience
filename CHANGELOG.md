@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- The Battery charge limit now obeys the **System config** switch: while off, the slider is hidden, `set_charge_limit` is rejected and the saved limit is not reapplied. It resumes when System config is turned back on.
+
 ## [0.2.22] - 2026-11-02
 
 ### Added

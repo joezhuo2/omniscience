@@ -90,7 +90,7 @@ Temperature readings also update while collapsed; sleeping discrete GPUs are not
 
 Config is off by default: turn on **System config** in Settings to add the **Info** and
 **Config** tabs and the tray's **Check for system updates**. While it is off, no Config
-automation runs and nothing in it changes your hardware (the Battery charge limit is unaffected).
+automation runs and nothing changes your hardware, including the Battery charge limit, which firmware resets on reboot.
 Your saved Config choices are kept and resume when you turn it back on. Info contains monitoring; Config contains
 a **Driver & software updates** card. Choose **Check now** to query Windows Update,
 including optional drivers and Microsoft software. Offered updates have a **Download**
