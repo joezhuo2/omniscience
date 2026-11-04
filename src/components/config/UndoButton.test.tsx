@@ -10,7 +10,6 @@ const base: GpuStatus = {
   selected: null,
   current: 'med',
   supported: true,
-  mux_supported: true,
   restart_required: false,
   error: null,
 };

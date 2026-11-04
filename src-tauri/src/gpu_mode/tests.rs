@@ -3,16 +3,16 @@ use super::*;
 #[cfg(windows)]
 #[ignore = "read-only ASUS driver probe on a supported reference laptop"]
 fn gpu_support_live() {
-    let (mode, mux, error) = read_hardware();
+    let (mode, error) = read_hardware();
     assert!(mode.is_some(), "ASUS GPU state unavailable: {error:?}");
-    println!("Firmware mode: {mode:?}; MUX supported: {mux}");
+    println!("Firmware mode: {mode:?}");
 }
 
 #[test]
 fn automatic_uses_integrated_on_battery_and_hybrid_on_ac() {
     assert_eq!(target(GpuMode::Auto, false), GpuMode::Min);
     assert_eq!(target(GpuMode::Auto, true), GpuMode::Med);
-    for mode in [GpuMode::Med, GpuMode::Min, GpuMode::Max] {
+    for mode in [GpuMode::Med, GpuMode::Min] {
         assert_eq!(target(mode, false), mode);
         assert_eq!(target(mode, true), mode);
     }
@@ -59,26 +59,35 @@ fn leaving_discrete_display_mode_requires_reboot_before_disabling_gpu() {
 }
 
 #[test]
-fn discrete_display_enables_gpu_before_switching_mux() {
-    let gpu = FakeGpu::new(1, Some(1));
-    assert!(apply_device(&gpu, GpuMode::Max, true).unwrap());
-    assert_eq!(
-        *gpu.writes.borrow(),
-        vec![(0x0009_0020, 0), (0x0009_0016, 0)]
-    );
+fn no_mode_routes_the_display_through_the_dgpu() {
+    for mode in [GpuMode::Auto, GpuMode::Med, GpuMode::Min] {
+        for ac in [false, true] {
+            let gpu = FakeGpu::new(1, Some(1));
+            assert!(!apply_device(&gpu, mode, ac).unwrap());
+            assert!(gpu.writes.borrow().iter().all(|w| w.0 != 0x0009_0016));
+        }
+    }
+}
+
+#[test]
+fn saved_max_preference_loads_as_hybrid() {
+    let prefs: Preferences = serde_json::from_str(r#"{"mode":"max"}"#).unwrap();
+    assert_eq!(prefs.mode, Some(GpuMode::Med));
+}
+
+#[test]
+fn discrete_display_reports_med_with_a_way_back() {
+    let (mode, note) = classify(0, Some(0));
+    assert_eq!(mode, GpuMode::Med);
+    assert!(note.unwrap().contains("Select Med"));
+    assert_eq!(classify(1, Some(1)), (GpuMode::Min, None));
+    assert_eq!(classify(0, None), (GpuMode::Med, None));
 }
 
 #[test]
 fn unknown_mux_state_never_disables_the_gpu() {
     let gpu = FakeGpu::new(0, Some(2));
     assert!(apply_device(&gpu, GpuMode::Min, false).is_err());
-    assert!(gpu.writes.borrow().is_empty());
-}
-
-#[test]
-fn unsupported_max_mode_does_not_change_hardware() {
-    let gpu = FakeGpu::new(1, None);
-    assert!(apply_device(&gpu, GpuMode::Max, true).is_err());
     assert!(gpu.writes.borrow().is_empty());
 }
 

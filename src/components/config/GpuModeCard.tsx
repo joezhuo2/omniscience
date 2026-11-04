@@ -1,12 +1,11 @@
 import { Card } from '../dashboard/Card';
 import { useNativeControl } from './useNativeControl';
 
-type Mode = 'auto' | 'med' | 'min' | 'max';
+type Mode = 'auto' | 'med' | 'min';
 export type GpuStatus = {
   selected: Mode | null;
   current: Mode | null;
   supported: boolean;
-  mux_supported: boolean;
   restart_required: boolean;
   error: string | null;
 };
@@ -15,11 +14,6 @@ const modes: { value: Mode; label: string; description: string }[] = [
   { value: 'auto', label: 'Auto', description: 'iGPU on battery, hybrid graphics when plugged in' },
   { value: 'med', label: 'Med', description: 'Hybrid graphics: both GPUs available' },
   { value: 'min', label: 'Min', description: 'iGPU only: dGPU disabled' },
-  {
-    value: 'max',
-    label: 'Max',
-    description: 'dGPU display mode: requires a supported MUX and Windows restart',
-  },
 ];
 
 export function GpuModeCard({ active = true }: { active?: boolean }) {
@@ -29,7 +23,7 @@ export function GpuModeCard({ active = true }: { active?: boolean }) {
   const selectedMode = modes.find(({ value }) => value === selected);
   return (
     <Card section="gpu-mode" title="GPU mode">
-      <div className="grid grid-cols-4 gap-1" role="group" aria-label="GPU mode">
+      <div className="grid grid-cols-3 gap-1" role="group" aria-label="GPU mode">
         {modes.map(({ value, label, description }) => (
           <button
             type="button"
@@ -37,12 +31,7 @@ export function GpuModeCard({ active = true }: { active?: boolean }) {
             className="config-button"
             title={description}
             aria-pressed={selected === value}
-            disabled={
-              !status?.supported ||
-              busy ||
-              status.restart_required ||
-              (value === 'max' && !status.mux_supported)
-            }
+            disabled={!status?.supported || busy || status.restart_required}
             onClick={() =>
               void apply(
                 'set_gpu_mode',

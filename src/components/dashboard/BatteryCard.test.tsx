@@ -1,8 +1,11 @@
 import { act, render, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { mockIPC } from '@tauri-apps/api/mocks';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { useSettingsStore } from '../../settings';
 import { useTelemetryStore } from '../../store';
 import { sampleDetail, sampleSnapshot } from '../../test/fixtures';
 import type { Battery } from '../../types/telemetry';
+import type { Settings } from '../../types/generated/Settings';
 import { BatteryCard } from './BatteryCard';
 
 const noHealth = {
@@ -60,5 +63,32 @@ describe('BatteryCard health', () => {
     render(<BatteryCard />);
     expect(screen.getByTestId('battery-health')).toHaveTextContent('Wear 4.2%');
     expect(screen.getByTestId('battery-summary')).toHaveTextContent('2h 30m left');
+  });
+});
+
+describe('BatteryCard charge limit', () => {
+  const withConfig = (config_enabled: boolean) =>
+    useSettingsStore.setState({ settings: { config_enabled } as Settings });
+
+  beforeEach(() => {
+    useTelemetryStore.setState({ snapshot: null, lastTickAt: null });
+    mockIPC(() => ({ limit: 80, supported: true, error: null }));
+  });
+
+  afterEach(() => useSettingsStore.setState({ settings: null }));
+
+  it('offers the slider while system config is on', async () => {
+    withConfig(true);
+    show({});
+    render(<BatteryCard />);
+    expect(await screen.findByRole('slider', { name: 'Charge limit' })).toBeInTheDocument();
+  });
+
+  it('hides the slider while system config is off', async () => {
+    withConfig(false);
+    show({});
+    render(<BatteryCard />);
+    await new Promise((r) => setTimeout(r, 20));
+    expect(screen.queryByRole('slider', { name: 'Charge limit' })).not.toBeInTheDocument();
   });
 });

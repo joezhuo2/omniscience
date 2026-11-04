@@ -8,9 +8,10 @@ use tauri::{AppHandle, Manager, State};
 #[serde(rename_all = "lowercase")]
 pub enum GpuMode {
     Auto,
+    // Removed Max mode: saved "max" preferences load as hybrid graphics.
+    #[serde(alias = "max")]
     Med,
     Min,
-    Max,
 }
 
 #[derive(Default, Clone, Serialize, Deserialize)]
@@ -32,7 +33,6 @@ pub struct GpuStatus {
     selected: Option<GpuMode>,
     current: Option<GpuMode>,
     supported: bool,
-    mux_supported: bool,
     restart_required: bool,
     error: Option<String>,
 }
@@ -115,12 +115,11 @@ impl GpuConfig {
 
     pub(crate) fn status(&self) -> Result<GpuStatus, String> {
         let prefs = self.prefs.lock().map_err(|e| e.to_string())?;
-        let (current, mux_supported, hardware_error) = read_hardware();
+        let (current, hardware_error) = read_hardware();
         Ok(GpuStatus {
             selected: prefs.mode,
             current,
             supported: current.is_some(),
-            mux_supported,
             restart_required: prefs.pending_boot.is_some(),
             error: prefs.error.clone().or(hardware_error),
         })
@@ -201,8 +200,23 @@ pub fn ac_power() -> Result<bool, String> {
     Err("GPU controls currently require Windows and supported ASUS ROG firmware.".into())
 }
 
+/// Firmware may already route the display through the dGPU (another utility, or an older version).
+#[cfg(any(windows, test))]
+fn classify(eco: u32, mux: Option<u32>) -> (GpuMode, Option<String>) {
+    if mux == Some(0) {
+        return (
+            GpuMode::Med,
+            Some(
+                "The display is routed through the dGPU. Select Med to return to hybrid graphics."
+                    .into(),
+            ),
+        );
+    }
+    (if eco == 1 { GpuMode::Min } else { GpuMode::Med }, None)
+}
+
 #[cfg(windows)]
-fn read_hardware() -> (Option<GpuMode>, bool, Option<String>) {
+fn read_hardware() -> (Option<GpuMode>, Option<String>) {
     use crate::asus::{Asus, GPU_ECO, GPU_MUX};
     let result = (|| {
         let asus = Asus::open()?;
@@ -211,25 +225,14 @@ fn read_hardware() -> (Option<GpuMode>, bool, Option<String>) {
         if eco > 1 || mux.is_some_and(|v| v > 1) {
             return Err("The firmware returned an unknown GPU mode.".into());
         }
-        Ok((
-            Some(if mux == Some(0) {
-                GpuMode::Max
-            } else if eco == 1 {
-                GpuMode::Min
-            } else {
-                GpuMode::Med
-            }),
-            mux.is_some(),
-            None,
-        ))
+        Ok(classify(eco, mux))
     })();
-    result.unwrap_or_else(|e| (None, false, Some(e)))
+    result.map_or_else(|e| (None, Some(e)), |(mode, note)| (Some(mode), note))
 }
 #[cfg(not(windows))]
-fn read_hardware() -> (Option<GpuMode>, bool, Option<String>) {
+fn read_hardware() -> (Option<GpuMode>, Option<String>) {
     (
         None,
-        false,
         Some("GPU controls currently require Windows and supported ASUS ROG firmware.".into()),
     )
 }
@@ -268,25 +271,6 @@ fn apply_device(asus: &impl GpuDevice, mode: GpuMode, ac: bool) -> Result<bool, 
     let mux = asus.get(GPU_MUX).ok();
     if mux.is_some_and(|value| value > 1) {
         return Err("Unknown GPU MUX state. No GPU setting was changed.".into());
-    }
-    if mode == GpuMode::Max {
-        if mux.is_none() {
-            return Err("This device does not have a supported GPU MUX.".into());
-        }
-        if eco == 1 {
-            asus.set(GPU_ECO, 0)?;
-            if asus.get(GPU_ECO)? != 0 {
-                return Err("Could not enable the dGPU.".into());
-            }
-        }
-        if mux != Some(0) {
-            asus.set(GPU_MUX, 0)?;
-            if asus.get(GPU_MUX)? != 0 {
-                return Err("The firmware did not accept dGPU display mode.".into());
-            }
-            return Ok(true);
-        }
-        return Ok(false);
     }
     if mux == Some(0) {
         asus.set(GPU_MUX, 1)?;
