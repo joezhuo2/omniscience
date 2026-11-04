@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.23] - 2026-11-04
+
 ### Removed
 
 - Remove GPU **Max** mode. Omniscience no longer routes the display through the dGPU. A saved Max choice becomes Med, which switches back to hybrid routing and asks for a Windows restart the next time System config is on.
