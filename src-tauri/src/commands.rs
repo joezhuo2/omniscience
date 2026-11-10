@@ -2,15 +2,23 @@
 
 use std::sync::Arc;
 
-use tauri::{AppHandle, State, WebviewWindow};
+use tauri::State;
+#[cfg(feature = "standalone")]
+use tauri::{AppHandle, WebviewWindow};
 
+#[cfg(feature = "standalone")]
 use crate::positions::Positions;
+#[cfg(feature = "standalone")]
 use crate::settings::Settings;
+#[cfg(feature = "standalone")]
 use crate::shell::Shell;
+use crate::telemetry::history::HistorySample;
 use crate::telemetry::types::KillReport;
 use crate::telemetry::{Telemetry, processes};
+#[cfg(feature = "standalone")]
 use crate::{webview, window};
 
+#[cfg(feature = "standalone")]
 /// Opens or closes the dashboard: snaps the native window to the expanded bounds before the
 /// expand animation (or back to the pill after the collapse animation), switches detail-tier
 /// sampling, and sets the WebView2 memory level.
@@ -39,6 +47,7 @@ pub fn set_expanded(
     Ok(())
 }
 
+#[cfg(feature = "standalone")]
 /// Fits the expanded window to the dashboard content height (logical px).
 #[tauri::command]
 pub fn set_overlay_height(
@@ -67,11 +76,13 @@ pub async fn kill_process_group(key: String) -> KillReport {
         })
 }
 
+#[cfg(feature = "standalone")]
 #[tauri::command]
 pub fn get_settings(shell: State<'_, Arc<Shell>>) -> Settings {
     shell.settings()
 }
 
+#[cfg(feature = "standalone")]
 /// Applies and saves settings; returns the values actually applied (after clamping).
 #[tauri::command]
 pub fn set_settings(
@@ -82,6 +93,7 @@ pub fn set_settings(
     shell.update_settings(&app, settings)
 }
 
+#[cfg(feature = "standalone")]
 /// Moves the overlay back to the top-center of the primary monitor and forgets the saved spot.
 #[tauri::command]
 pub fn reset_position(
@@ -93,4 +105,12 @@ pub fn reset_position(
     positions.forget(&window);
     positions.set_tracking(true);
     result
+}
+
+#[tauri::command]
+pub fn get_telemetry_history(
+    since_ms: Option<u64>,
+    telemetry: State<'_, Arc<Telemetry>>,
+) -> Vec<HistorySample> {
+    telemetry.history(since_ms)
 }

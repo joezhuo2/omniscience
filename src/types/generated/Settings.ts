@@ -49,4 +49,4 @@ sustained_alerts: boolean,
 /**
  * Shows each reading's source, age and proxy status on the dashboard. Problems always show.
  */
-sensor_details: boolean, };
+sensor_details: boolean, history_hours: number, };

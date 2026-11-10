@@ -4,15 +4,23 @@ use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use serde::Serialize;
-use tauri::{AppHandle, Manager, State, command};
+#[cfg(feature = "standalone")]
+use tauri::Manager;
+use tauri::{AppHandle, State, command};
 
+#[cfg(feature = "standalone")]
 use crate::charge_limit::ChargeLimit;
+#[cfg(feature = "standalone")]
 use crate::display::DisplayConfig;
+#[cfg(feature = "standalone")]
 use crate::gpu_mode::GpuConfig;
+#[cfg(feature = "standalone")]
 use crate::power_limits::PowerLimits;
+#[cfg(feature = "standalone")]
 use crate::power_mode::PowerConfig;
 use crate::telemetry::Telemetry;
 use crate::telemetry::types::Snapshot;
+#[cfg(feature = "standalone")]
 use crate::{battery_saver, config_gate, cpu_boost};
 
 const MAX_ERRORS: usize = 20;
@@ -163,6 +171,7 @@ fn redacted(mut snapshot: Snapshot) -> Snapshot {
     snapshot
 }
 
+#[cfg(any(feature = "standalone", test))]
 fn control(name: &'static str, status: Result<impl Serialize, String>) -> ControlStatus {
     match status {
         Ok(status) => {
@@ -181,6 +190,7 @@ fn control(name: &'static str, status: Result<impl Serialize, String>) -> Contro
     }
 }
 
+#[cfg(feature = "standalone")]
 fn controls(app: &AppHandle) -> Vec<ControlStatus> {
     vec![
         control("gpu_mode", app.state::<Arc<GpuConfig>>().status()),
@@ -191,6 +201,11 @@ fn controls(app: &AppHandle) -> Vec<ControlStatus> {
         control("battery_saver", Ok(battery_saver::read())),
         control("charge_limit", Ok(app.state::<Arc<ChargeLimit>>().status())),
     ]
+}
+
+#[cfg(not(feature = "standalone"))]
+fn controls(_app: &AppHandle) -> Vec<ControlStatus> {
+    Vec::new()
 }
 
 fn build(
@@ -216,18 +231,20 @@ pub async fn get_diagnostic_report(
     app: AppHandle,
     telemetry: State<'_, Arc<Telemetry>>,
 ) -> Result<String, String> {
-    let info = app.package_info();
     let meta = Meta {
         app: AppInfo {
-            name: info.name.clone(),
-            version: info.version.to_string(),
+            name: "Omniscience".into(),
+            version: env!("CARGO_PKG_VERSION").into(),
         },
         platform: Platform {
             os: std::env::consts::OS,
             arch: std::env::consts::ARCH,
         },
         generated_ms: now_ms(),
+        #[cfg(feature = "standalone")]
         system_config_enabled: config_gate::enabled(),
+        #[cfg(not(feature = "standalone"))]
+        system_config_enabled: false,
     };
     let snapshot = telemetry.latest();
     tauri::async_runtime::spawn_blocking(move || {

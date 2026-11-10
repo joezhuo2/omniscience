@@ -31,22 +31,32 @@ struct DriverStatus {
     cycle_count: Option<u32>,
 }
 
-/// Charge, AC and Windows' time estimate from `GetSystemPowerStatus`.
 #[cfg(windows)]
-pub fn read() -> Reading {
+fn power_status() -> Option<windows_sys::Win32::System::Power::SYSTEM_POWER_STATUS> {
     use windows_sys::Win32::System::Power::{GetSystemPowerStatus, SYSTEM_POWER_STATUS};
     const NO_BATTERY: u8 = 128;
-    const CHARGING: u8 = 8;
     const UNKNOWN: u8 = 255;
     let mut s = SYSTEM_POWER_STATUS::default();
     // SAFETY: plain query into a valid out pointer.
-    if unsafe { GetSystemPowerStatus(&mut s) } == 0
-        || s.BatteryFlag == UNKNOWN
-        || s.BatteryFlag & NO_BATTERY != 0
-        || s.BatteryLifePercent == UNKNOWN
-    {
+    let ok = unsafe { GetSystemPowerStatus(&mut s) } != 0;
+    (ok && s.BatteryFlag != UNKNOWN
+        && s.BatteryFlag & NO_BATTERY == 0
+        && s.BatteryLifePercent != UNKNOWN)
+        .then_some(s)
+}
+
+#[cfg(windows)]
+pub fn percent() -> Option<f32> {
+    power_status().map(|s| f32::from(s.BatteryLifePercent))
+}
+
+/// Charge, AC and Windows' time estimate from `GetSystemPowerStatus`.
+#[cfg(windows)]
+pub fn read() -> Reading {
+    const CHARGING: u8 = 8;
+    let Some(s) = power_status() else {
         return Reading::default();
-    }
+    };
     let d = driver_status();
     Reading {
         percent: Some(f32::from(s.BatteryLifePercent)),
@@ -220,6 +230,11 @@ fn driver_status() -> DriverStatus {
 #[cfg(not(windows))]
 pub fn read() -> Reading {
     Reading::default()
+}
+
+#[cfg(not(windows))]
+pub fn percent() -> Option<f32> {
+    None
 }
 
 /// Turns a reading into what the dashboard shows. `None` without a battery.

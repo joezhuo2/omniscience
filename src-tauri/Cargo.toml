@@ -12,21 +12,50 @@ rust-version = "1.90"
 name = "omniscience_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
+[[bin]]
+name = "omniscience"
+path = "src/main.rs"
+required-features = ["standalone"]
+
+[features]
+default = ["standalone"]
+# Tauri features live here, not in tauri.conf.json, so plugin hosts do not inherit them.
+standalone = [
+  "dep:tauri-build",
+  "dep:tauri-plugin-autostart",
+  "dep:tauri-plugin-global-shortcut",
+  "dep:tauri-plugin-process",
+  "dep:tauri-plugin-single-instance",
+  "dep:tauri-plugin-updater",
+  "dep:webview2-com",
+  "dep:windows-core",
+  "tauri/macos-private-api",
+  "tauri/tray-icon",
+  "windows-sys/Win32_Devices_Display",
+  "windows-sys/Win32_Graphics_Gdi",
+  "windows-sys/Win32_System_LibraryLoader",
+  "windows-sys/Win32_System_SystemInformation",
+  "windows-sys/Win32_UI_HiDpi",
+  "windows-sys/Win32_UI_Input_KeyboardAndMouse",
+  "windows-sys/Win32_UI_Shell",
+  "windows-sys/Win32_UI_WindowsAndMessaging",
+]
+
 [build-dependencies]
-tauri-build = { version = "2.7", features = [] }
+tauri-build = { version = "2.7", features = [], optional = true }
 
 [dependencies]
-tauri = { version = "2.12", features = ["macos-private-api", "tray-icon"] }
+tauri = { version = "2.12", features = [] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 sysinfo = { version = "0.39", default-features = false, features = ["system", "network"] }
 ts-rs = "12"
-tauri-plugin-autostart = "2"
-tauri-plugin-global-shortcut = "2"
+tauri-plugin-autostart = { version = "2", optional = true }
+tauri-plugin-global-shortcut = { version = "2", optional = true }
 tauri-plugin-notification = "2"
-tauri-plugin-process = "2"
-tauri-plugin-single-instance = "2"
-tauri-plugin-updater = "2"
+tauri-plugin-process = { version = "2", optional = true }
+tauri-plugin-single-instance = { version = "2", optional = true }
+tauri-plugin-updater = { version = "2", optional = true }
 
 [profile.release]
 codegen-units = 1
@@ -37,25 +66,17 @@ strip = true
 [target.'cfg(windows)'.dependencies]
 ferrisetw = { version = "1.2", default-features = false }
 # Same versions wry uses, for WebView2 memory-level control.
-webview2-com = "0.39"
-windows-core = "0.62"
+webview2-com = { version = "0.39", optional = true }
+windows-core = { version = "0.62", optional = true }
 windows-sys = { version = "0.61", features = [
   "Wdk_Graphics_Direct3D",
   "Win32_Devices_DeviceAndDriverInstallation",
-  "Win32_Devices_Display",
   "Win32_Foundation",
-  "Win32_Graphics_Gdi",
   "Win32_NetworkManagement_IpHelper",
   "Win32_Security",
   "Win32_Storage_FileSystem",
   "Win32_System_IO",
-  "Win32_System_LibraryLoader",
   "Win32_System_Performance",
   "Win32_System_Power",
   "Win32_System_Threading",
-  "Win32_System_SystemInformation",
-  "Win32_UI_HiDpi",
-  "Win32_UI_Input_KeyboardAndMouse",
-  "Win32_UI_Shell",
-  "Win32_UI_WindowsAndMessaging",
 ] }

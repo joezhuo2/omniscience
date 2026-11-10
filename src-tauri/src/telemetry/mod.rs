@@ -5,6 +5,7 @@ mod alerts;
 mod battery;
 #[cfg(any(windows, test))]
 mod fans;
+pub mod history;
 #[cfg(any(windows, test))]
 mod parse;
 mod peak;
@@ -19,12 +20,14 @@ pub mod types;
 mod windows;
 
 use std::panic::AssertUnwindSafe;
+use std::path::Path;
 use std::sync::{Arc, Condvar, Mutex};
-use std::time::Duration;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use tauri::{AppHandle, Emitter};
 use tauri_plugin_notification::NotificationExt;
 
+use history::{History, HistorySample};
 use types::{Snapshot, Thresholds};
 
 pub const TICK_EVENT: &str = "telemetry://tick";
@@ -41,6 +44,7 @@ pub struct Control {
     /// Whether to look up the public IP while expanded.
     pub public_ip: bool,
     pub sustained_alerts: bool,
+    pub history_hours: u32,
 }
 
 impl Default for Control {
@@ -53,6 +57,7 @@ impl Default for Control {
             ping_target: "".into(),
             public_ip: false,
             sustained_alerts: false,
+            history_hours: 24,
         }
     }
 }
@@ -61,6 +66,7 @@ pub struct Telemetry {
     control: Mutex<Control>,
     wake: Condvar,
     latest: Mutex<Option<Snapshot>>,
+    history: Mutex<History>,
 }
 
 impl Telemetry {
@@ -69,7 +75,24 @@ impl Telemetry {
             control: Mutex::new(control),
             wake: Condvar::new(),
             latest: Mutex::new(None),
+            history: Mutex::new(History::default()),
         })
+    }
+
+    pub fn open_history(&self, dir: Option<&Path>) {
+        let now_ms = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map(|d| d.as_millis() as u64)
+            .unwrap_or_default();
+        let loaded = History::open(dir, now_ms, self.control().history_hours);
+        *self.history.lock().unwrap_or_else(|e| e.into_inner()) = loaded;
+    }
+
+    pub fn history(&self, since_ms: Option<u64>) -> Vec<HistorySample> {
+        self.history
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .since(since_ms)
     }
 
     pub fn latest(&self) -> Option<Snapshot> {
@@ -144,6 +167,15 @@ impl Telemetry {
             } else {
                 sustained.reset();
             }
+            self.history
+                .lock()
+                .unwrap_or_else(|e| e.into_inner())
+                .record(
+                    snapshot.timestamp_ms,
+                    &snapshot.core,
+                    battery::percent(),
+                    control.history_hours,
+                );
             *self.latest.lock().unwrap_or_else(|e| e.into_inner()) = Some(snapshot);
             let c = self.control.lock().unwrap_or_else(|e| e.into_inner());
             // Woken early by any control change (e.g. expand), otherwise once per interval.

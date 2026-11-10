@@ -127,7 +127,8 @@ impl Shell {
             let _ = app.global_shortcut().unregister(old.hotkey.as_str());
         }
         app.state::<Arc<Telemetry>>().update(|c| new.apply(c));
-        settings::save(app, &new)?;
+        let dir = app.path().app_config_dir().map_err(|e| e.to_string())?;
+        settings::save(&dir, &new)?;
         crate::config_gate::set(new.config_enabled);
         *self.settings.lock().unwrap_or_else(|e| e.into_inner()) = new.clone();
         self.sync_tray();
