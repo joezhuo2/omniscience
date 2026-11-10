@@ -1,4 +1,4 @@
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from '../../lib/ipc';
 import { ChevronDown, Search, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { formatBytes, formatRateRounded } from '../../lib/format';
