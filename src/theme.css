@@ -20,6 +20,11 @@
   --color-island-crit: #ff453a;
   --color-island-ok: #34c759;
 
+  /* History chart series */
+  --color-chart-1: #0a84ff;
+  --color-chart-2: #bf5af2;
+  --color-chart-3: #ff9f0a;
+
   /* Buttons */
   --color-allow-bg: #f2f2f2;
   --color-allow-text: #000;

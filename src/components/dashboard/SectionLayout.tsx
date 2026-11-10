@@ -10,6 +10,7 @@ import {
 } from '@dnd-kit/core';
 import {
   SortableContext,
+  rectSortingStrategy,
   sortableKeyboardCoordinates,
   useSortable,
   verticalListSortingStrategy,
@@ -56,9 +57,11 @@ function SortableSection({
 
 export function SectionLayout({
   hidden = [],
+  grid = false,
   children,
 }: {
   hidden?: SectionId[];
+  grid?: boolean;
   children: (id: SectionId) => ReactNode;
 }) {
   const [order, setOrder] = useState(readSectionOrder);
@@ -119,7 +122,10 @@ export function SectionLayout({
           if (dragging.current && event.key === 'Escape') event.preventDefault();
         }}
       >
-        <SortableContext items={visible} strategy={verticalListSortingStrategy}>
+        <SortableContext
+          items={visible}
+          strategy={grid ? rectSortingStrategy : verticalListSortingStrategy}
+        >
           {visible.map((id) => (
             <SortableSection key={id} id={id} animate={animate}>
               {children(id)}

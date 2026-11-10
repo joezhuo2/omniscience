@@ -4,6 +4,8 @@ import { BatteryCard } from './BatteryCard';
 import { CpuHeatmap } from './CpuHeatmap';
 import { FanCard } from './FanCard';
 import { GpuPowerCard } from './GpuPowerCard';
+import { HistoryCard } from './HistoryCard';
+import { isEmbedded } from '../../lib/ipc';
 import { useSettingsStore } from '../../settings';
 import type { SectionId } from '../../lib/sections';
 import { useTelemetryStore } from '../../store';
@@ -23,6 +25,7 @@ const SECTIONS = {
   'cpu-cores': CpuHeatmap,
   network: NetworkCard,
   processes: ProcessList,
+  history: HistoryCard,
 };
 
 export function Dashboard({
@@ -36,7 +39,8 @@ export function Dashboard({
   onTogglePin?: () => void;
   showSystemUpdates?: number;
 }) {
-  const configEnabled = useSettingsStore((s) => s.settings?.config_enabled ?? false);
+  const embedded = isEmbedded();
+  const configEnabled = useSettingsStore((s) => !embedded && (s.settings?.config_enabled ?? false));
   const [chosenTab, setTab] = useState<'info' | 'config'>(
     showSystemUpdates > 0 ? 'config' : 'info',
   );
@@ -104,12 +108,14 @@ export function Dashboard({
         <div className="flex flex-col gap-2">
           <MetricStrip />
           <SensorDetails />
-          <SectionLayout hidden={hiddenSections}>
-            {(id) => {
-              const Component = SECTIONS[id];
-              return <Component />;
-            }}
-          </SectionLayout>
+          <div className={embedded ? 'embed-grid' : 'contents'}>
+            <SectionLayout hidden={hiddenSections} grid={embedded}>
+              {(id) => {
+                const Component = SECTIONS[id];
+                return <Component />;
+              }}
+            </SectionLayout>
+          </div>
         </div>
       </div>
       {configEnabled && (

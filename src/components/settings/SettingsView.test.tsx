@@ -20,6 +20,7 @@ const defaults: Settings = {
   config_enabled: false,
   sustained_alerts: true,
   sensor_details: false,
+  history_hours: 24,
 };
 
 describe('SettingsView', () => {

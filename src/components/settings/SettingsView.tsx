@@ -1,6 +1,7 @@
-import { invoke } from '@tauri-apps/api/core';
+import { invoke, isEmbedded } from '../../lib/ipc';
 import { ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
+import { RANGES } from '../../lib/history';
 import { acceleratorFromEvent, displayAccelerator } from '../../lib/hotkey';
 import { useSettingsStore, type Settings } from '../../settings';
 import { useToastStore } from '../../toasts';
@@ -182,6 +183,7 @@ export function SettingsView({ onBack }: { onBack: () => void }) {
   }, [settings, load]);
 
   const set = (patch: Partial<Settings>) => void update(patch);
+  const standalone = !isEmbedded();
 
   const push = useToastStore((s) => s.push);
   const [includeTelemetry, setIncludeTelemetry] = useState(false);
@@ -275,30 +277,60 @@ export function SettingsView({ onBack }: { onBack: () => void }) {
               })}
             </div>
           </Row>
-          <Row label="Show/hide hotkey">
-            <HotkeyRecorder value={settings.hotkey} onChange={(hotkey) => set({ hotkey })} />
+          <Row label="Keep history for">
+            <div
+              role="radiogroup"
+              aria-label="History retention"
+              className="flex rounded-md bg-island-track p-0.5 text-[10px]"
+            >
+              {RANGES.map(({ label, hours }) => {
+                const active = settings.history_hours === hours;
+                return (
+                  <button
+                    key={hours}
+                    role="radio"
+                    aria-checked={active}
+                    onClick={() => set({ history_hours: hours })}
+                    className={`rounded px-2 py-0.5 tabular-nums transition-colors ${
+                      active
+                        ? 'bg-island-faint text-island-text'
+                        : 'text-island-muted hover:text-island-text'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
           </Row>
-          <Row label="Launch at startup">
-            <Toggle
-              label="Launch at startup"
-              checked={settings.launch_at_startup}
-              onChange={(v) => set({ launch_at_startup: v })}
-            />
-          </Row>
-          <Row label="Auto-check for updates">
-            <Toggle
-              label="Auto-check for updates"
-              checked={settings.auto_check_updates}
-              onChange={(v) => set({ auto_check_updates: v })}
-            />
-          </Row>
-          <Row label="Hide over fullscreen apps">
-            <Toggle
-              label="Hide over fullscreen apps"
-              checked={settings.hide_over_fullscreen}
-              onChange={(v) => set({ hide_over_fullscreen: v })}
-            />
-          </Row>
+          {standalone && (
+            <>
+              <Row label="Show/hide hotkey">
+                <HotkeyRecorder value={settings.hotkey} onChange={(hotkey) => set({ hotkey })} />
+              </Row>
+              <Row label="Launch at startup">
+                <Toggle
+                  label="Launch at startup"
+                  checked={settings.launch_at_startup}
+                  onChange={(v) => set({ launch_at_startup: v })}
+                />
+              </Row>
+              <Row label="Auto-check for updates">
+                <Toggle
+                  label="Auto-check for updates"
+                  checked={settings.auto_check_updates}
+                  onChange={(v) => set({ auto_check_updates: v })}
+                />
+              </Row>
+              <Row label="Hide over fullscreen apps">
+                <Toggle
+                  label="Hide over fullscreen apps"
+                  checked={settings.hide_over_fullscreen}
+                  onChange={(v) => set({ hide_over_fullscreen: v })}
+                />
+              </Row>
+            </>
+          )}
           <Row label="Ping target">
             <TextInput
               key={`ping-${settings.ping_target}`}
@@ -335,24 +367,28 @@ export function SettingsView({ onBack }: { onBack: () => void }) {
               onChange={(v) => set({ sensor_details: v })}
             />
           </Row>
-          <Row
-            label="System config (GPU, power, display)"
-            hint="Adds the Config tab, which changes hardware settings."
-          >
-            <Toggle
-              label="System config"
-              checked={settings.config_enabled}
-              onChange={(v) => set({ config_enabled: v })}
-            />
-          </Row>
-          <Row label="Position">
-            <button
-              onClick={() => void invoke('reset_position').catch(() => {})}
-              className="rounded border border-island-faint px-2 py-0.5 text-[10px] text-island-text hover:border-island-muted"
-            >
-              Reset to top center
-            </button>
-          </Row>
+          {standalone && (
+            <>
+              <Row
+                label="System config (GPU, power, display)"
+                hint="Adds the Config tab, which changes hardware settings."
+              >
+                <Toggle
+                  label="System config"
+                  checked={settings.config_enabled}
+                  onChange={(v) => set({ config_enabled: v })}
+                />
+              </Row>
+              <Row label="Position">
+                <button
+                  onClick={() => void invoke('reset_position').catch(() => {})}
+                  className="rounded border border-island-faint px-2 py-0.5 text-[10px] text-island-text hover:border-island-muted"
+                >
+                  Reset to top center
+                </button>
+              </Row>
+            </>
+          )}
           <Row
             label="Diagnostic report"
             hint="App version, sensor and control availability, recent errors. Telemetry leaves out process names and IP addresses."

@@ -6,6 +6,7 @@ export const DEFAULT_SECTION_ORDER = [
   'cpu-cores',
   'network',
   'processes',
+  'history',
 ] as const;
 export type SectionId = (typeof DEFAULT_SECTION_ORDER)[number];
 export const CONFIG_SECTION_ORDER = [
@@ -27,6 +28,7 @@ export const SECTION_LABELS: Record<SectionId, string> = {
   'cpu-cores': 'CPU cores',
   network: 'Network',
   processes: 'Top processes',
+  history: 'History',
 };
 
 const PREFIX = 'omniscience:section:';

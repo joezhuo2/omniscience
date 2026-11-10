@@ -32,11 +32,19 @@ describe('section drag layout', () => {
   it('restores saved order and omits absent cards without forgetting their place', () => {
     saveSectionOrder(['processes', 'network', 'battery', 'cpu-cores', 'gpu-power']);
     const view = layout(['battery']);
-    expect(order()).toEqual(['processes', 'network', 'cpu-cores', 'gpu-power', 'fans']);
+    expect(order()).toEqual(['processes', 'network', 'cpu-cores', 'gpu-power', 'fans', 'history']);
     expect(screen.queryByRole('region', { name: 'Battery' })).not.toBeInTheDocument();
     view.unmount();
     layout();
-    expect(order()).toEqual(['processes', 'network', 'battery', 'cpu-cores', 'gpu-power', 'fans']);
+    expect(order()).toEqual([
+      'processes',
+      'network',
+      'battery',
+      'cpu-cores',
+      'gpu-power',
+      'fans',
+      'history',
+    ]);
   });
 
   it('reorders with the keyboard and preserves mounted card state', async () => {
@@ -80,7 +88,15 @@ describe('section drag layout', () => {
     expect(screen.getByRole('textbox', { name: 'gpu-power input' })).toHaveValue('keep me');
     view.unmount();
     layout();
-    expect(order()).toEqual(['battery', 'gpu-power', 'fans', 'cpu-cores', 'network', 'processes']);
+    expect(order()).toEqual([
+      'battery',
+      'gpu-power',
+      'fans',
+      'cpu-cores',
+      'network',
+      'processes',
+      'history',
+    ]);
   });
 
   it.each(['surface', 'title', 'input'] as const)(
