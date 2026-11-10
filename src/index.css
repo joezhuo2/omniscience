@@ -46,6 +46,27 @@ body,
   overscroll-behavior: none;
 }
 
+/* Embedded in a host page: the document scrolls and the host backdrop shows through. */
+html.embed,
+html.embed body,
+html.embed #root {
+  height: auto;
+  min-height: 100%;
+  overflow: visible;
+}
+
+.embed-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  align-items: start;
+  gap: 12px;
+}
+
+.embed-grid [data-section='history'],
+.embed-grid [data-section='processes'] {
+  grid-column: 1 / -1;
+}
+
 /* Native scrollbars and form parts render dark. */
 :root {
   color-scheme: dark;

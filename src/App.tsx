@@ -1,4 +1,4 @@
-import { invoke } from '@tauri-apps/api/core';
+import { invoke, isEmbedded } from './lib/ipc';
 import { listen } from '@tauri-apps/api/event';
 import { useEffect, useRef, useState } from 'react';
 import { Pill } from './components/Pill';
@@ -42,7 +42,47 @@ function useFitWindow(ref: React.RefObject<HTMLDivElement | null>, active: boole
   }, [ref, active]);
 }
 
+function EmbeddedApp() {
+  useTelemetry();
+  const [view, setView] = useState<'dashboard' | 'settings'>('dashboard');
+
+  useEffect(() => {
+    void useSettingsStore.getState().load();
+  }, []);
+
+  // Detail-tier sampling only runs while the host shows this page.
+  useEffect(() => {
+    const expand = (expanded: boolean) => void invoke('set_expanded', { expanded }).catch(() => {});
+    const sync = () => expand(document.visibilityState === 'visible');
+    const hide = () => expand(false);
+    sync();
+    document.addEventListener('visibilitychange', sync);
+    window.addEventListener('pagehide', hide);
+    return () => {
+      document.removeEventListener('visibilitychange', sync);
+      window.removeEventListener('pagehide', hide);
+      hide();
+    };
+  }, []);
+
+  return (
+    <main data-testid="embedded" className="mx-auto max-w-[1600px] p-4">
+      {view === 'settings' ? (
+        <div className="mx-auto max-w-xl">
+          <SettingsView onBack={() => setView('dashboard')} />
+        </div>
+      ) : (
+        <Dashboard onSettings={() => setView('settings')} />
+      )}
+    </main>
+  );
+}
+
 export default function App() {
+  return isEmbedded() ? <EmbeddedApp /> : <OverlayApp />;
+}
+
+function OverlayApp() {
   useTelemetry();
   const banner = useUpdaterStore((s) => s.banner);
   const checkNow = useUpdaterStore((s) => s.checkNow);
