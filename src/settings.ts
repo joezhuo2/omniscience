@@ -1,5 +1,4 @@
-import { invoke } from './lib/ipc';
-import { listen } from '@tauri-apps/api/event';
+import { invoke, listen } from './lib/ipc';
 import { create } from 'zustand';
 import type { Settings } from './types/generated/Settings';
 

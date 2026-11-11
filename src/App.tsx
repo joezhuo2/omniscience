@@ -1,5 +1,4 @@
-import { invoke, isEmbedded } from './lib/ipc';
-import { listen } from '@tauri-apps/api/event';
+import { invoke, isEmbedded, listen } from './lib/ipc';
 import { useEffect, useRef, useState } from 'react';
 import { Pill } from './components/Pill';
 import { UpdateBanner } from './components/UpdateBanner';

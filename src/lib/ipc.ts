@@ -1,4 +1,5 @@
 import { invoke as tauriInvoke, type InvokeArgs } from '@tauri-apps/api/core';
+import { listen as tauriListen, type EventCallback, type UnlistenFn } from '@tauri-apps/api/event';
 
 const BRIDGED = ['__TAURI_INTERNALS__', '__TAURI_EVENT_PLUGIN_INTERNALS__'] as const;
 
@@ -17,4 +18,15 @@ export function initEmbed(): void {
 
 export function invoke<T>(cmd: string, ...args: [args?: InvokeArgs]): Promise<T> {
   return tauriInvoke<T>(isEmbedded() ? `plugin:omniscience|${cmd}` : cmd, ...args);
+}
+
+const unlisteners = new Set<UnlistenFn>();
+
+// The host removes the iframe without running React cleanup, which would leave listeners on its window.
+if (isEmbedded()) window.addEventListener('pagehide', () => unlisteners.forEach((f) => f()));
+
+export function listen<T>(event: string, handler: EventCallback<T>): Promise<UnlistenFn> {
+  const pending = tauriListen<T>(event, handler);
+  if (isEmbedded()) void pending.then((f) => unlisteners.add(f));
+  return pending;
 }

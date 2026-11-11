@@ -1,5 +1,4 @@
-import { invoke } from '../lib/ipc';
-import { listen } from '@tauri-apps/api/event';
+import { invoke, listen } from '../lib/ipc';
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { COLLAPSE_FALLBACK_MS, nextPhase, type Phase } from '../lib/island';
 
