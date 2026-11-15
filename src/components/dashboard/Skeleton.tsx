@@ -1,10 +1,9 @@
-/** Placeholder block shown while detail data loads (about one tick after expanding). */
+import { GlassSkeleton } from '@crystalflux/skeleton-glass';
+
 export function Skeleton({ className = '' }: { className?: string }) {
   return (
-    <div
-      data-testid="skeleton"
-      aria-hidden
-      className={`animate-pulse rounded-md bg-island-track ${className}`}
-    />
+    <div data-testid="skeleton" aria-hidden className={className}>
+      <GlassSkeleton height="100%" />
+    </div>
   );
 }

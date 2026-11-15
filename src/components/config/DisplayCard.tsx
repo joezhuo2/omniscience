@@ -1,5 +1,6 @@
 import { Card } from '../dashboard/Card';
 import { useNativeControl, type Undo } from './useNativeControl';
+import { Tip } from '../Tip';
 
 export type DisplayStatus = {
   device: string | null;
@@ -31,16 +32,17 @@ export function DisplayCard({ active = true }: { active?: boolean }) {
       {status?.device && <p className="mb-2 text-xs text-island-muted">{status.device}</p>}
       <p className="mb-1 text-[11px] text-island-muted">Refresh rate</p>
       <div className="flex flex-wrap gap-1" role="group" aria-label="Refresh rate">
-        <button
-          type="button"
-          className="config-button"
-          title="Lowest rate of at least 60 Hz on battery, highest when plugged in"
-          aria-pressed={!!status?.auto}
-          disabled={disabled}
-          onClick={() => void apply('set_display_refresh', { hz: null }, undoRefresh)}
-        >
-          Auto
-        </button>
+        <Tip content="Lowest rate of at least 60 Hz on battery, highest when plugged in">
+          <button
+            type="button"
+            className="config-button"
+            aria-pressed={!!status?.auto}
+            disabled={disabled}
+            onClick={() => void apply('set_display_refresh', { hz: null }, undoRefresh)}
+          >
+            Auto
+          </button>
+        </Tip>
         {status?.rates.map((hz) => (
           <button
             type="button"

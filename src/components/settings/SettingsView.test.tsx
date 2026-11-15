@@ -20,6 +20,7 @@ const defaults: Settings = {
   config_enabled: false,
   sustained_alerts: true,
   sensor_details: false,
+  history_hours: 24,
 };
 
 describe('SettingsView', () => {
@@ -55,10 +56,7 @@ describe('SettingsView', () => {
     render(<SettingsView onBack={() => {}} />);
     expect(await screen.findByLabelText('Warning threshold')).toHaveValue(70);
     expect(screen.getByLabelText('Show/hide hotkey')).toHaveTextContent('Ctrl+Shift+O');
-    expect(screen.getByLabelText('Hide over fullscreen apps')).toHaveAttribute(
-      'aria-checked',
-      'true',
-    );
+    expect(screen.getByLabelText('Hide over fullscreen apps')).toBeChecked();
   });
 
   it('saves a toggle immediately', async () => {
@@ -111,7 +109,7 @@ describe('SettingsView', () => {
   it('enables system config, which is off by default', async () => {
     render(<SettingsView onBack={() => {}} />);
     const toggle = await screen.findByLabelText('System config');
-    expect(toggle).toHaveAttribute('aria-checked', 'false');
+    expect(toggle).not.toBeChecked();
     fireEvent.click(toggle);
     await waitFor(() => expect(saved.at(-1)?.config_enabled).toBe(true));
   });
@@ -126,9 +124,7 @@ describe('SettingsView', () => {
     render(<SettingsView onBack={() => {}} />);
     fireEvent.click(await screen.findByRole('radio', { name: '2 s' }));
     await waitFor(() => expect(saved.at(-1)?.poll_interval_ms).toBe(2000));
-    await waitFor(() =>
-      expect(screen.getByRole('radio', { name: '2 s' })).toHaveAttribute('aria-checked', 'true'),
-    );
+    await waitFor(() => expect(screen.getByRole('radio', { name: '2 s' })).toBeChecked());
   });
 
   it('records a new hotkey', async () => {

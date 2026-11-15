@@ -4,11 +4,14 @@ import { useSettingsStore } from '../../settings';
 import { useTelemetryStore } from '../../store';
 import type { Battery } from '../../types/telemetry';
 import { Card } from './Card';
+import { Num } from '../Num';
 import { ChargeLimitBar } from './ChargeLimitBar';
 import { Skeleton } from './Skeleton';
+import { Tip } from '../Tip';
 
 /** Below this charge the bar turns amber, below half of it red. */
 const LOW_PCT = 20;
+const pct = (p: number | null | undefined) => `${Math.round(p ?? 0)}%`;
 
 function summary(b: Battery): string {
   switch (b.state) {
@@ -40,8 +43,16 @@ function HealthRow({ battery }: { battery: Battery }) {
       data-testid="battery-health"
       className="flex items-baseline justify-between gap-2 text-[11px] text-island-muted tabular-nums"
     >
-      {wear_pct != null && <span title="Capacity lost since new">Wear {wear_pct.toFixed(1)}%</span>}
-      {capacity != null && <span title="Full-charge / design capacity">{capacity}</span>}
+      {wear_pct != null && (
+        <Tip content="Capacity lost since new">
+          <span>Wear {wear_pct.toFixed(1)}%</span>
+        </Tip>
+      )}
+      {capacity != null && (
+        <Tip content="Full-charge / design capacity">
+          <span>{capacity}</span>
+        </Tip>
+      )}
       {cycle_count != null && <span>{cycle_count} cycles</span>}
     </div>
   );
@@ -73,18 +84,16 @@ export function BatteryCard() {
       section="battery"
       summary={
         <span className="text-[11px] text-island-text tabular-nums">
-          {Math.round(battery.percent)}%
+          <Num value={battery.percent} format={pct} />
         </span>
       }
       aside={
         battery.watts != null ? (
-          <span
-            title={battery.state === 'charging' ? 'Charge rate' : 'Drain rate'}
-            className="text-[11px] text-island-muted tabular-nums"
-          >
-            {sign}
-            {formatWatts(battery.watts)}
-          </span>
+          <Tip content={battery.state === 'charging' ? 'Charge rate' : 'Drain rate'}>
+            <span className="text-[11px] text-island-muted tabular-nums">
+              <Num value={battery.watts} format={(w) => `${sign}${formatWatts(w)}`} />
+            </span>
+          </Tip>
         ) : null
       }
     >
@@ -93,7 +102,7 @@ export function BatteryCard() {
           <span className="flex items-center gap-1.5 text-island-text">
             <Icon size={12} aria-hidden />
             <span data-testid="battery-percent" className="tabular-nums">
-              {Math.round(battery.percent)}%
+              <Num value={battery.percent} format={pct} />
             </span>
           </span>
           <span data-testid="battery-summary" className="text-island-muted tabular-nums">

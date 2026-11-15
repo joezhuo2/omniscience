@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from '../../lib/ipc';
 import { Card } from '../dashboard/Card';
 
 type OfferedUpdate = { id: string; title: string };

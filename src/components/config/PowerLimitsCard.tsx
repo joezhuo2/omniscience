@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { SmoothRange } from '@crystalflux/smooth-range';
+import { useEffect, useRef, useState } from 'react';
 import { Card } from '../dashboard/Card';
 import { SourceTabs } from './SourceTabs';
 import { useSourceTab } from './useSourceTab';
@@ -38,14 +39,19 @@ export function PowerLimitsCard({ active = true }: { active?: boolean }) {
     );
     setDraft(null);
   };
+  const latestCommit = useRef(commit);
+  useEffect(() => {
+    latestCommit.current = commit;
+  });
+  // SmoothRange glides for 300 ms after a click before reporting the final value.
+  const settle = () => setTimeout(() => void latestCommit.current(), 350);
   const slider = (label: string, key: keyof Limits) => (
     <label className="block text-xs">
       <span className="flex justify-between">
         <span>{label}</span>
         <span>{value[key]} W</span>
       </span>
-      <input
-        type="range"
+      <SmoothRange
         className="w-full"
         min={5}
         max={80}
@@ -53,15 +59,14 @@ export function PowerLimitsCard({ active = true }: { active?: boolean }) {
         value={value[key]}
         disabled={disabled}
         aria-label={label}
-        onChange={(e) => {
-          const watts = Number(e.target.value);
+        onValue={(watts) => {
           setDraft(
             key === 'spl'
               ? { spl: watts, sppt: Math.max(watts, value.sppt) }
               : { spl: Math.min(watts, value.spl), sppt: watts },
           );
         }}
-        onPointerUp={() => void commit()}
+        onPointerUp={settle}
         onKeyUp={() => void commit()}
       />
     </label>

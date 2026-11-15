@@ -53,11 +53,11 @@ describe('Dashboard', () => {
       );
     }
     expect(screen.getByTestId('value-cpu')).toBeVisible();
-    expect(screen.getByTitle('Package power')).toBeVisible();
+    expect(screen.getByTestId('package-power')).toBeVisible();
     expect(screen.getByText('2 threads')).toBeVisible();
-    expect(
-      screen.getByRole('region', { name: 'Battery' }).querySelector('header'),
-    ).toHaveTextContent('78%');
+    expect(screen.getByRole('article', { name: 'Battery' }).querySelector('h3')).toHaveTextContent(
+      '78%',
+    );
     unmount();
     render(<Dashboard />);
     for (const title of ['GPU & Power', 'Battery', 'CPU cores', 'Network', 'Top processes']) {
@@ -81,14 +81,16 @@ describe('Dashboard', () => {
     expect(screen.getByTestId('value-net')).toHaveTextContent('↑ 80 KB/s');
     expect(screen.getByTestId('value-dgpu')).toHaveTextContent('--');
     expect(screen.getByText(/5\.2 \/ 8\.0 GB/)).toBeInTheDocument();
-    expect(screen.getAllByText('8.2 W').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('8.2 W', { ignore: '[aria-hidden=true]' }).length).toBeGreaterThan(
+      0,
+    );
   });
 
   it('shows package watts once and keeps temperature out of the header', () => {
     act(() => useTelemetryStore.getState().setSnapshot(withDetail));
     render(<Dashboard onSettings={() => {}} />);
-    expect(screen.getAllByText('8.2 W')).toHaveLength(1);
-    expect(screen.getByTitle('Package power')).toHaveTextContent('8.2 W');
+    expect(screen.getAllByText('8.2 W', { ignore: '[aria-hidden=true]' })).toHaveLength(1);
+    expect(screen.getByTestId('package-power')).toHaveTextContent('8.2 W');
     const header = screen.getByText('Omniscience').closest('header')!;
     expect(header).not.toHaveTextContent(/W|°C/);
     expect(within(header).getByRole('button', { name: 'Settings' })).toBeInTheDocument();
@@ -102,7 +104,7 @@ describe('Dashboard', () => {
     expect(screen.getAllByText('Throttling')).toHaveLength(1);
   });
 
-  it('shows temperatures under CPU and GPU rings, with the ACPI source explained', () => {
+  it('shows temperatures under CPU and GPU rings, with the ACPI source explained', async () => {
     act(() => useTelemetryStore.getState().setSnapshot(withDetail));
     render(<Dashboard />);
     expect([...screen.getByTestId('value-cpu').children].map((el) => el.textContent)).toEqual([
@@ -110,10 +112,8 @@ describe('Dashboard', () => {
       '3.2 GHz',
       '48°C',
     ]);
-    expect(within(screen.getByTestId('value-cpu')).getByText('48°C')).toHaveAttribute(
-      'title',
-      expect.stringContaining('ACPI'),
-    );
+    fireEvent.pointerOver(within(screen.getByTestId('value-cpu')).getByText('48°C'));
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('ACPI');
     expect([...screen.getByTestId('value-igpu').children].map((el) => el.textContent)).toEqual([
       '4%',
       '45°C',
@@ -159,7 +159,7 @@ describe('Dashboard', () => {
     expect(screen.getByText('Wi-Fi')).toBeInTheDocument();
     expect(screen.getByText('192.168.1.20')).toBeInTheDocument();
     expect(screen.getByTestId('ping')).toHaveTextContent('14 ms');
-    const row = screen.getByText('Wi-Fi').parentElement!;
+    const row = screen.getByText('Wi-Fi').closest('div')!;
     expect(within(row).getByText('192.168.1.20')).toBeInTheDocument();
     expect(within(row).getByTestId('ping')).toHaveTextContent('14 ms');
     const card = screen.getByRole('heading', { name: 'Network' }).closest('section')!;
@@ -173,7 +173,7 @@ describe('Dashboard', () => {
     render(<Dashboard />);
     expect(screen.getByTestId('battery-percent')).toHaveTextContent('78%');
     expect(screen.getByTestId('battery-summary')).toHaveTextContent('2h 30m left');
-    expect(screen.getByText('−12 W')).toBeInTheDocument();
+    expect(screen.getByText('−12 W', { ignore: '[aria-hidden=true]' })).toBeInTheDocument();
   });
 
   it('shows battery health beside the charge readings', () => {
@@ -202,11 +202,11 @@ describe('Dashboard', () => {
     expect(screen.queryByText('Battery')).not.toBeInTheDocument();
   });
 
-  it('shows a tooltip for a hovered core', () => {
+  it('shows a tooltip for a hovered core', async () => {
     act(() => useTelemetryStore.getState().setSnapshot(withDetail));
     render(<Dashboard />);
-    fireEvent.mouseEnter(screen.getAllByTestId('core-cell')[1]!);
-    const tip = screen.getByRole('tooltip');
+    fireEvent.pointerOver(screen.getAllByTestId('core-cell')[1]!);
+    const tip = await screen.findByRole('tooltip');
     expect(tip).toHaveTextContent('Core 1');
     expect(tip).toHaveTextContent('5100 MHz');
     expect(tip).toHaveTextContent('Usage 95%');

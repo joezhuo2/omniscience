@@ -1,10 +1,10 @@
-//! User settings, persisted as JSON in the app config directory.
+//! User settings, persisted as JSON in the app config directory (standalone) or the embedded data
+//! directory.
 
-use std::path::PathBuf;
+use std::path::Path;
 use std::time::Duration;
 
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Manager};
 use ts_rs::TS;
 
 use crate::telemetry::Control;
@@ -41,6 +41,7 @@ pub struct Settings {
     pub sustained_alerts: bool,
     /// Shows each reading's source, age and proxy status on the dashboard. Problems always show.
     pub sensor_details: bool,
+    pub history_hours: u32,
 }
 
 impl Default for Settings {
@@ -60,6 +61,7 @@ impl Default for Settings {
             config_enabled: false,
             sustained_alerts: true,
             sensor_details: false,
+            history_hours: 24,
         }
     }
 }
@@ -87,6 +89,7 @@ impl Settings {
             .cpu_temp_crit_c
             .clamp(self.cpu_temp_warn_c + 1.0, 110.0);
         self.poll_interval_ms = self.poll_interval_ms.clamp(500, 5000);
+        self.history_hours = self.history_hours.clamp(1, 720);
         if self.hotkey.trim().is_empty() {
             self.hotkey = d.hotkey;
         }
@@ -113,32 +116,25 @@ impl Settings {
         c.ping_target = self.ping_target.as_str().into();
         c.public_ip = self.show_public_ip;
         c.sustained_alerts = self.sustained_alerts;
+        c.history_hours = self.history_hours;
     }
 }
 
-fn path(app: &AppHandle) -> Option<PathBuf> {
-    app.path()
-        .app_config_dir()
-        .ok()
-        .map(|d| d.join("settings.json"))
-}
+const FILE: &str = "settings.json";
 
-/// Loads settings, falling back to defaults for a missing or unreadable file.
-pub fn load(app: &AppHandle) -> Settings {
-    path(app)
-        .and_then(|p| std::fs::read_to_string(p).ok())
+/// Loads settings from `dir`, falling back to defaults for a missing or unreadable file.
+pub fn load(dir: &Path) -> Settings {
+    std::fs::read_to_string(dir.join(FILE))
+        .ok()
         .and_then(|s| serde_json::from_str::<Settings>(&s).ok())
         .unwrap_or_default()
         .sanitized()
 }
 
-pub fn save(app: &AppHandle, settings: &Settings) -> Result<(), String> {
-    let p = path(app).ok_or("no config directory")?;
-    if let Some(dir) = p.parent() {
-        std::fs::create_dir_all(dir).map_err(|e| e.to_string())?;
-    }
+pub fn save(dir: &Path, settings: &Settings) -> Result<(), String> {
+    std::fs::create_dir_all(dir).map_err(|e| e.to_string())?;
     let json = serde_json::to_string_pretty(settings).map_err(|e| e.to_string())?;
-    std::fs::write(p, json).map_err(|e| e.to_string())
+    std::fs::write(dir.join(FILE), json).map_err(|e| e.to_string())
 }
 
 #[cfg(test)]
@@ -167,6 +163,7 @@ mod tests {
         assert_eq!(s.warn_threshold, 95.0);
         assert_eq!(s.crit_threshold, 96.0);
         assert_eq!(s.poll_interval_ms, 500);
+        assert_eq!(s.history_hours, 24);
         assert_eq!(s.hotkey, "CommandOrControl+Shift+O");
         let nan = Settings {
             warn_threshold: f32::NAN,
@@ -204,6 +201,20 @@ mod tests {
         .sanitized();
         assert_eq!(top.cpu_temp_warn_c, 109.0);
         assert_eq!(top.cpu_temp_crit_c, 110.0);
+    }
+
+    #[test]
+    fn clamps_history_retention() {
+        let low = Settings {
+            history_hours: 0,
+            ..Settings::default()
+        };
+        assert_eq!(low.sanitized().history_hours, 1);
+        let high = Settings {
+            history_hours: 10_000,
+            ..Settings::default()
+        };
+        assert_eq!(high.sanitized().history_hours, 720);
     }
 
     #[test]

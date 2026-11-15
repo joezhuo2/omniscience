@@ -19,23 +19,17 @@ describe('ConfigView card toggles', () => {
     const { unmount } = render(<ConfigView active={false} />);
     const switches = screen.getAllByRole('switch');
     expect(switches).toHaveLength(7);
-    switches.forEach((s) => expect(s).toHaveAttribute('aria-checked', 'true'));
+    switches.forEach((s) => expect(s).toBeChecked());
     const cpu = screen.getByRole('switch', { name: 'CPU boost enabled' });
     expect(screen.getByRole('group', { name: 'CPU boost' })).toBeInTheDocument();
     fireEvent.click(cpu);
-    expect(cpu).toHaveAttribute('aria-checked', 'false');
+    expect(cpu).not.toBeChecked();
     expect(screen.queryByRole('group', { name: 'CPU boost' })).not.toBeInTheDocument();
     expect(localStorage.getItem('omniscience:section:cpu-boost:off')).toBe('true');
     unmount();
     render(<ConfigView active={false} />);
-    expect(screen.getByRole('switch', { name: 'CPU boost enabled' })).toHaveAttribute(
-      'aria-checked',
-      'false',
-    );
-    expect(screen.getByRole('switch', { name: 'Display enabled' })).toHaveAttribute(
-      'aria-checked',
-      'true',
-    );
+    expect(screen.getByRole('switch', { name: 'CPU boost enabled' })).not.toBeChecked();
+    expect(screen.getByRole('switch', { name: 'Display enabled' })).toBeChecked();
   });
 
   it('does not read the device for a disabled card', async () => {

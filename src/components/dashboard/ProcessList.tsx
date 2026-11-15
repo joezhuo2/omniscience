@@ -1,6 +1,6 @@
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from '../../lib/ipc';
 import { ChevronDown, Search, X } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { formatBytes, formatRateRounded } from '../../lib/format';
 import {
   COLLAPSED_PROCESSES,
@@ -14,31 +14,24 @@ import { useTelemetryStore } from '../../store';
 import { useToastStore } from '../../toasts';
 import type { KillReport, ProcessGroup } from '../../types/telemetry';
 import { Card } from './Card';
+import { Segmented } from '../Segmented';
+import { ScrollArea } from '../ScrollArea';
 import { Skeleton } from './Skeleton';
+import { Tip } from '../Tip';
 
 function SortToggle({ sort, onChange }: { sort: ProcessSort; onChange: (s: ProcessSort) => void }) {
   return (
-    <div
-      role="tablist"
-      aria-label="Sort processes"
-      className="flex rounded-md bg-island-hover p-0.5 text-[10px]"
-    >
-      {(['cpu', 'ram', 'gpu', 'disk', 'network'] as const).map((s) => (
-        <button
-          key={s}
-          role="tab"
-          aria-selected={sort === s}
-          className={`rounded px-1.5 py-0.5 font-medium uppercase transition-colors ${
-            sort === s
-              ? 'bg-island-track text-island-text'
-              : 'text-island-muted hover:text-island-text'
-          }`}
-          onClick={() => onChange(s)}
-        >
-          {s}
-        </button>
-      ))}
-    </div>
+    <Segmented
+      role="tab"
+      label="Sort processes"
+      className="uppercase"
+      items={(['cpu', 'ram', 'gpu', 'disk', 'network'] as const).map((v) => ({
+        value: v,
+        label: v,
+      }))}
+      value={sort}
+      onChange={onChange}
+    />
   );
 }
 
@@ -59,13 +52,14 @@ function Row({
   const rate = processRate(sort === 'disk' ? p.disk_bps : p.net_bps);
   return (
     <li className="group flex items-center gap-2 rounded-md px-1.5 py-1 text-[11px] hover:bg-island-track/30">
-      <span className="min-w-0 flex-1 truncate text-island-text" title={p.name}>
-        {p.name.replace(/\.exe$/i, '')}
-        {p.pids.length > 1 && <span className="ml-1 text-island-muted">×{p.pids.length}</span>}
-      </span>
-      <span
-        className={`${throughput ? 'w-20' : 'w-12'} text-right text-island-text tabular-nums`}
-        title={
+      <Tip content={p.name}>
+        <span className="min-w-0 flex-1 truncate text-island-text">
+          {p.name.replace(/\.exe$/i, '')}
+          {p.pids.length > 1 && <span className="ml-1 text-island-muted">×{p.pids.length}</span>}
+        </span>
+      </Tip>
+      <Tip
+        content={
           throughput
             ? sort === 'disk'
               ? 'Disk read + write'
@@ -73,18 +67,21 @@ function Row({
             : undefined
         }
       >
-        {throughput
-          ? rate == null
-            ? '—'
-            : formatRateRounded(rate)
-          : `${(gpu ? p.gpu_pct : p.cpu_pct).toFixed(1)}%`}
-      </span>
-      <span
-        className="w-16 text-right text-island-muted tabular-nums"
-        title={gpu ? 'GPU memory' : 'Memory'}
-      >
-        {formatBytes(gpu ? p.gpu_mem_bytes : p.mem_bytes)}
-      </span>
+        <span
+          className={`${throughput ? 'w-20' : 'w-12'} text-right text-island-text tabular-nums`}
+        >
+          {throughput
+            ? rate == null
+              ? '—'
+              : formatRateRounded(rate)
+            : `${(gpu ? p.gpu_pct : p.cpu_pct).toFixed(1)}%`}
+        </span>
+      </Tip>
+      <Tip content={gpu ? 'GPU memory' : 'Memory'}>
+        <span className="w-16 text-right text-island-muted tabular-nums">
+          {formatBytes(gpu ? p.gpu_mem_bytes : p.mem_bytes)}
+        </span>
+      </Tip>
       <button
         aria-label={armed ? `Confirm end ${p.name}` : `End ${p.name}`}
         className={`flex h-5 items-center justify-center rounded transition-colors ${
@@ -107,6 +104,13 @@ export function ProcessList() {
   const [armed, setArmed] = useState<string | null>(null);
   const [hidden, setHidden] = useState<ReadonlySet<string>>(new Set());
   const [showAll, setShowAll] = useState(false);
+  const [listHeight, setListHeight] = useState<number>();
+  const measureList = useCallback((el: HTMLUListElement | null) => {
+    if (!el) return;
+    const observer = new ResizeObserver(() => setListHeight(el.offsetHeight));
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
   const [query, setQuery] = useState('');
   const [settledQuery, setSettledQuery] = useState('');
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -169,7 +173,7 @@ export function ProcessList() {
       title="Top processes"
       aside={<SortToggle sort={sort} onChange={setSort} />}
     >
-      <div className="mb-2 flex items-center gap-1.5 rounded-md bg-island-hover px-2 focus-within:ring-1 focus-within:ring-island-muted">
+      <div className="glass-field mb-2 flex items-center gap-1.5 rounded-md px-2 focus-within:ring-1 focus-within:ring-island-muted">
         <Search size={12} aria-hidden className="shrink-0 text-island-muted" />
         <input
           type="search"
@@ -217,19 +221,21 @@ export function ProcessList() {
                 {settledQuery.trim() ? 'No matching processes' : 'No processes available'}
               </p>
             )}
-            <ul
-              data-testid="process-rows"
-              className={`-mx-1.5 overscroll-none ${showAll ? 'max-h-36 overflow-y-auto' : ''}`}
+            <ScrollArea
+              className={`-mx-1.5 overscroll-none transition-[height] duration-200 ease-out ${showAll ? 'max-h-36 overflow-y-auto' : 'overflow-hidden'}`}
+              style={{ height: listHeight && (showAll ? Math.min(listHeight, 144) : listHeight) }}
             >
-              {rows.map((p) => (
-                <Row key={p.key} p={p} sort={sort} armed={armed === p.key} onKill={onKill} />
-              ))}
-            </ul>
+              <ul ref={measureList} data-testid="process-rows">
+                {rows.map((p) => (
+                  <Row key={p.key} p={p} sort={sort} armed={armed === p.key} onKill={onKill} />
+                ))}
+              </ul>
+            </ScrollArea>
             {all.length > COLLAPSED_PROCESSES && (
               <button
                 aria-expanded={showAll}
                 onClick={() => setShowAll((v) => !v)}
-                className="mt-1 flex w-full items-center justify-center gap-1 rounded-md py-0.5 text-[10px] text-island-muted hover:bg-island-hover hover:text-island-text"
+                className="mt-1 flex w-full items-center justify-center gap-1 py-0.5 text-[10px] text-island-muted transition-colors hover:text-island-text"
               >
                 {showAll ? 'Show less' : `Show ${all.length - COLLAPSED_PROCESSES} more`}
                 <ChevronDown

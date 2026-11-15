@@ -1,0 +1,35 @@
+:where(.skeleton) {
+  display: block;
+  flex: none;
+  overflow: hidden;
+  --cg-shadow: none;
+}
+
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 20%, rgb(255 255 255 / 0.22) 50%, transparent 80%);
+  transform: translateX(-100%);
+  animation: sweep 1.6s ease-in-out infinite;
+}
+
+@keyframes sweep {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after {
+    animation: pulse 2s ease-in-out infinite;
+    transform: none;
+    background: rgb(255 255 255 / 0.14);
+  }
+}

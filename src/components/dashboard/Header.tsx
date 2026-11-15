@@ -1,13 +1,15 @@
-import { Pin, Settings } from 'lucide-react';
+import { Pencil, Pin, Settings } from 'lucide-react';
 import { StaleDot } from './StaleDot';
 
 /** Dashboard header. */
 export function Header({
   onSettings,
+  onStyle,
   pinned = false,
   onTogglePin,
 }: {
   onSettings?: () => void;
+  onStyle?: () => void;
   pinned?: boolean;
   onTogglePin?: () => void;
 }) {
@@ -25,6 +27,15 @@ export function Header({
           onClick={onTogglePin}
         >
           <Pin size={14} aria-hidden fill={pinned ? 'currentColor' : 'none'} />
+        </button>
+      )}
+      {onStyle && (
+        <button
+          aria-label="Appearance"
+          className="rounded-md p-1 text-island-muted hover:bg-island-track/50 hover:text-island-text"
+          onClick={onStyle}
+        >
+          <Pencil size={14} aria-hidden />
         </button>
       )}
       {onSettings && (

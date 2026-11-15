@@ -59,8 +59,8 @@ it('shows and writes each power source separately', async () => {
   });
   render(<CpuBoostCard />);
   await waitFor(() => expect(screen.getByRole('button', { name: 'On' })).toBeEnabled());
-  expect(screen.getByRole('tab', { name: 'Plugged in' })).toHaveAttribute('aria-selected', 'true');
-  fireEvent.click(screen.getByRole('tab', { name: 'Battery' }));
+  expect(screen.getByRole('tab', { name: /^Plugged in/ })).toHaveAttribute('aria-selected', 'true');
+  fireEvent.click(screen.getByRole('tab', { name: /^Battery/ }));
   expect(screen.getByRole('button', { name: 'Off' })).toHaveAttribute('aria-pressed', 'true');
   fireEvent.click(screen.getByRole('button', { name: 'Aggressive' }));
   await waitFor(() => expect(calls).toContainEqual(['set_cpu_boost', { ac: false, mode: 2 }]));

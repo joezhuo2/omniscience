@@ -1,3 +1,4 @@
+import { toast } from '@crystalflux/toast-glass';
 import { create } from 'zustand';
 
 export interface Toast {
@@ -18,6 +19,7 @@ export const useToastStore = create<ToastState>((set, get) => ({
   toasts: [],
   push: (text) => {
     const id = nextId++;
+    toast(text, { duration: TOAST_MS });
     set({ toasts: [...get().toasts, { id, text }].slice(-3) });
     setTimeout(() => get().dismiss(id), TOAST_MS);
   },

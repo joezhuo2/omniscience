@@ -12,6 +12,7 @@ import { useTelemetryStore } from '../../store';
 import type { CoreMetrics } from '../../types/telemetry';
 import { Ring } from '../Ring';
 import { RingIcon } from '../RingIcon';
+import { Tip } from '../Tip';
 
 const tempText = (temp: number | null | undefined) => (temp == null ? '—' : formatTemp(temp));
 
@@ -64,13 +65,12 @@ export function MetricStrip() {
             className="flex w-full flex-col items-center text-[10px] leading-tight text-island-text tabular-nums"
           >
             {valueLines(r.key, core).map((line, i) => (
-              <span
+              <Tip
                 key={i}
-                className="max-w-full truncate whitespace-nowrap"
-                title={r.key === 'cpu' && i === 2 ? `${line} · ${CPU_TEMP_SOURCE}` : line}
+                content={r.key === 'cpu' && i === 2 ? `${line} · ${CPU_TEMP_SOURCE}` : line}
               >
-                {line}
-              </span>
+                <span className="max-w-full truncate whitespace-nowrap">{line}</span>
+              </Tip>
             ))}
           </span>
         </div>

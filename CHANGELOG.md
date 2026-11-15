@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-15
+
+### Added
+
+- Add a **History** section with charts for CPU, memory, GPU, temperatures, disk, network, battery and power (1h to 7d), and a **Keep history for** setting. Telemetry is sampled once a minute.
+- Add an embedded full-page mode (`?embed=1`) and an Omniscience plugin so another Tauri app can host the dashboard; the UI also installs as a git dependency.
+- Add an **Appearance** view (pencil button between pin and settings) to change every theme color with a color picker, the font and the text size.
+- Add **Settings > Island image**: drop an image or click the folder to browse. It fills the island background, showing the top of the image while the dashboard is open and sliding to the middle when it closes. No image by default.
+- Add **Glass cards** with a **Glass opacity** slider, and a pointer-following spotlight on cards.
+
+### Changed
+
+- Restyle the dashboard with Crystal Design components: cards are collapsible glass accordions (chevron left of the title), and tabs use a sliding rubber-band highlight. Switches, checkboxes, sliders, skeleton loaders, toasts, tooltips, the font dropdown and copy/reset/battery saver buttons are restyled too.
+- Changing numbers animate, sliders glide to new values, **Show N more** expands and collapses smoothly, and scroll areas scroll smoothly with themed scrollbars.
+
+### Fixed
+
+- Hovering a tooltip inside a card shows the tooltip instead of starting a card drag, including CPU core details.
+- The History hover time no longer makes its label row jump between one and two lines.
+
 ## [0.2.23] - 2026-11-04
 
 ### Removed

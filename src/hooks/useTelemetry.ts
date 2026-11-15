@@ -1,4 +1,4 @@
-import { listen } from '@tauri-apps/api/event';
+import { listen } from '../lib/ipc';
 import { useEffect } from 'react';
 import { useTelemetryStore } from '../store';
 import { TICK_EVENT, type Snapshot } from '../types/telemetry';

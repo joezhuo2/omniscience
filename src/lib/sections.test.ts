@@ -25,6 +25,7 @@ describe('section ordering', () => {
       'battery',
       'fans',
       'cpu-cores',
+      'history',
     ]);
     expect(normalizeSectionOrder({})).toEqual([...DEFAULT_SECTION_ORDER]);
     localStorage.setItem('omniscience:section-order', '{invalid');
@@ -34,7 +35,15 @@ describe('section ordering', () => {
   it('moves cards without losing hidden sections or changing minimize preferences', () => {
     const original = [...DEFAULT_SECTION_ORDER];
     const moved = moveSection(original, 'processes', 'gpu-power');
-    expect(moved).toEqual(['processes', 'gpu-power', 'battery', 'fans', 'cpu-cores', 'network']);
+    expect(moved).toEqual([
+      'processes',
+      'gpu-power',
+      'battery',
+      'fans',
+      'cpu-cores',
+      'network',
+      'history',
+    ]);
     expect(original).toEqual([...DEFAULT_SECTION_ORDER]);
     saveSectionCollapsed('network', true);
     saveSectionOrder(moved);

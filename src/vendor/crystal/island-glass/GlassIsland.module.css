@@ -1,0 +1,82 @@
+@property --t {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
+:where(.island) {
+  --cd-island-ease: var(--cd-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+  --t: 0;
+  --x: calc((100% - var(--pw)) / 2 * (1 - var(--t)));
+  --pill-inset: 0 var(--x) calc((100% - var(--ph)) * (1 - var(--t))) var(--x);
+  --pill-round: calc(var(--ph) / 2 + (28px - var(--ph) / 2) * var(--t));
+  display: block;
+  min-width: 260px;
+  box-shadow: none;
+  pointer-events: none;
+  clip-path: inset(var(--pill-inset) round var(--pill-round));
+  /* animating --t instead of clip-path keeps it on the main thread, so the backdrop blur is re-clipped every frame */
+  transition: --t 0.5s var(--cd-island-ease);
+}
+
+.island[data-open='true'] {
+  --t: 1;
+  pointer-events: auto;
+}
+
+.outline {
+  position: absolute;
+  inset: var(--pill-inset);
+  border-radius: var(--pill-round);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.3);
+  pointer-events: none;
+}
+
+.pill {
+  appearance: none;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  translate: -50% 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  padding: 10px 20px;
+  white-space: nowrap;
+  border-radius: 999px;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: opacity 0.2s;
+}
+
+.island[data-open='true'] .pill {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.pill:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: -4px;
+}
+
+.panel {
+  padding: 18px 22px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.island[data-open='true'] .panel {
+  opacity: 1;
+  transition: opacity 0.3s 0.12s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island,
+  .pill,
+  .panel,
+  .island[data-open='true'] .panel {
+    transition: none;
+  }
+}

@@ -1,32 +1,55 @@
 #[cfg(windows)]
+#[cfg_attr(not(feature = "standalone"), allow(dead_code))]
 mod asus;
+#[cfg(feature = "standalone")]
 mod battery_saver;
+#[cfg(feature = "standalone")]
 mod charge_limit;
 mod commands;
+#[cfg(feature = "standalone")]
 mod config_gate;
+#[cfg(feature = "standalone")]
 mod cpu_boost;
 mod diagnostics;
+#[cfg(feature = "standalone")]
 mod display;
+#[cfg(feature = "standalone")]
 mod driver_updates;
+pub mod embed;
+#[cfg(feature = "standalone")]
 mod fullscreen;
+#[cfg(feature = "standalone")]
 mod gpu_mode;
+#[cfg(feature = "standalone")]
 mod hover;
+#[cfg(feature = "standalone")]
 mod platform;
+#[cfg(feature = "standalone")]
 mod positions;
+#[cfg(feature = "standalone")]
 mod power_limits;
+#[cfg(feature = "standalone")]
 mod power_mode;
 mod settings;
+#[cfg(feature = "standalone")]
 mod shell;
+#[cfg(feature = "standalone")]
 mod system_command;
 mod telemetry;
+#[cfg(feature = "standalone")]
 mod tray;
+#[cfg(feature = "standalone")]
 mod webview;
+#[cfg(feature = "standalone")]
 mod window;
 
+#[cfg(feature = "standalone")]
 use std::sync::Arc;
 
+#[cfg(feature = "standalone")]
 use tauri::Manager;
 
+#[cfg(feature = "standalone")]
 pub fn run() {
     let telemetry = telemetry::Telemetry::new(telemetry::Control::default());
     tauri::Builder::default()
@@ -51,6 +74,7 @@ pub fn run() {
             commands::get_settings,
             commands::set_settings,
             commands::reset_position,
+            commands::get_telemetry_history,
             diagnostics::get_diagnostic_report,
             driver_updates::scan_driver_updates,
             driver_updates::get_system_update_status,
@@ -88,7 +112,11 @@ pub fn run() {
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
 
-            let settings = settings::load(app.handle());
+            let settings = app
+                .path()
+                .app_config_dir()
+                .map(|dir| settings::load(&dir))
+                .unwrap_or_default();
             config_gate::set(settings.config_enabled);
             app.manage(gpu_mode::GpuConfig::start(app.handle())?);
             app.manage(power_limits::PowerLimits::start(app.handle())?);
@@ -116,6 +144,7 @@ pub fn run() {
             hover::spawn(app.handle().clone());
             tray::init(app.handle())?;
             main.show()?;
+            telemetry.open_history(app.path().app_data_dir().ok().as_deref());
             telemetry.start(app.handle().clone());
             Ok(())
         })

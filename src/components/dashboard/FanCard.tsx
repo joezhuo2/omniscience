@@ -2,6 +2,7 @@ import { Fan } from 'lucide-react';
 import { formatRpm } from '../../lib/format';
 import { useTelemetryStore } from '../../store';
 import { Card } from './Card';
+import { Num } from '../Num';
 
 function FanRow({ label, rpm }: { label: string; rpm: number }) {
   return (
@@ -11,7 +12,7 @@ function FanRow({ label, rpm }: { label: string; rpm: number }) {
         {label}
       </span>
       <span data-testid={`fan-${label.toLowerCase()}`} className="text-island-muted tabular-nums">
-        {rpm > 0 ? formatRpm(rpm) : 'Stopped'}
+        {rpm > 0 ? <Num value={rpm} format={formatRpm} /> : 'Stopped'}
       </span>
     </div>
   );

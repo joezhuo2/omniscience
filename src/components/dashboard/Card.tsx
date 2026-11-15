@@ -1,20 +1,14 @@
-import { ChevronRight } from 'lucide-react';
 import { CSS } from '@dnd-kit/utilities';
+import { GlassAccordion, GlassAccordionItem } from '@crystalflux/accordion-glass';
+import { GlassSwitch } from '@crystalflux/switch-glass';
+import { useSpotlight } from '@crystalflux/spotlight';
 import { useSectionDrag } from './SectionDragContext';
-import {
-  useCallback,
-  useEffect,
-  useId,
-  useRef,
-  useState,
-  type MouseEvent,
-  type ReactNode,
-} from 'react';
+import { useCallback, useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react';
 import { useSectionToggle } from '../config/sectionToggleContext';
 import { readSectionCollapsed, saveSectionCollapsed, type CardSectionId } from '../../lib/sections';
 
 const INTERACTIVE =
-  'button, a, input, select, textarea, label, [role=slider], [role=tab], [contenteditable]';
+  'button, a, input, select, textarea, label, [role=slider], [role=tab], [contenteditable], [data-no-drag]';
 const DRAG_DISTANCE = 6;
 
 export function Card({
@@ -30,7 +24,6 @@ export function Card({
   summary?: ReactNode;
   children: ReactNode;
 }) {
-  const id = useId();
   const power = useSectionToggle();
   const off = power?.enabled === false;
   const {
@@ -42,25 +35,25 @@ export function Card({
     isDragging,
     transition,
   } = useSectionDrag() ?? {};
+  const spot = useRef<HTMLElement | null>(null);
+  useSpotlight(spot);
   const cardRef = useCallback(
     (node: HTMLElement | null) => {
+      spot.current = node;
       setNodeRef?.(node);
       setActivatorNodeRef?.(node);
     },
     [setNodeRef, setActivatorNodeRef],
   );
   const [collapsed, setCollapsed] = useState(() => readSectionCollapsed(section));
-  const [animate, setAnimate] = useState(false);
   const press = useRef<{ x: number; y: number } | null>(null);
   const dragged = useRef(false);
   useEffect(() => {
     if (isDragging) dragged.current = true;
   }, [isDragging]);
-  const toggle = (event: MouseEvent<HTMLElement>) => {
-    setAnimate(event.detail > 0);
-    const next = !collapsed;
-    setCollapsed(next);
-    if (section) saveSectionCollapsed(section, next);
+  const setOpen = (open: boolean) => {
+    setCollapsed(!open);
+    if (section) saveSectionCollapsed(section, !open);
   };
   const surfaceClick = (event: MouseEvent<HTMLElement>) => {
     if (!section || (event.target as Element).closest(INTERACTIVE)) return;
@@ -68,19 +61,21 @@ export function Card({
     if (dragged.current || isDragging) return;
     if (from && Math.hypot(event.clientX - from.x, event.clientY - from.y) > DRAG_DISTANCE) return;
     if (window.getSelection()?.toString()) return;
-    toggle(event);
+    setOpen(collapsed);
   };
+  const noDrag = (target: EventTarget) => (target as Element).closest('[data-no-drag]') != null;
   return (
     <section
       ref={cardRef}
       onClick={surfaceClick}
       data-section={section}
       data-collapsed={collapsed}
-      data-animate={animate}
       data-dragging={isDragging || undefined}
       tabIndex={attributes?.tabIndex}
       aria-describedby={attributes?.['aria-describedby']}
       aria-roledescription={attributes ? 'sortable section' : undefined}
+      role="article"
+      aria-label={title}
       onMouseDownCapture={(event) => {
         press.current = { x: event.clientX, y: event.clientY };
         dragged.current = false;
@@ -89,8 +84,20 @@ export function Card({
         press.current = null;
         dragged.current = false;
       }}
-      onMouseDown={listeners ? (event) => listeners.onMouseDown?.(event) : undefined}
-      onTouchStart={listeners ? (event) => listeners.onTouchStart?.(event) : undefined}
+      onMouseDown={
+        listeners
+          ? (event) => {
+              if (!noDrag(event.target)) listeners.onMouseDown?.(event);
+            }
+          : undefined
+      }
+      onTouchStart={
+        listeners
+          ? (event) => {
+              if (!noDrag(event.target)) listeners.onTouchStart?.(event);
+            }
+          : undefined
+      }
       onKeyDown={
         listeners
           ? (event) => {
@@ -109,57 +116,29 @@ export function Card({
             }
           : undefined
       }
-      aria-labelledby={`${id}-heading`}
-      className={`rounded-xl border border-island-faint bg-island-hover min-w-0 shrink-0 p-3 ${attributes ? ' section-sortable cursor-grab focus-visible:ring-1 focus-visible:ring-island-muted focus-visible:outline-none' : ''}`}
+      className={`card-accordion card-spot relative min-w-0 shrink-0 rounded-xl ${attributes ? 'section-sortable cursor-grab focus-visible:ring-1 focus-visible:ring-island-muted focus-visible:outline-none' : ''}`}
     >
-      <header className="flex flex-wrap items-center justify-between gap-2">
-        <h2
-          id={`${id}-heading`}
-          className="min-w-0 text-[10px] font-semibold tracking-wider text-island-muted uppercase"
+      <GlassAccordion radius={12} className="card-surface">
+        <GlassAccordionItem
+          title={title}
+          open={!off && (!section || !collapsed)}
+          onOpenChange={section && !off ? setOpen : () => {}}
+          aside={
+            <div className="flex shrink-0 items-center gap-2">
+              {!off && (collapsed ? (summary ?? aside) : aside)}
+              {power && (
+                <GlassSwitch
+                  checked={!off}
+                  onChange={(on) => power.setEnabled(on)}
+                  label={<span className="sr-only">{`${title} enabled`}</span>}
+                />
+              )}
+            </div>
+          }
         >
-          {section ? (
-            <button
-              type="button"
-              aria-expanded={!collapsed}
-              aria-controls={`${id}-body`}
-              title={`${collapsed ? 'Expand' : 'Minimize'} ${title}`}
-              onClick={toggle}
-              className="-m-1 flex items-center gap-1 rounded p-1 text-left hover:text-island-text focus-visible:ring-1 focus-visible:ring-island-muted focus-visible:outline-none"
-            >
-              <ChevronRight size={12} aria-hidden className="card-chevron shrink-0" />
-              {title}
-            </button>
-          ) : (
-            title
-          )}
-        </h2>
-        <div className="flex items-center gap-2">
-          {!off && (collapsed ? (summary ?? aside) : aside)}
-          {power && (
-            <button
-              type="button"
-              role="switch"
-              aria-checked={!off}
-              aria-label={`${title} enabled`}
-              title={`${off ? 'Enable' : 'Disable'} ${title}`}
-              onClick={() => power.setEnabled(off)}
-              className={`relative h-4 w-7 shrink-0 rounded-full transition-colors focus-visible:ring-1 focus-visible:ring-island-muted focus-visible:outline-none ${off ? 'bg-island-faint' : 'bg-emerald-500'}`}
-            >
-              <span
-                aria-hidden
-                className={`absolute top-0.5 left-0.5 h-3 w-3 rounded-full bg-white transition-transform ${off ? '' : 'translate-x-3'}`}
-              />
-            </button>
-          )}
-        </div>
-      </header>
-      {!off && (
-        <div id={`${id}-body`} className="card-body" aria-hidden={collapsed} inert={collapsed}>
-          <div className="card-body-clip">
-            <div className="pt-2">{children}</div>
-          </div>
-        </div>
-      )}
+          {!off && children}
+        </GlassAccordionItem>
+      </GlassAccordion>
     </section>
   );
 }

@@ -2,6 +2,7 @@ import { Card } from '../dashboard/Card';
 import { SourceTabs } from './SourceTabs';
 import { useSourceTab } from './useSourceTab';
 import { useNativeControl } from './useNativeControl';
+import { Tip } from '../Tip';
 
 type Mode = 'efficiency' | 'balanced' | 'performance';
 export type PowerStatus = {
@@ -34,25 +35,29 @@ export function PowerModeCard({ active = true }: { active?: boolean }) {
     >
       <div className="grid grid-cols-3 gap-1" role="group" aria-label="Power mode">
         {modes.map(({ value, label, description }) => (
-          <button
-            type="button"
-            key={value}
-            className="config-button"
-            title={description}
-            aria-pressed={selected === value}
-            disabled={!status?.supported || busy}
-            onClick={() =>
-              void apply(
-                'set_power_mode',
-                { ac, mode: value },
-                selected
-                  ? { label: 'Power mode', command: 'set_power_mode', args: { ac, mode: selected } }
-                  : undefined,
-              )
-            }
-          >
-            {label}
-          </button>
+          <Tip key={value} content={description}>
+            <button
+              type="button"
+              className="config-button"
+              aria-pressed={selected === value}
+              disabled={!status?.supported || busy}
+              onClick={() =>
+                void apply(
+                  'set_power_mode',
+                  { ac, mode: value },
+                  selected
+                    ? {
+                        label: 'Power mode',
+                        command: 'set_power_mode',
+                        args: { ac, mode: selected },
+                      }
+                    : undefined,
+                )
+              }
+            >
+              {label}
+            </button>
+          </Tip>
         ))}
       </div>
       <p className="mt-2 text-[11px] text-island-muted">
