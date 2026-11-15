@@ -56,9 +56,13 @@ describe('embedded mode', () => {
     await waitFor(() => expect(screen.getByRole('radio', { name: '24h' })).toBeDisabled());
     expect(screen.getByRole('radio', { name: '6h' })).toBeChecked();
     act(() => unmount());
-    expect(calls.at(-1)).toEqual({
+    expect(calls.filter((c) => c.cmd.endsWith('set_expanded')).at(-1)).toEqual({
       cmd: 'plugin:omniscience|set_expanded',
       args: { expanded: false },
+    });
+    expect(calls.filter((c) => c.cmd.endsWith('set_process_sampling')).at(-1)).toEqual({
+      cmd: 'plugin:omniscience|set_process_sampling',
+      args: { enabled: false },
     });
   });
 

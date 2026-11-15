@@ -38,6 +38,7 @@ commands![
     diagnostics::get_diagnostic_report,
     commands::get_telemetry_history,
     embed::set_active,
+    commands::set_process_sampling,
 ];
 
 fn setup(app: &AppHandle) {
@@ -117,6 +118,7 @@ mod tests {
                 "get_diagnostic_report",
                 "get_telemetry_history",
                 "set_active",
+                "set_process_sampling",
             ]
         );
     }

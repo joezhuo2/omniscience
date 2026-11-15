@@ -50,14 +50,29 @@ pub fn percent() -> Option<f32> {
     power_status().map(|s| f32::from(s.BatteryLifePercent))
 }
 
-/// Charge, AC and Windows' time estimate from `GetSystemPowerStatus`.
+/// Battery device paths, enumerated once per dashboard open instead of every tick.
 #[cfg(windows)]
-pub fn read() -> Reading {
+pub struct Devices(Vec<Vec<u16>>);
+
+#[cfg(windows)]
+impl Devices {
+    pub fn find() -> Self {
+        Self(device_paths())
+    }
+
+    /// Charge, AC and Windows' time estimate from `GetSystemPowerStatus`.
+    pub fn read(&self) -> Reading {
+        read(&self.0)
+    }
+}
+
+#[cfg(windows)]
+fn read(paths: &[Vec<u16>]) -> Reading {
     const CHARGING: u8 = 8;
     let Some(s) = power_status() else {
         return Reading::default();
     };
-    let d = driver_status();
+    let d = driver_status(paths);
     Reading {
         percent: Some(f32::from(s.BatteryLifePercent)),
         on_ac: s.ACLineStatus == 1,
@@ -76,12 +91,7 @@ pub fn read() -> Reading {
 /// that report it, plus design capacity and cycle count, from the battery class driver's IOCTLs.
 /// No admin rights needed.
 #[cfg(windows)]
-fn driver_status() -> DriverStatus {
-    use windows_sys::Win32::Devices::DeviceAndDriverInstallation::{
-        DIGCF_DEVICEINTERFACE, DIGCF_PRESENT, GUID_DEVCLASS_BATTERY, SP_DEVICE_INTERFACE_DATA,
-        SP_DEVICE_INTERFACE_DETAIL_DATA_W, SetupDiDestroyDeviceInfoList,
-        SetupDiEnumDeviceInterfaces, SetupDiGetClassDevsW, SetupDiGetDeviceInterfaceDetailW,
-    };
+fn driver_status(paths: &[Vec<u16>]) -> DriverStatus {
     use windows_sys::Win32::Foundation::{
         CloseHandle, GENERIC_READ, GENERIC_WRITE, HANDLE, INVALID_HANDLE_VALUE,
     };
@@ -114,58 +124,11 @@ fn driver_status() -> DriverStatus {
     }
 
     let mut out = DriverStatus::default();
-    // SAFETY: the device info set and every opened handle are released before returning; the
-    // interface detail buffer is u64-aligned and as large as SetupDi asked for.
+    // SAFETY: every opened handle is closed before the next iteration; paths are NUL-terminated.
     unsafe {
-        let set = SetupDiGetClassDevsW(
-            &GUID_DEVCLASS_BATTERY,
-            std::ptr::null(),
-            std::ptr::null_mut(),
-            DIGCF_PRESENT | DIGCF_DEVICEINTERFACE,
-        );
-        if set == -1 {
-            return out;
-        }
-        for index in 0..8 {
-            let mut iface = SP_DEVICE_INTERFACE_DATA {
-                cbSize: std::mem::size_of::<SP_DEVICE_INTERFACE_DATA>() as u32,
-                ..Default::default()
-            };
-            if SetupDiEnumDeviceInterfaces(
-                set,
-                std::ptr::null(),
-                &GUID_DEVCLASS_BATTERY,
-                index,
-                &mut iface,
-            ) == 0
-            {
-                break;
-            }
-            let mut needed = 0;
-            SetupDiGetDeviceInterfaceDetailW(
-                set,
-                &iface,
-                std::ptr::null_mut(),
-                0,
-                &mut needed,
-                std::ptr::null_mut(),
-            );
-            let mut buf = vec![0u64; (needed as usize).div_ceil(8).max(1)];
-            let detail = buf.as_mut_ptr().cast::<SP_DEVICE_INTERFACE_DETAIL_DATA_W>();
-            (*detail).cbSize = std::mem::size_of::<SP_DEVICE_INTERFACE_DETAIL_DATA_W>() as u32;
-            if SetupDiGetDeviceInterfaceDetailW(
-                set,
-                &iface,
-                detail,
-                needed,
-                std::ptr::null_mut(),
-                std::ptr::null_mut(),
-            ) == 0
-            {
-                continue;
-            }
+        for path in paths {
             let h = CreateFileW(
-                (*detail).DevicePath.as_ptr(),
+                path.as_ptr(),
                 GENERIC_READ | GENERIC_WRITE,
                 FILE_SHARE_READ | FILE_SHARE_WRITE,
                 std::ptr::null(),
@@ -222,14 +185,90 @@ fn driver_status() -> DriverStatus {
                 *cycles = (*cycles).max(info.CycleCount);
             }
         }
-        SetupDiDestroyDeviceInfoList(set);
     }
     out
 }
 
+/// NUL-terminated device paths of up to 8 batteries, from SetupDi.
+#[cfg(windows)]
+fn device_paths() -> Vec<Vec<u16>> {
+    use windows_sys::Win32::Devices::DeviceAndDriverInstallation::{
+        DIGCF_DEVICEINTERFACE, DIGCF_PRESENT, GUID_DEVCLASS_BATTERY, SP_DEVICE_INTERFACE_DATA,
+        SP_DEVICE_INTERFACE_DETAIL_DATA_W, SetupDiDestroyDeviceInfoList,
+        SetupDiEnumDeviceInterfaces, SetupDiGetClassDevsW, SetupDiGetDeviceInterfaceDetailW,
+    };
+    let mut paths = Vec::new();
+    // SAFETY: the device info set is released before returning; the interface detail buffer is
+    // u64-aligned and as large as SetupDi asked for, and SetupDi NUL-terminates DevicePath in it.
+    unsafe {
+        let set = SetupDiGetClassDevsW(
+            &GUID_DEVCLASS_BATTERY,
+            std::ptr::null(),
+            std::ptr::null_mut(),
+            DIGCF_PRESENT | DIGCF_DEVICEINTERFACE,
+        );
+        if set == -1 {
+            return paths;
+        }
+        for index in 0..8 {
+            let mut iface = SP_DEVICE_INTERFACE_DATA {
+                cbSize: std::mem::size_of::<SP_DEVICE_INTERFACE_DATA>() as u32,
+                ..Default::default()
+            };
+            if SetupDiEnumDeviceInterfaces(
+                set,
+                std::ptr::null(),
+                &GUID_DEVCLASS_BATTERY,
+                index,
+                &mut iface,
+            ) == 0
+            {
+                break;
+            }
+            let mut needed = 0;
+            SetupDiGetDeviceInterfaceDetailW(
+                set,
+                &iface,
+                std::ptr::null_mut(),
+                0,
+                &mut needed,
+                std::ptr::null_mut(),
+            );
+            let mut buf = vec![0u64; (needed as usize).div_ceil(8).max(1)];
+            let detail = buf.as_mut_ptr().cast::<SP_DEVICE_INTERFACE_DETAIL_DATA_W>();
+            (*detail).cbSize = std::mem::size_of::<SP_DEVICE_INTERFACE_DETAIL_DATA_W>() as u32;
+            if SetupDiGetDeviceInterfaceDetailW(
+                set,
+                &iface,
+                detail,
+                needed,
+                std::ptr::null_mut(),
+                std::ptr::null_mut(),
+            ) == 0
+            {
+                continue;
+            }
+            let start = (*detail).DevicePath.as_ptr();
+            let len = (0..).take_while(|&i| *start.add(i) != 0).count();
+            paths.push(std::slice::from_raw_parts(start, len + 1).to_vec());
+        }
+        SetupDiDestroyDeviceInfoList(set);
+    }
+    paths
+}
+
 #[cfg(not(windows))]
-pub fn read() -> Reading {
-    Reading::default()
+pub struct Devices;
+
+#[cfg(not(windows))]
+impl Devices {
+    pub fn find() -> Self {
+        Self
+    }
+
+    pub fn read(&self) -> Reading {
+        Reading::default()
+    }
 }
 
 #[cfg(not(windows))]
@@ -400,7 +439,7 @@ mod tests {
     #[test]
     #[ignore]
     fn battery_live() {
-        let r = read();
+        let r = Devices::find().read();
         println!("{r:?}");
         println!("{:?}", estimate(&r));
     }

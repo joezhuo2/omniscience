@@ -30,4 +30,9 @@ public_ip: string | null,
 /**
  * `None` on machines without a battery.
  */
-battery: Battery | null, fans: FanSpeeds | null, processes: Array<ProcessGroup>, };
+battery: Battery | null, fans: FanSpeeds | null, 
+/**
+ * Sent only on ticks that refresh the list (one in three) while the processes section is
+ * open; `None` otherwise, and the frontend keeps the last list.
+ */
+processes: Array<ProcessGroup> | null, };

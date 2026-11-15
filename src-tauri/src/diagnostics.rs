@@ -162,7 +162,7 @@ fn sensors(snapshot: &Snapshot) -> Vec<SensorStatus> {
 
 fn redacted(mut snapshot: Snapshot) -> Snapshot {
     if let Some(detail) = &mut snapshot.detail {
-        detail.processes.clear();
+        detail.processes = None;
         detail.public_ip = None;
         for adapter in &mut detail.net_adapters {
             adapter.ipv4 = None;
@@ -317,7 +317,7 @@ mod tests {
                 cpu_rpm: Some(2000),
                 gpu_rpm: None,
             }),
-            processes: vec![ProcessGroup {
+            processes: Some(vec![ProcessGroup {
                 key: "secret".into(),
                 name: "secret.exe".into(),
                 pids: vec![7],
@@ -327,7 +327,7 @@ mod tests {
                 gpu_mem_bytes: 0,
                 disk_bps: None,
                 net_bps: None,
-            }],
+            }]),
         }
     }
 

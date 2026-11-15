@@ -14,6 +14,7 @@ import { SectionLayout } from './SectionLayout';
 import { Header } from './Header';
 import { MetricStrip } from './MetricStrip';
 import { NetworkCard } from './NetworkCard';
+import { InfoTabVisible } from './infoTabContext';
 import { ProcessList } from './ProcessList';
 import { SensorDetails } from './SensorDetails';
 import { Toasts } from './Toasts';
@@ -84,12 +85,14 @@ export function Dashboard({
           </div>
           <SensorDetails />
           <div className={embedded ? 'embed-grid' : 'contents'}>
-            <SectionLayout hidden={hiddenSections} grid={embedded}>
-              {(id) => {
-                const Component = SECTIONS[id];
-                return <Component />;
-              }}
-            </SectionLayout>
+            <InfoTabVisible.Provider value={tab === 'info'}>
+              <SectionLayout hidden={hiddenSections} grid={embedded}>
+                {(id) => {
+                  const Component = SECTIONS[id];
+                  return <Component />;
+                }}
+              </SectionLayout>
+            </InfoTabVisible.Provider>
           </div>
         </div>
       </div>

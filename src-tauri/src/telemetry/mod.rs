@@ -37,6 +37,8 @@ pub const TICK_EVENT: &str = "telemetry://tick";
 pub struct Control {
     pub expanded: bool,
     pub visible: bool,
+    /// Whether the processes section is open, so the process list is sampled.
+    pub processes: bool,
     pub interval: Duration,
     pub thresholds: Thresholds,
     /// Host to ping while expanded; empty for none.
@@ -52,6 +54,7 @@ impl Default for Control {
         Self {
             expanded: false,
             visible: true,
+            processes: true,
             interval: Duration::from_secs(1),
             thresholds: Thresholds::default(),
             ping_target: "".into(),
@@ -148,7 +151,7 @@ impl Telemetry {
                 c.clone()
             };
             sampler.set_network(control.ping_target.clone(), control.public_ip);
-            let snapshot = sampler.sample(control.thresholds, control.expanded);
+            let snapshot = sampler.sample(control.thresholds, control.expanded, control.processes);
             if let Err(e) = app.emit(TICK_EVENT, &snapshot) {
                 crate::diagnostics::log_error(format_args!("emit telemetry: {e}"));
             }

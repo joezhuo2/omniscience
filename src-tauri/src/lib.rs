@@ -71,6 +71,7 @@ pub fn run() {
             commands::set_expanded,
             commands::set_overlay_height,
             commands::kill_process_group,
+            commands::set_process_sampling,
             commands::get_settings,
             commands::set_settings,
             commands::reset_position,

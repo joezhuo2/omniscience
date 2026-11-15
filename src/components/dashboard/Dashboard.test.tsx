@@ -213,6 +213,29 @@ describe('Dashboard', () => {
     expect(tip).toHaveTextContent('48°C');
   });
 
+  it('samples processes only while their card is open', async () => {
+    const sampling: unknown[] = [];
+    mockIPC((cmd, args) => {
+      if (cmd === 'set_process_sampling') sampling.push(args);
+      return null;
+    });
+    render(<Dashboard />);
+    await waitFor(() => expect(sampling.at(-1)).toEqual({ enabled: true }));
+    fireEvent.click(screen.getByRole('button', { name: 'Top processes' }));
+    await waitFor(() => expect(sampling.at(-1)).toEqual({ enabled: false }));
+  });
+
+  it('keeps the last process list on ticks that carry none', () => {
+    act(() => useTelemetryStore.getState().setSnapshot(withDetail));
+    const list = useTelemetryStore.getState().snapshot?.detail?.processes;
+    act(() =>
+      useTelemetryStore
+        .getState()
+        .setSnapshot({ ...withDetail, detail: { ...sampleDetail, processes: null } }),
+    );
+    expect(useTelemetryStore.getState().snapshot?.detail?.processes).toBe(list);
+  });
+
   it('needs two clicks to end a process and removes it optimistically', async () => {
     const calls: unknown[] = [];
     mockIPC((cmd, args) => {
@@ -295,7 +318,7 @@ describe('Dashboard', () => {
           ...withDetail,
           detail: {
             ...sampleDetail,
-            processes: sampleDetail.processes.map((p) => ({ ...p, net_bps: null })),
+            processes: sampleDetail.processes!.map((p) => ({ ...p, net_bps: null })),
           },
         }),
       );
@@ -354,7 +377,7 @@ describe('Dashboard', () => {
       act(() =>
         useTelemetryStore.getState().setSnapshot({
           ...withDetail,
-          detail: { ...sampleDetail, processes: [sampleDetail.processes[1]!] },
+          detail: { ...sampleDetail, processes: [sampleDetail.processes![1]!] },
         }),
       );
       expect(screen.getByText('No matching processes')).toBeInTheDocument();

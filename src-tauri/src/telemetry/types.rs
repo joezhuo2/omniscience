@@ -243,7 +243,9 @@ pub struct DetailMetrics {
     /// `None` on machines without a battery.
     pub battery: Option<Battery>,
     pub fans: Option<FanSpeeds>,
-    pub processes: Vec<ProcessGroup>,
+    /// Sent only on ticks that refresh the list (one in three) while the processes section is
+    /// open; `None` otherwise, and the frontend keeps the last list.
+    pub processes: Option<Vec<ProcessGroup>>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, TS)]

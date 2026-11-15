@@ -209,6 +209,12 @@ body {
   }
 }
 
+/* Per-tick text and bar changes re-lay out and repaint only inside their own card, which
+   matters while WebView2 rasterizes in software. */
+.card-accordion {
+  contain: content;
+}
+
 .card-accordion h3 {
   display: flex;
   align-items: center;
