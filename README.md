@@ -54,7 +54,7 @@ Hover the pill and it expands in place with a 280 ms clip-path morph. It opens t
 arrives and collapses the moment it leaves; coming back mid-collapse reverses it. Press **Esc** to
 close it.
 
-- ⚡ **Header:** a Settings shortcut and an amber indicator if telemetry stops arriving. Package
+- ⚡ **Header:** pin, Appearance (pencil) and Settings buttons, and an amber indicator if telemetry stops arriving. Package
   watts live in GPU & Power; CPU temperature sits below the CPU ring.
 - 📊 **Metric strip:** labeled values for each ring, such as CPU usage with its live clock in GHz,
   RAM as `15/31 GB`, and download/upload speeds on two lines. CPU temperature appears on a third
@@ -211,6 +211,9 @@ Settings are kept after uninstalling. Delete the [settings file](#configuration)
 | Search processes         | Type an app name or PID in the Top processes search bar        |
 | End an app               | Click **End?** on its row, then confirm                        |
 | Open settings            | Gear icon in the dashboard header, or tray > Settings…         |
+| Change colors and fonts  | Pencil icon in the dashboard header                            |
+| Set an island background | Settings > Island image (drop an image or click to browse)     |
+| Turn glass cards on/off  | Settings > Glass cards, with Glass opacity below it            |
 | Check for updates        | Tray > Check for updates now                                   |
 | Quit                     | Tray > Quit                                                    |
 

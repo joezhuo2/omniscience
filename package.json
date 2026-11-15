@@ -1,7 +1,7 @@
 {
   "name": "omniscience",
   "private": true,
-  "version": "0.2.23",
+  "version": "0.3.0",
   "type": "module",
   "license": "MIT",
   "files": [
