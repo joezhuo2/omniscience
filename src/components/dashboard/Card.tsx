@@ -16,12 +16,15 @@ export function Card({
   section,
   aside,
   summary,
+  onOpenChange,
   children,
 }: {
   title: string;
   section?: CardSectionId;
   aside?: ReactNode;
   summary?: ReactNode;
+  /** Called with whether the card's content is shown, on mount and on every change. */
+  onOpenChange?: (open: boolean) => void;
   children: ReactNode;
 }) {
   const power = useSectionToggle();
@@ -51,6 +54,8 @@ export function Card({
   useEffect(() => {
     if (isDragging) dragged.current = true;
   }, [isDragging]);
+  const open = !off && (!section || !collapsed);
+  useEffect(() => onOpenChange?.(open), [open, onOpenChange]);
   const setOpen = (open: boolean) => {
     setCollapsed(!open);
     if (section) saveSectionCollapsed(section, !open);
@@ -121,7 +126,7 @@ export function Card({
       <GlassAccordion radius={12} className="card-surface">
         <GlassAccordionItem
           title={title}
-          open={!off && (!section || !collapsed)}
+          open={open}
           onOpenChange={section && !off ? setOpen : () => {}}
           aside={
             <div className="flex shrink-0 items-center gap-2">

@@ -61,6 +61,12 @@ pub fn set_overlay_height(
         .map_err(|e| e.to_string())
 }
 
+/// Turns process-list sampling on while the processes section is open and visible.
+#[tauri::command]
+pub fn set_process_sampling(enabled: bool, telemetry: State<'_, Arc<Telemetry>>) {
+    telemetry.update(|c| c.processes = enabled);
+}
+
 /// Ends every process in the group `key`, refusing protected ones.
 #[tauri::command]
 pub async fn kill_process_group(key: String) -> KillReport {

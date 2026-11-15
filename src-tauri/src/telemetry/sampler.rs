@@ -40,18 +40,57 @@ pub struct Sampler {
     detail: Option<Detail>,
 }
 
+/// The process list is refreshed (and sent) on one tick in this many.
+const PROCESS_EVERY: u32 = 3;
+
 /// Detail-tier state, alive only while expanded.
 struct Detail {
-    procs: System,
-    #[cfg(windows)]
-    io: Option<super::process_io::ProcessIo>,
     #[cfg(windows)]
     win: Option<super::windows::Query>,
     #[cfg(windows)]
     fans: super::fans::FanSource,
+    battery: battery::Devices,
     pinger: Option<Pinger>,
+    /// `Some` while the processes section is open.
+    procs: Option<Procs>,
     /// Process CPU% needs two samples; the first detail tick only primes.
     warm: bool,
+}
+
+/// Process-list state: the costliest part of the detail tier.
+struct Procs {
+    sys: System,
+    #[cfg(windows)]
+    io: Option<super::process_io::ProcessIo>,
+    #[cfg(windows)]
+    gpu_mem: Option<super::windows::Query>,
+    /// Ticks to skip before the next refresh.
+    wait: u32,
+}
+
+impl Procs {
+    fn start() -> Self {
+        Self {
+            sys: processes::new_system(),
+            #[cfg(windows)]
+            io: super::process_io::ProcessIo::start(),
+            #[cfg(windows)]
+            gpu_mem: super::windows::Query::new(&win::PROCESS_COUNTERS),
+            // `new_system` just refreshed; another refresh this tick would read ~0% CPU.
+            wait: 1,
+        }
+    }
+
+    /// Whether this tick refreshes the list.
+    fn due(&mut self) -> bool {
+        if self.wait > 0 {
+            self.wait -= 1;
+            return false;
+        }
+        self.wait = PROCESS_EVERY - 1;
+        processes::refresh(&mut self.sys);
+        true
+    }
 }
 
 impl Sampler {
@@ -86,7 +125,8 @@ impl Sampler {
         self.detail = None;
     }
 
-    pub fn sample(&mut self, t: Thresholds, expanded: bool) -> Snapshot {
+    /// `processes`: whether the processes section is open, so the process list is worth reading.
+    pub fn sample(&mut self, t: Thresholds, expanded: bool, processes: bool) -> Snapshot {
         if !expanded {
             self.detail = None;
         }
@@ -156,9 +196,9 @@ impl Sampler {
 
         let detail = if expanded {
             #[cfg(windows)]
-            let d = self.sample_detail(t, &win);
+            let d = self.sample_detail(t, processes, &win);
             #[cfg(not(windows))]
-            let d = self.sample_detail(t);
+            let d = self.sample_detail(t, processes);
             d
         } else {
             None
@@ -217,26 +257,30 @@ impl Sampler {
     fn sample_detail(
         &mut self,
         t: Thresholds,
+        want_processes: bool,
         #[cfg(windows)] win: &win::CoreSample,
     ) -> Option<DetailMetrics> {
         let detail = self.detail.get_or_insert_with(|| Detail {
-            procs: processes::new_system(),
-            #[cfg(windows)]
-            io: super::process_io::ProcessIo::start(),
             #[cfg(windows)]
             win: super::windows::Query::new(&win::DETAIL_COUNTERS),
             #[cfg(windows)]
             fans: super::fans::FanSource::start(),
+            battery: battery::Devices::find(),
             pinger: None,
+            procs: None,
             warm: false,
         });
         let target = &self.ping_target;
         if detail.pinger.as_ref().map(Pinger::target) != Some(&**target) {
             detail.pinger = (!target.is_empty()).then(|| Pinger::start(target.clone()));
         }
-        if detail.warm {
-            processes::refresh(&mut detail.procs);
-        }
+        let procs = if want_processes {
+            let p = detail.procs.get_or_insert_with(Procs::start);
+            p.due().then_some(p)
+        } else {
+            detail.procs = None;
+            None
+        };
         self.sys.refresh_cpu_frequency();
         if !detail.warm {
             detail.warm = true;
@@ -279,27 +323,30 @@ impl Sampler {
         #[cfg(not(windows))]
         let (temps, gpus, power, cpu_limit) = (Vec::new(), Vec::new(), None, None);
 
-        #[cfg_attr(not(windows), allow(unused_mut))]
-        let mut procs = processes::read(&detail.procs);
-        #[cfg(windows)]
-        {
-            let (usage, mem) = win::process_gpu(detail.win.as_ref(), win);
-            let rates = detail
-                .io
-                .as_mut()
-                .and_then(super::process_io::ProcessIo::sample);
-            for p in &mut procs {
-                p.gpu_pct = usage.get(&p.pid).copied().unwrap_or(0.0);
-                p.gpu_mem_bytes = mem.get(&p.pid).copied().unwrap_or(0);
-                if let Some(rates) = &rates {
-                    let (disk, net) = rates.get(&p.pid).copied().unwrap_or_default();
-                    p.disk_bps = Some(disk);
-                    p.net_bps = Some(net);
+        let cpus = self.sys.cpus().len();
+        // Search must include quiet apps too; the frontend filters, sorts and limits rows.
+        let groups = procs.map(|state| {
+            #[cfg_attr(not(windows), allow(unused_mut))]
+            let mut list = processes::read(&state.sys);
+            #[cfg(windows)]
+            {
+                let (usage, mem) = win::process_gpu(state.gpu_mem.as_ref(), win);
+                let rates = state
+                    .io
+                    .as_mut()
+                    .and_then(super::process_io::ProcessIo::sample);
+                for p in &mut list {
+                    p.gpu_pct = usage.get(&p.pid).copied().unwrap_or(0.0);
+                    p.gpu_mem_bytes = mem.get(&p.pid).copied().unwrap_or(0);
+                    if let Some(rates) = &rates {
+                        let (disk, net) = rates.get(&p.pid).copied().unwrap_or_default();
+                        p.disk_bps = Some(disk);
+                        p.net_bps = Some(net);
+                    }
                 }
             }
-        }
-        // Search must include quiet apps too; the frontend filters, sorts and limits rows.
-        let groups = processes::groups(&procs, self.sys.cpus().len());
+            processes::groups(&list, cpus)
+        });
 
         #[cfg(windows)]
         let fans = detail.fans.latest();
@@ -319,7 +366,7 @@ impl Sampler {
                 .as_ref()
                 .and_then(PublicIp::latest)
                 .map(|ip| ip.to_string()),
-            battery: battery::estimate(&battery::read()),
+            battery: battery::estimate(&detail.battery.read()),
             fans,
             processes: groups,
         })
@@ -358,13 +405,16 @@ mod win {
     const GPU_DEDICATED: usize = 0;
     const GPU_SHARED: usize = 1;
     const CPU_LIMIT: usize = 2;
-    const GPU_PROCESS_MEM: usize = 3;
-    pub const DETAIL_COUNTERS: [&str; 4] = [
+    pub const DETAIL_COUNTERS: [&str; 3] = [
         r"\GPU Adapter Memory(*)\Dedicated Usage",
         r"\GPU Adapter Memory(*)\Shared Usage",
         r"\Processor Information(_Total)\% Performance Limit",
-        r"\GPU Process Memory(*)\Dedicated Usage",
     ];
+
+    /// Per-process instances are expensive to expand, so this query lives only with the
+    /// process list.
+    const GPU_PROCESS_MEM: usize = 0;
+    pub const PROCESS_COUNTERS: [&str; 1] = [r"\GPU Process Memory(*)\Dedicated Usage"];
 
     /// A dGPU below this usage is treated as asleep: no D3DKMT sensor query, which could wake it.
     const DGPU_ACTIVE_PCT: f32 = 0.5;
@@ -508,14 +558,14 @@ mod win {
         }
     }
 
-    /// Per-process GPU utilization and dedicated memory. `query` must have been collected this
-    /// tick (by [`detail`]).
+    /// Per-process GPU utilization and dedicated memory; collects the [`PROCESS_COUNTERS`] query.
     pub fn process_gpu(
         query: Option<&Query>,
         core: &CoreSample,
     ) -> (HashMap<u32, f32>, HashMap<u32, u64>) {
         let usage = parse::gpu_usage_by_pid(&core.gpu_engines);
         let mem = query
+            .filter(|q| q.collect_ok())
             .and_then(|q| q.items(GPU_PROCESS_MEM))
             .map(|v| parse::sum_by_pid(&v))
             .unwrap_or_default();
@@ -586,7 +636,7 @@ mod tests {
     fn collapsed_snapshot_has_no_detail() {
         let mut s = Sampler::new();
         std::thread::sleep(sysinfo::MINIMUM_CPU_UPDATE_INTERVAL);
-        let snap = s.sample(Thresholds::default(), false);
+        let snap = s.sample(Thresholds::default(), false, true);
         assert!(snap.detail.is_none());
         assert!(snap.core.ram.total_bytes > 0);
         assert!((0.0..=100.0).contains(&snap.core.cpu.percent));
@@ -596,13 +646,44 @@ mod tests {
     fn detail_appears_on_second_expanded_tick_and_drops_on_collapse() {
         let mut s = Sampler::new();
         let t = Thresholds::default();
-        assert!(s.sample(t, true).detail.is_none(), "first tick only primes");
+        assert!(
+            s.sample(t, true, true).detail.is_none(),
+            "first tick only primes"
+        );
         std::thread::sleep(sysinfo::MINIMUM_CPU_UPDATE_INTERVAL);
-        let d = s.sample(t, true).detail.expect("second tick has detail");
+        let d = s
+            .sample(t, true, true)
+            .detail
+            .expect("second tick has detail");
         assert!(!d.cores.is_empty());
-        assert!(!d.processes.is_empty());
-        assert!(s.sample(t, false).detail.is_none());
+        assert!(
+            !d.processes
+                .expect("second tick refreshes processes")
+                .is_empty()
+        );
+        assert!(s.sample(t, false, true).detail.is_none());
         assert!(s.detail.is_none(), "detail state released on collapse");
+    }
+
+    #[test]
+    fn processes_refresh_every_third_tick_and_stop_when_closed() {
+        let mut s = Sampler::new();
+        let t = Thresholds::default();
+        s.sample(t, true, true);
+        let sent: Vec<bool> = (0..4)
+            .map(|_| {
+                std::thread::sleep(sysinfo::MINIMUM_CPU_UPDATE_INTERVAL);
+                let d = s.sample(t, true, true).detail.expect("detail");
+                d.processes.is_some()
+            })
+            .collect();
+        assert_eq!(sent, [true, false, false, true]);
+        let d = s.sample(t, true, false).detail.expect("detail");
+        assert!(d.processes.is_none());
+        assert!(
+            s.detail.as_ref().is_some_and(|d| d.procs.is_none()),
+            "process state released"
+        );
     }
 
     /// Machine-dependent: `cargo test snapshot_live -- --ignored --nocapture` prints a real
@@ -612,9 +693,9 @@ mod tests {
     fn snapshot_live() {
         let mut s = Sampler::new();
         let t = Thresholds::default();
-        s.sample(t, true);
+        s.sample(t, true, true);
         std::thread::sleep(std::time::Duration::from_secs(1));
-        let snap = s.sample(t, true);
+        let snap = s.sample(t, true, true);
         println!("{}", serde_json::to_string_pretty(&snap).unwrap());
     }
 }

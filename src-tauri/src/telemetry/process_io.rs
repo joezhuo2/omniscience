@@ -10,7 +10,6 @@ use std::time::Instant;
 
 use ferrisetw::{
     EventRecord,
-    parser::Parser,
     provider::{
         Provider,
         kernel_providers::{self, KernelProvider},
@@ -20,8 +19,47 @@ use ferrisetw::{
 };
 use windows_sys::Win32::{
     Foundation::CloseHandle,
+    System::Diagnostics::Etw::{EVENT_HEADER_FLAG_32_BIT_HEADER, EVENT_RECORD},
     System::Threading::{GetProcessIdOfThread, OpenThread, THREAD_QUERY_LIMITED_INFORMATION},
 };
+
+/// The event's MOF payload. Read at fixed offsets instead of through TDH schemas, which cost a
+/// lookup and a parse for every packet and disk transfer.
+fn user_data(record: &EventRecord) -> &[u8] {
+    // SAFETY: `EventRecord` is `#[repr(transparent)]` over `EVENT_RECORD`, and `UserData` holds
+    // `UserDataLength` bytes for as long as the record is borrowed.
+    unsafe {
+        let raw = &*(record as *const EventRecord).cast::<EVENT_RECORD>();
+        if raw.UserData.is_null() {
+            return &[];
+        }
+        std::slice::from_raw_parts(raw.UserData.cast(), raw.UserDataLength.into())
+    }
+}
+
+fn u32_at(data: &[u8], at: usize) -> Option<u32> {
+    Some(u32::from_le_bytes(data.get(at..at + 4)?.try_into().ok()?))
+}
+
+/// The two leading `u32`s: (PID, size) in `TcpIp`/`UdpIp` send and receive events, and
+/// (ProcessId, TThreadId) in `Thread` events.
+fn leading_pair(data: &[u8]) -> Option<(u32, u32)> {
+    Some((u32_at(data, 0)?, u32_at(data, 4)?))
+}
+
+/// (IssuingThreadId, TransferSize) from a `DiskIo_TypeGroup1` read or write. The thread ID
+/// follows four `u32`s, a `u64`, two pointers and a `u64`; versions before Windows 8 lack it.
+fn disk_transfer(data: &[u8], pointer_size: usize) -> Option<(u32, u32)> {
+    Some((u32_at(data, 32 + 2 * pointer_size)?, u32_at(data, 8)?))
+}
+
+fn pointer_size(record: &EventRecord) -> usize {
+    if u32::from(record.event_flags()) & EVENT_HEADER_FLAG_32_BIT_HEADER != 0 {
+        4
+    } else {
+        8
+    }
+}
 
 #[derive(Default)]
 struct Counts {
@@ -54,19 +92,12 @@ impl ProcessIo {
         static SERIAL: AtomicU64 = AtomicU64::new(0);
         let counts = Arc::new(Mutex::new(Counts::default()));
         let net_counts = counts.clone();
-        let network = move |record: &EventRecord, schemas: &SchemaLocator| {
+        let network = move |record: &EventRecord, _: &SchemaLocator| {
             // Send/receive IPv4 and IPv6, excluding reconnect/retransmit/control events.
             if !matches!(record.opcode(), 10 | 11 | 26 | 27) {
                 return;
             }
-            let Ok(schema) = schemas.event_schema(record) else {
-                return;
-            };
-            let parser = Parser::create(record, &schema);
-            if let (Ok(pid), Ok(bytes)) = (
-                parser.try_parse::<u32>("PID"),
-                parser.try_parse::<u32>("size"),
-            ) {
+            if let Some((pid, bytes)) = leading_pair(user_data(record)) {
                 net_counts
                     .lock()
                     .unwrap_or_else(|e| e.into_inner())
@@ -85,18 +116,11 @@ impl ProcessIo {
             .build();
         let thread_counts = counts.clone();
         let threads = Provider::kernel(&kernel_providers::THREAD_PROVIDER)
-            .add_callback(move |record: &EventRecord, schemas: &SchemaLocator| {
+            .add_callback(move |record: &EventRecord, _: &SchemaLocator| {
                 if !matches!(record.opcode(), 1..=4) {
                     return;
                 }
-                let Ok(schema) = schemas.event_schema(record) else {
-                    return;
-                };
-                let parser = Parser::create(record, &schema);
-                if let (Ok(pid), Ok(tid)) = (
-                    parser.try_parse::<u32>("ProcessId"),
-                    parser.try_parse::<u32>("TThreadId"),
-                ) {
+                if let Some((pid, tid)) = leading_pair(user_data(record)) {
                     let mut state = thread_counts.lock().unwrap_or_else(|e| e.into_inner());
                     if matches!(record.opcode(), 1 | 3) {
                         if state.threads.len() >= 65536 {
@@ -111,18 +135,12 @@ impl ProcessIo {
             .build();
         let disk_counts = counts.clone();
         let disk = Provider::kernel(&kernel_providers::DISK_IO_PROVIDER)
-            .add_callback(move |record: &EventRecord, schemas: &SchemaLocator| {
+            .add_callback(move |record: &EventRecord, _: &SchemaLocator| {
                 if !matches!(record.opcode(), 10 | 11) {
                     return;
                 }
-                let Ok(schema) = schemas.event_schema(record) else {
-                    return;
-                };
-                let parser = Parser::create(record, &schema);
-                let (Ok(tid), Ok(bytes)) = (
-                    parser.try_parse::<u32>("IssuingThreadId"),
-                    parser.try_parse::<u32>("TransferSize"),
-                ) else {
+                let Some((tid, bytes)) = disk_transfer(user_data(record), pointer_size(record))
+                else {
                     return;
                 };
                 let mut state = disk_counts.lock().unwrap_or_else(|e| e.into_inner());
@@ -228,5 +246,28 @@ mod tests {
         assert_eq!(counts.bytes.get(&42), Some(&(150, 50)));
         assert_eq!(counts.bytes.get(&7), Some(&(0, 5)));
         assert!(!counts.bytes.contains_key(&0));
+    }
+
+    #[test]
+    fn reads_payload_fields_at_mof_offsets() {
+        let mut net = 4242u32.to_le_bytes().to_vec();
+        net.extend(1500u32.to_le_bytes());
+        net.extend([0; 16]);
+        assert_eq!(leading_pair(&net), Some((4242, 1500)));
+        assert_eq!(leading_pair(&net[..7]), None);
+
+        let disk = |ptr: usize| {
+            let mut d = vec![0u8; 36 + 2 * ptr];
+            d[8..12].copy_from_slice(&4096u32.to_le_bytes());
+            d[32 + 2 * ptr..36 + 2 * ptr].copy_from_slice(&77u32.to_le_bytes());
+            d
+        };
+        assert_eq!(disk_transfer(&disk(8), 8), Some((77, 4096)));
+        assert_eq!(disk_transfer(&disk(4), 4), Some((77, 4096)));
+        assert_eq!(
+            disk_transfer(&disk(8)[..48], 8),
+            None,
+            "pre-Windows 8 layout"
+        );
     }
 }
