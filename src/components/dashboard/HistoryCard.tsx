@@ -14,6 +14,7 @@ import {
 } from '../../lib/history';
 import { useSettingsStore } from '../../settings';
 import { Card } from './Card';
+import { Segmented } from '../Segmented';
 
 const REFRESH_MS = 60_000;
 const COLORS = ['var(--color-chart-1)', 'var(--color-chart-2)', 'var(--color-chart-3)'];
@@ -109,12 +110,16 @@ function HistoryChart({
           />
         )}
       </svg>
-      <div className="flex justify-between text-[9px] text-island-muted tabular-nums">
-        <span>{clock(f.from, long)}</span>
+      <div className="relative flex justify-between gap-2 text-[9px] whitespace-nowrap text-island-muted tabular-nums">
+        <span className={hover != null ? 'invisible' : ''}>{clock(f.from, long)}</span>
+        <span className={hover != null ? 'invisible' : ''}>
+          {clock(f.from + f.count * f.step, long)}
+        </span>
         {hover != null && (
-          <span className="text-island-text">{clock(f.from + hover * f.step, long)}</span>
+          <span className="absolute inset-x-0 text-center text-island-text">
+            {clock(f.from + hover * f.step, long)}
+          </span>
         )}
-        <span>{clock(f.from + f.count * f.step, long)}</span>
       </div>
     </figure>
   );
@@ -151,33 +156,17 @@ export function HistoryCard() {
   const f = frame(range.hours, data?.now ?? 0);
   const charts = data ? shapeCharts(data.samples, f) : [];
   const selector = (
-    <div
-      role="radiogroup"
-      aria-label="History range"
-      className="flex rounded-md bg-island-track p-0.5 text-[10px]"
-    >
-      {RANGES.map((r) => {
-        const active = r.hours === range.hours;
-        return (
-          <button
-            key={r.label}
-            type="button"
-            role="radio"
-            aria-checked={active}
-            disabled={r.hours > retention}
-            title={r.hours > retention ? 'Longer than the history kept (see Settings)' : undefined}
-            onClick={() => setChosen(r.hours)}
-            className={`rounded px-1.5 py-0.5 tabular-nums transition-colors disabled:opacity-35 ${
-              active
-                ? 'bg-island-faint text-island-text'
-                : 'text-island-muted hover:text-island-text'
-            }`}
-          >
-            {r.label}
-          </button>
-        );
-      })}
-    </div>
+    <Segmented
+      label="History range"
+      items={RANGES.map((r) => ({
+        value: r.hours,
+        label: r.label,
+        disabled: r.hours > retention,
+        tip: r.hours > retention ? 'Longer than the history kept (see Settings)' : undefined,
+      }))}
+      value={range.hours}
+      onChange={setChosen}
+    />
   );
   return (
     <Card

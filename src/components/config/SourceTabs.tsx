@@ -1,3 +1,5 @@
+import { Segmented } from '../Segmented';
+
 export function SourceTabs({
   label,
   ac,
@@ -9,37 +11,18 @@ export function SourceTabs({
   activeAc: boolean | null | undefined;
   onChange: (ac: boolean) => void;
 }) {
+  const name = (value: boolean, text: string) => (activeAc === value ? `${text} •` : text);
   return (
-    <div
-      role="tablist"
-      aria-label={label}
-      className="flex w-fitrounded-md bg-island-hover p-0.5 text-[10px]"
-    >
-      {[
-        { value: true, name: 'Plugged in' },
-        { value: false, name: 'Battery' },
-      ].map(({ value, name }) => (
-        <button
-          key={name}
-          type="button"
-          role="tab"
-          aria-selected={ac === value}
-          className={`rounded px-1.5 py-0.5 font-medium uppercase transition-colors ${
-            ac === value
-              ? 'bg-island-track text-island-text'
-              : 'text-island-muted hover:text-island-text'
-          }`}
-          onClick={() => onChange(value)}
-        >
-          {name}
-          {activeAc === value && (
-            <span
-              title="Current power source"
-              className="ml-1 inline-block h-1 w-1 rounded-full bg-current align-middle"
-            />
-          )}
-        </button>
-      ))}
-    </div>
+    <Segmented
+      role="tab"
+      label={label}
+      className="uppercase"
+      items={[
+        { value: 'ac', label: name(true, 'Plugged in') },
+        { value: 'dc', label: name(false, 'Battery') },
+      ]}
+      value={ac ? 'ac' : 'dc'}
+      onChange={(v) => onChange(v === 'ac')}
+    />
   );
 }

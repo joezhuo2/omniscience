@@ -1,3 +1,4 @@
+import { FeedbackButton } from '@crystalflux/feedback-button';
 import { Card } from '../dashboard/Card';
 import { useNativeControl } from './useNativeControl';
 
@@ -60,12 +61,12 @@ export function BatterySaverCard({ active = true }: { active?: boolean }) {
             ))}
           </select>
         </label>
-        <button
-          type="button"
+        <FeedbackButton
           className="config-button"
           disabled={disabled || status?.on == null}
-          onClick={() =>
-            void apply(
+          done={status?.on ? 'Turned on' : 'Turned off'}
+          action={() =>
+            apply(
               'set_battery_saver',
               { on: !status?.on },
               status?.on != null
@@ -75,7 +76,7 @@ export function BatterySaverCard({ active = true }: { active?: boolean }) {
           }
         >
           {status?.on ? 'Turn off' : 'Turn on'}
-        </button>
+        </FeedbackButton>
       </div>
       <p className="mt-2 text-xs" role="status" aria-live="polite">
         {busy

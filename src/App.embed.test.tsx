@@ -72,6 +72,6 @@ describe('embedded mode', () => {
     expect(screen.queryByText('Auto-check for updates')).not.toBeInTheDocument();
     expect(screen.queryByText(/System config/)).not.toBeInTheDocument();
     expect(screen.queryByText('Reset to top center')).not.toBeInTheDocument();
-    expect(screen.getByText('Sustained usage alerts')).toBeInTheDocument();
+    expect(screen.getAllByText('Sustained usage alerts')[0]).toBeInTheDocument();
   });
 });

@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Card } from './Card';
 import { SectionLayout } from './SectionLayout';
+import { Tip } from '../Tip';
 import { DEFAULT_SECTION_ORDER, SECTION_LABELS, saveSectionOrder } from '../../lib/sections';
 
 const layout = (hidden: 'battery'[] = []) =>
@@ -33,7 +34,7 @@ describe('section drag layout', () => {
     saveSectionOrder(['processes', 'network', 'battery', 'cpu-cores', 'gpu-power']);
     const view = layout(['battery']);
     expect(order()).toEqual(['processes', 'network', 'cpu-cores', 'gpu-power', 'fans', 'history']);
-    expect(screen.queryByRole('region', { name: 'Battery' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('article', { name: 'Battery' })).not.toBeInTheDocument();
     view.unmount();
     layout();
     expect(order()).toEqual([
@@ -70,7 +71,7 @@ describe('section drag layout', () => {
       target: { value: 'keep me' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'GPU & Power' }));
-    const handle = screen.getByRole('region', { name: 'GPU & Power' });
+    const handle = screen.getByRole('article', { name: 'GPU & Power' });
     handle.focus();
     fireEvent.keyDown(handle, { key: ' ', code: 'Space' });
     await waitFor(() => expect(handle).toHaveAttribute('data-dragging', 'true'));
@@ -120,7 +121,7 @@ describe('section drag layout', () => {
         };
       });
       layout();
-      const card = screen.getByRole('region', { name: 'GPU & Power' });
+      const card = screen.getByRole('article', { name: 'GPU & Power' });
       const target =
         part === 'surface'
           ? card
@@ -137,6 +138,29 @@ describe('section drag layout', () => {
     },
   );
 
+  it('does not start a drag from an element with a tooltip', async () => {
+    render(
+      <SectionLayout>
+        {(id) => (
+          <Card title={SECTION_LABELS[id]} section={id}>
+            <Tip content="Explained">
+              <span>{`${id} hint`}</span>
+            </Tip>
+          </Card>
+        )}
+      </SectionLayout>,
+    );
+    const card = screen.getByRole('article', { name: 'GPU & Power' });
+    const hint = screen.getByText('gpu-power hint');
+    fireEvent.mouseDown(hint, { button: 0, buttons: 1, clientX: 20, clientY: 20 });
+    fireEvent.mouseMove(document, { buttons: 1, clientX: 20, clientY: 60 });
+    fireEvent.mouseUp(document, { button: 0, clientX: 20, clientY: 60 });
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 30));
+    });
+    expect(card).not.toHaveAttribute('data-dragging');
+  });
+
   it('toggles collapse from a surface click but not from child controls or drags', async () => {
     render(
       <Card title="Network" section="network">
@@ -144,7 +168,7 @@ describe('section drag layout', () => {
         <p>body text</p>
       </Card>,
     );
-    const card = screen.getByRole('region', { name: 'Network' });
+    const card = screen.getByRole('article', { name: 'Network' });
     const title = screen.getByRole('button', { name: /Network/ });
     fireEvent.mouseDown(card, { button: 0, clientX: 5, clientY: 5 });
     fireEvent.click(card, { clientX: 5, clientY: 5 });
@@ -160,7 +184,7 @@ describe('section drag layout', () => {
 
   it('does not toggle after a completed drag', async () => {
     layout();
-    const card = screen.getByRole('region', { name: 'GPU & Power' });
+    const card = screen.getByRole('article', { name: 'GPU & Power' });
     fireEvent.mouseDown(card, { button: 0, buttons: 1, clientX: 20, clientY: 20 });
     fireEvent.mouseMove(document, { buttons: 1, clientX: 20, clientY: 30 });
     await waitFor(() => expect(card).toHaveAttribute('data-dragging', 'true'));
@@ -178,7 +202,7 @@ describe('section drag layout', () => {
     const input = screen.getByRole('textbox', { name: 'gpu-power input' });
     input.focus();
     fireEvent.keyDown(input, { key: ' ', code: 'Space' });
-    expect(screen.getByRole('region', { name: 'GPU & Power' })).not.toHaveAttribute(
+    expect(screen.getByRole('article', { name: 'GPU & Power' })).not.toHaveAttribute(
       'data-dragging',
       'true',
     );
@@ -191,7 +215,7 @@ describe('section drag layout', () => {
 
   it('cancels a picked-up card without persisting a new order', async () => {
     layout();
-    const handle = screen.getByRole('region', { name: 'Network' });
+    const handle = screen.getByRole('article', { name: 'Network' });
     handle.focus();
     fireEvent.keyDown(handle, { key: ' ', code: 'Space' });
     await waitFor(() => expect(handle).toHaveAttribute('data-dragging', 'true'));

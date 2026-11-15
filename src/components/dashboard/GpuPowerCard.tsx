@@ -5,6 +5,8 @@ import { useTelemetryStore } from '../../store';
 import type { GpuDetail } from '../../types/telemetry';
 import { Card } from './Card';
 import { Skeleton } from './Skeleton';
+import { Num } from '../Num';
+import { Tip } from '../Tip';
 
 function memoryText(g: GpuDetail): string {
   const gb = 1024 ** 3;
@@ -21,9 +23,9 @@ function GpuRow({ gpu }: { gpu: GpuDetail }) {
     <div className="space-y-1">
       <div className="flex items-baseline justify-between gap-2 text-[11px]">
         <span className="flex min-w-0 items-center gap-1.5">
-          <span className="truncate text-island-text" title={gpu.name}>
-            {gpu.name}
-          </span>
+          <Tip content={gpu.name}>
+            <span className="truncate text-island-text">{gpu.name}</span>
+          </Tip>
           {gpu.throttling && (
             <span className="shrink-0 rounded-full bg-island-crit/20 px-1.5 text-[9px] text-island-crit">
               Throttling
@@ -64,13 +66,15 @@ export function GpuPowerCard() {
       title="GPU & Power"
       section="gpu-power"
       aside={
-        <span
-          title="Package power"
-          className="flex items-center gap-1 text-[11px] text-island-warn tabular-nums"
-        >
-          <Zap size={11} aria-hidden />
-          {formatWatts(packageWatts)}
-        </span>
+        <Tip content="Package power">
+          <span
+            data-testid="package-power"
+            className="flex items-center gap-1 text-[11px] text-island-warn tabular-nums"
+          >
+            <Zap size={11} aria-hidden />
+            <Num value={packageWatts} format={formatWatts} />
+          </span>
+        </Tip>
       }
     >
       {!detail ? (

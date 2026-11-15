@@ -46,14 +46,14 @@ it('selects tabs per source, saving the inactive source without touching the act
   });
   render(<PowerModeCard />);
   await waitFor(() =>
-    expect(screen.getByRole('tab', { name: 'Battery' })).toHaveAttribute('aria-selected', 'true'),
+    expect(screen.getByRole('tab', { name: /^Battery/ })).toHaveAttribute('aria-selected', 'true'),
   );
   expect(screen.getByRole('button', { name: 'Efficiency' })).toHaveAttribute(
     'aria-pressed',
     'true',
   );
   expect(screen.queryByRole('button', { name: 'Auto' })).toBeNull();
-  fireEvent.click(screen.getByRole('tab', { name: 'Plugged in' }));
+  fireEvent.click(screen.getByRole('tab', { name: /^Plugged in/ }));
   expect(screen.getByRole('button', { name: 'Performance' })).toHaveAttribute(
     'aria-pressed',
     'true',

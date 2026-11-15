@@ -1,4 +1,8 @@
 import { invoke, isEmbedded } from '../../lib/ipc';
+import { GlassCheckbox } from '@crystalflux/checkbox-glass';
+import { FeedbackButton } from '@crystalflux/feedback-button';
+import { GlassSwitch } from '@crystalflux/switch-glass';
+import { SmoothRange } from '@crystalflux/smooth-range';
 import { ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
 import { RANGES } from '../../lib/history';
@@ -6,6 +10,9 @@ import { acceleratorFromEvent, displayAccelerator } from '../../lib/hotkey';
 import { useSettingsStore, type Settings } from '../../settings';
 import { useToastStore } from '../../toasts';
 import { Toasts } from '../dashboard/Toasts';
+import { IslandImageField } from './IslandImageField';
+import { Segmented } from '../Segmented';
+import { useGlass } from '../../lib/glass';
 
 const IS_MAC = typeof navigator !== 'undefined' && /Mac/i.test(navigator.platform);
 const INTERVALS = [500, 1000, 2000, 5000];
@@ -22,9 +29,6 @@ function Row({ label, hint, children }: { label: string; hint?: string; children
   );
 }
 
-/** iOS-style switch. Sizes are explicit so the knob always stays inside the track. */
-const SWITCH = { w: 34, h: 20, knob: 16, pad: 2 };
-
 function Toggle({
   checked,
   label,
@@ -35,27 +39,12 @@ function Toggle({
   onChange: (v: boolean) => void;
 }) {
   return (
-    <button
-      role="switch"
-      aria-checked={checked}
-      aria-label={label}
-      onClick={() => onChange(!checked)}
-      className={`relative shrink-0 overflow-hidden rounded-full p-0 transition-colors duration-200 ${
-        checked ? 'bg-island-ok' : 'bg-island-track'
-      }`}
-      style={{ width: SWITCH.w, height: SWITCH.h }}
-    >
-      <span
-        aria-hidden
-        className="absolute block rounded-full bg-white shadow transition-[left] duration-200 ease-out"
-        style={{
-          top: SWITCH.pad,
-          width: SWITCH.knob,
-          height: SWITCH.knob,
-          left: checked ? SWITCH.w - SWITCH.knob - SWITCH.pad : SWITCH.pad,
-        }}
-      />
-    </button>
+    <GlassSwitch
+      className="shrink-0"
+      checked={checked}
+      onChange={onChange}
+      label={<span className="sr-only">{label}</span>}
+    />
   );
 }
 
@@ -178,6 +167,12 @@ function HotkeyRecorder({ value, onChange }: { value: string; onChange: (v: stri
 
 export function SettingsView({ onBack }: { onBack: () => void }) {
   const { settings, error, load, update } = useSettingsStore();
+  const {
+    on: glass,
+    opacity: glassOpacity,
+    setOn: setGlass,
+    setOpacity: setGlassOpacity,
+  } = useGlass();
   useEffect(() => {
     if (!settings) void load();
   }, [settings, load]);
@@ -194,6 +189,7 @@ export function SettingsView({ onBack }: { onBack: () => void }) {
       push('Diagnostic report copied to the clipboard.');
     } catch (e) {
       push(`Could not copy the diagnostic report: ${String(e)}`);
+      throw e;
     }
   };
 
@@ -252,57 +248,37 @@ export function SettingsView({ onBack }: { onBack: () => void }) {
             />
           </Row>
           <Row label="Update every">
-            <div
-              role="radiogroup"
-              aria-label="Update interval"
-              className="flex rounded-md bg-island-track p-0.5 text-[10px]"
-            >
-              {INTERVALS.map((ms) => {
-                const active = settings.poll_interval_ms === ms;
-                return (
-                  <button
-                    key={ms}
-                    role="radio"
-                    aria-checked={active}
-                    onClick={() => set({ poll_interval_ms: ms })}
-                    className={`rounded px-2 py-0.5 tabular-nums transition-colors ${
-                      active
-                        ? 'bg-island-faint text-island-text'
-                        : 'text-island-muted hover:text-island-text'
-                    }`}
-                  >
-                    {ms / 1000} s
-                  </button>
-                );
-              })}
-            </div>
+            <Segmented
+              label="Update interval"
+              items={INTERVALS.map((ms) => ({ value: ms, label: `${ms / 1000} s` }))}
+              value={settings.poll_interval_ms}
+              onChange={(ms) => set({ poll_interval_ms: ms })}
+            />
           </Row>
           <Row label="Keep history for">
-            <div
-              role="radiogroup"
-              aria-label="History retention"
-              className="flex rounded-md bg-island-track p-0.5 text-[10px]"
-            >
-              {RANGES.map(({ label, hours }) => {
-                const active = settings.history_hours === hours;
-                return (
-                  <button
-                    key={hours}
-                    role="radio"
-                    aria-checked={active}
-                    onClick={() => set({ history_hours: hours })}
-                    className={`rounded px-2 py-0.5 tabular-nums transition-colors ${
-                      active
-                        ? 'bg-island-faint text-island-text'
-                        : 'text-island-muted hover:text-island-text'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
+            <Segmented
+              label="History retention"
+              items={RANGES.map(({ label, hours }) => ({ value: hours, label }))}
+              value={settings.history_hours}
+              onChange={(hours) => set({ history_hours: hours })}
+            />
           </Row>
+          <Row label="Glass cards" hint="Translucent cards that show the island image through.">
+            <Toggle label="Glass cards" checked={glass} onChange={setGlass} />
+          </Row>
+          {glass && (
+            <Row label={`Glass opacity ${glassOpacity}%`}>
+              <SmoothRange
+                aria-label="Glass opacity"
+                className="w-28"
+                min={20}
+                max={95}
+                step={5}
+                value={glassOpacity}
+                onValue={setGlassOpacity}
+              />
+            </Row>
+          )}
           {standalone && (
             <>
               <Row label="Show/hide hotkey">
@@ -379,13 +355,17 @@ export function SettingsView({ onBack }: { onBack: () => void }) {
                   onChange={(v) => set({ config_enabled: v })}
                 />
               </Row>
+              <Row label="Island image" hint="Background for the island. Blank when none is set.">
+                <IslandImageField />
+              </Row>
               <Row label="Position">
-                <button
-                  onClick={() => void invoke('reset_position').catch(() => {})}
+                <FeedbackButton
+                  action={() => invoke('reset_position')}
+                  done="Moved"
                   className="rounded border border-island-faint px-2 py-0.5 text-[10px] text-island-text hover:border-island-muted"
                 >
                   Reset to top center
-                </button>
+                </FeedbackButton>
               </Row>
             </>
           )}
@@ -394,20 +374,19 @@ export function SettingsView({ onBack }: { onBack: () => void }) {
             hint="App version, sensor and control availability, recent errors. Telemetry leaves out process names and IP addresses."
           >
             <div className="flex shrink-0 flex-col items-end gap-1.5">
-              <label className="flex items-center gap-1.5 text-[10px] text-island-muted">
-                <input
-                  type="checkbox"
-                  checked={includeTelemetry}
-                  onChange={(e) => setIncludeTelemetry(e.target.checked)}
-                />
-                Include telemetry
-              </label>
-              <button
-                onClick={() => void copyReport()}
+              <GlassCheckbox
+                className="text-[10px] text-island-muted"
+                checked={includeTelemetry}
+                onChange={setIncludeTelemetry}
+                label="Include telemetry"
+              />
+              <FeedbackButton
+                action={copyReport}
+                done="Copied"
                 className="rounded border border-island-faint px-2 py-0.5 text-[10px] text-island-text hover:border-island-muted"
               >
                 Copy diagnostic report
-              </button>
+              </FeedbackButton>
             </div>
           </Row>
         </div>

@@ -22,7 +22,7 @@ describe('FanCard', () => {
   it('shows CPU and GPU fan speeds', () => {
     show({ cpu_rpm: 3200, gpu_rpm: 2800 });
     render(<FanCard />);
-    expect(screen.getByRole('region', { name: 'Fans' })).toBeInTheDocument();
+    expect(screen.getByRole('article', { name: 'Fans' })).toBeInTheDocument();
     expect(screen.getByTestId('fan-cpu')).toHaveTextContent('3200 rpm');
     expect(screen.getByTestId('fan-gpu')).toHaveTextContent('2800 rpm');
   });
@@ -52,9 +52,9 @@ describe('FanCard', () => {
   it('is hidden from the dashboard on machines without a fan sensor', () => {
     show({ cpu_rpm: 3200, gpu_rpm: 2800 });
     render(<Dashboard />);
-    expect(screen.getByRole('region', { name: 'Fans' })).toBeInTheDocument();
+    expect(screen.getByRole('article', { name: 'Fans' })).toBeInTheDocument();
     show(null);
     expect(screen.queryByText('Fans')).not.toBeInTheDocument();
-    expect(screen.getByRole('region', { name: 'Battery' })).toBeInTheDocument();
+    expect(screen.getByRole('article', { name: 'Battery' })).toBeInTheDocument();
   });
 });

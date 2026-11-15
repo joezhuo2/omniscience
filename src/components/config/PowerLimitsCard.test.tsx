@@ -46,10 +46,10 @@ it('selects the active source tab and edits the other profile separately', async
     return { ...supported, ac: false, ac_limits: { spl: 60, sppt: 70 } };
   });
   render(<PowerLimitsCard />);
-  const battery = screen.getByRole('tab', { name: 'Battery' });
+  const battery = screen.getByRole('tab', { name: /^Battery/ });
   await waitFor(() => expect(battery).toHaveAttribute('aria-selected', 'true'));
   expect(screen.getByRole('slider', { name: 'Sustained (SPL)' })).toHaveValue('45');
-  fireEvent.click(screen.getByRole('tab', { name: 'Plugged in' }));
+  fireEvent.click(screen.getByRole('tab', { name: /^Plugged in/ }));
   const spl = screen.getByRole('slider', { name: 'Sustained (SPL)' });
   expect(spl).toHaveValue('60');
   fireEvent.change(spl, { target: { value: '65' } });

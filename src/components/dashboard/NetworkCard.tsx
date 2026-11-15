@@ -5,6 +5,8 @@ import { useSettingsStore } from '../../settings';
 import { useTelemetryStore } from '../../store';
 import { Card } from './Card';
 import { Skeleton } from './Skeleton';
+import { Num } from '../Num';
+import { Tip } from '../Tip';
 
 /** Adapters listed; the rest are usually idle virtual switches. */
 const VISIBLE_ADAPTERS = 3;
@@ -19,13 +21,14 @@ export function NetworkCard() {
     if (!loaded) void load();
   }, [loaded, load]);
   const ping = target ? (
-    <span
-      title={`Round trip to ${target}`}
-      className="flex shrink-0 items-center gap-1 whitespace-nowrap text-[11px] text-island-muted tabular-nums"
-    >
-      <Timer size={11} aria-hidden />
-      <span data-testid="ping">{formatLatency(detail?.ping_ms)}</span>
-    </span>
+    <Tip content={`Round trip to ${target}`}>
+      <span className="flex shrink-0 items-center gap-1 whitespace-nowrap text-[11px] text-island-muted tabular-nums">
+        <Timer size={11} aria-hidden />
+        <span data-testid="ping">
+          <Num value={detail?.ping_ms} format={formatLatency} />
+        </span>
+      </span>
+    </Tip>
   ) : null;
   return (
     <Card section="network" title="Network" summary={ping}>
@@ -41,10 +44,12 @@ export function NetworkCard() {
           )}
           {detail.net_adapters.slice(0, VISIBLE_ADAPTERS).map((a, index) => (
             <div key={a.name} className="flex items-baseline justify-between gap-2">
-              <span className="min-w-0 truncate text-island-text" title={a.name}>
-                {a.name}
-                {a.ipv4 && <span className="pl-1.5 text-island-muted">{a.ipv4}</span>}
-              </span>
+              <Tip content={a.name}>
+                <span className="min-w-0 truncate text-island-text">
+                  {a.name}
+                  {a.ipv4 && <span className="pl-1.5 text-island-muted">{a.ipv4}</span>}
+                </span>
+              </Tip>
               {index === 0 && ping}
             </div>
           ))}

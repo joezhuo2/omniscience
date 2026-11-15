@@ -1,3 +1,4 @@
+import { Segmented } from '../Segmented';
 import { useId, useState } from 'react';
 import { ConfigView } from '../config/ConfigView';
 import { BatteryCard } from './BatteryCard';
@@ -30,11 +31,13 @@ const SECTIONS = {
 
 export function Dashboard({
   onSettings,
+  onStyle,
   pinned,
   onTogglePin,
   showSystemUpdates = 0,
 }: {
   onSettings?: () => void;
+  onStyle?: () => void;
   pinned?: boolean;
   onTogglePin?: () => void;
   showSystemUpdates?: number;
@@ -58,55 +61,27 @@ export function Dashboard({
   if (!hasFans) hiddenSections.push('fans');
   return (
     <div data-testid="dashboard" className="flex flex-col gap-2 pt-1">
-      <Header onSettings={onSettings} pinned={pinned} onTogglePin={onTogglePin} />
+      <Header onSettings={onSettings} onStyle={onStyle} pinned={pinned} onTogglePin={onTogglePin} />
       {configEnabled && (
-        <div
-          role="tablist"
-          aria-label="Dashboard"
-          className="flex gap-1 rounded-lg bg-island-hover p-1"
-        >
-          {(['info', 'config'] as const).map((name, index) => (
-            <button
-              key={name}
-              id={`${id}-${name}-tab`}
-              role="tab"
-              type="button"
-              aria-selected={tab === name}
-              aria-controls={`${id}-${name}-panel`}
-              tabIndex={tab === name ? 0 : -1}
-              onClick={() => selectTab(name)}
-              onKeyDown={(event) => {
-                const next =
-                  event.key === 'Home'
-                    ? 'info'
-                    : event.key === 'End'
-                      ? 'config'
-                      : event.key === 'ArrowLeft' || event.key === 'ArrowRight'
-                        ? index === 0
-                          ? 'config'
-                          : 'info'
-                        : null;
-                if (next) {
-                  event.preventDefault();
-                  selectTab(next);
-                  document.getElementById(`${id}-${next}-tab`)?.focus();
-                }
-              }}
-              className={`flex-1 rounded-md px-3 py-1.5 text-xs capitalize transition-colors hover:text-island-text focus-visible:outline-2 focus-visible:outline-island-muted ${tab === name ? 'bg-island-faint text-island-text' : 'text-island-muted'}`}
-            >
-              {name}
-            </button>
-          ))}
+        <div className="card-surface rounded-[10px]">
+          <Segmented
+            role="tab"
+            label="Dashboard"
+            className="dashboard-tabs"
+            items={[
+              { value: 'info', label: 'info' },
+              { value: 'config', label: 'config' },
+            ]}
+            value={tab}
+            onChange={selectTab}
+          />
         </div>
       )}
-      <div
-        id={`${id}-info-panel`}
-        role="tabpanel"
-        aria-labelledby={`${id}-info-tab`}
-        hidden={tab !== 'info'}
-      >
+      <div id={`${id}-info-panel`} role="tabpanel" aria-label="info" hidden={tab !== 'info'}>
         <div className="flex flex-col gap-2">
-          <MetricStrip />
+          <div className="card-surface rounded-xl px-1 py-2">
+            <MetricStrip />
+          </div>
           <SensorDetails />
           <div className={embedded ? 'embed-grid' : 'contents'}>
             <SectionLayout hidden={hiddenSections} grid={embedded}>
@@ -122,7 +97,7 @@ export function Dashboard({
         <div
           id={`${id}-config-panel`}
           role="tabpanel"
-          aria-labelledby={`${id}-config-tab`}
+          aria-label="config"
           hidden={tab !== 'config'}
         >
           {configOpened && <ConfigView key={showSystemUpdates} active={tab === 'config'} />}

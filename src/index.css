@@ -108,26 +108,55 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* The island: one black shape whose clip-path morphs between the centered pill and the full
-   panel (compositor-friendly, no layout). Content fades in after the shape grows. */
-.island {
+/* The island: GlassIsland morphs between the centered pill and the full panel. */
+.island-host {
   position: absolute;
   top: var(--top-gap);
   left: 50%;
   width: var(--panel-w);
   transform: translateX(-50%);
-  background: var(--color-island-bg);
-  color: var(--color-island-text);
-  border-radius: var(--panel-radius);
-  clip-path: inset(
-    0 calc(50% - var(--pill-w) / 2) calc(100% - var(--pill-h)) calc(50% - var(--pill-w) / 2) round
-      calc(var(--pill-h) / 2)
-  );
-  transition: clip-path var(--shape-ms) var(--ease);
 }
 
-.island.expanded {
-  clip-path: inset(0 0 0 0 round var(--panel-radius));
+.island-shell {
+  min-width: 0;
+  isolation: isolate;
+  background-color: var(--color-island-bg);
+  color: var(--color-island-text);
+  --pw: var(--pill-w) !important;
+  --ph: var(--pill-h) !important;
+  box-shadow: none;
+  transition: clip-path var(--shape-ms) var(--ease) !important;
+}
+
+.island-shell::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: -1;
+  height: var(--window-max-h);
+  background: var(--island-image, none) center / cover no-repeat;
+  pointer-events: none;
+  /* Closed, the pill shows the middle of the image; open, the panel starts at its top. */
+  transform: translateY(calc((var(--pill-h) - var(--window-max-h)) / 2));
+  transition: transform var(--shape-ms) var(--ease);
+}
+
+.expanded .island-shell::before {
+  transform: translateY(0);
+}
+
+.island-shell > span[aria-hidden='true'] {
+  display: none;
+}
+
+.island-shell > button {
+  padding: 0;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+.island-shell > div:last-child {
+  padding: calc(var(--pill-h)) 0 0;
 }
 
 .panel {
@@ -180,49 +209,43 @@ body {
   }
 }
 
-/* A grid track follows intrinsic content height and reverses from its current size.
-   Content stays mounted; inert and aria-hidden disable collapsed controls immediately. */
-.card-body {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: 1fr;
-  opacity: 1;
-  visibility: visible;
+.card-accordion h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-right: 12px;
 }
 
-.card-body-clip {
+.card-accordion h3 > button {
   min-width: 0;
-  min-height: 0;
-  overflow: hidden;
+  flex: 1;
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 10px 12px;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-island-muted);
 }
 
-.card-chevron {
-  transform: rotate(90deg);
+.card-accordion h3 > button:hover {
+  color: var(--color-island-text);
+  background: transparent;
 }
 
-[data-collapsed='true'] > .card-body {
-  grid-template-rows: 0fr;
-  opacity: 0;
-  visibility: hidden;
+.card-accordion h3 > button svg {
+  width: 14px;
+  height: 14px;
 }
 
-[data-collapsed='true'] .card-chevron {
-  transform: rotate(0deg);
+.card-accordion [role='region'] > div > div {
+  padding: 2px 12px 12px;
+  opacity: 1;
 }
 
-[data-animate='true'] > .card-body {
-  transition:
-    grid-template-rows var(--card-ms) var(--ease),
-    opacity var(--card-ms) var(--ease),
-    visibility 0s;
-}
-
-[data-animate='true'][data-collapsed='true'] > .card-body {
-  transition-delay: 0s, 0s, var(--card-ms);
-}
-
-[data-animate='true'] .card-chevron {
-  transition: transform var(--card-ms) var(--ease);
+.section-sortable [data-no-drag] {
+  cursor: default;
 }
 
 .section-sortable[data-dragging='true'] {
@@ -231,12 +254,10 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .card-body,
-  .card-chevron,
   .section-sortable {
     transition: none !important;
   }
-  .island,
+  .island-shell,
   .panel,
   .ring-arc {
     transition: none;
@@ -244,4 +265,199 @@ body {
   .ring-critical {
     animation: none;
   }
+}
+
+:root {
+  --cd-accent: var(--color-island-ok);
+  --cd-fg: var(--color-island-text);
+  --cd-bg: var(--color-island-bg);
+  --cd-raised: var(--color-island-hover);
+  --cd-line: var(--color-island-faint);
+  --cd-radius: 10px;
+  --cd-ease: var(--ease);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-island-faint) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: var(--color-island-faint);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-island-muted);
+}
+
+.dashboard-tabs {
+  width: 100%;
+}
+
+.dashboard-tabs {
+  border-radius: 10px;
+  padding: 3px;
+  background: transparent;
+}
+
+.dashboard-tabs button[role='tab'] {
+  flex: 1;
+  padding: 3px 10px;
+  font-size: 11px;
+  text-transform: capitalize;
+}
+
+.segmented-thumb {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  border-radius: 4px;
+  background: var(--color-island-faint);
+  transition:
+    left 220ms var(--ease),
+    right 220ms var(--ease);
+}
+
+.dashboard-tabs .segmented-thumb {
+  top: 3px;
+  bottom: 3px;
+  border-radius: 7px;
+}
+
+/* Rubber band: the leading edge springs ahead, the trailing edge catches up. */
+.segmented-thumb[data-dir='fwd'] {
+  transition:
+    right 200ms cubic-bezier(0.3, 1.45, 0.6, 1),
+    left 320ms 60ms cubic-bezier(0.3, 1.25, 0.6, 1);
+}
+
+.segmented-thumb[data-dir='back'] {
+  transition:
+    left 200ms cubic-bezier(0.3, 1.45, 0.6, 1),
+    right 320ms 60ms cubic-bezier(0.3, 1.25, 0.6, 1);
+}
+
+.card-surface {
+  background: var(--color-island-hover);
+  box-shadow: inset 0 0 0 1px var(--color-island-faint);
+}
+
+/* Glass without backdrop-filter: a translucent tint and lit edge stay cheap in the
+   software-rendered overlay. */
+:root[data-glass='on'] .card-surface {
+  background:
+    linear-gradient(160deg, rgb(255 255 255 / 0.1), rgb(255 255 255 / 0.02)),
+    color-mix(in srgb, var(--color-island-hover) var(--glass-alpha, 60%), transparent);
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 0.12),
+    inset 0 1px 0 rgb(255 255 255 / 0.2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .segmented-thumb {
+    transition: none !important;
+  }
+}
+
+.font-field > span {
+  display: flex;
+}
+
+.font-select {
+  width: 100%;
+  min-width: 0;
+  padding: 4px 8px;
+  font-size: 11px;
+  color: var(--color-island-text);
+}
+
+:root[data-glass='on'] .segmented:not(.dashboard-tabs),
+:root[data-glass='on'] .glass-field {
+  background: rgb(0 0 0 / 0.18);
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 0.1),
+    inset 0 1px 0 rgb(255 255 255 / 0.12);
+}
+
+.glass-field {
+  background: var(--color-island-hover);
+}
+
+:root[data-glass='on'] .segmented-thumb {
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.24), rgb(255 255 255 / 0.1));
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 0.18),
+    inset 0 1px 0 rgb(255 255 255 / 0.3);
+}
+
+input[type='range'] {
+  --sr-track: 6px;
+}
+
+:root[data-glass='on'] input[type='range']::-webkit-slider-runnable-track {
+  background: linear-gradient(
+    to right,
+    rgb(255 255 255 / 0.55) var(--sr-pct, 0%),
+    rgb(255 255 255 / 0.1) var(--sr-pct, 0%)
+  );
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14);
+}
+
+:root[data-glass='on'] input[type='range']::-webkit-slider-thumb {
+  background: radial-gradient(circle at 35% 30%, rgb(255 255 255 / 0.95), rgb(255 255 255 / 0.55));
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 0.7),
+    0 1px 4px rgb(0 0 0 / 0.35);
+}
+
+@property --cd-lit {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
+/* Pointer-following spotlight (crystal-design spotlight): a lit rim and a soft wash. */
+.card-spot {
+  transition: --cd-lit 0.5s ease;
+}
+
+.card-spot::before,
+.card-spot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.card-spot::before {
+  padding: 1px;
+  background: radial-gradient(
+    220px circle at var(--cd-mx, 50%) var(--cd-my, 0),
+    color-mix(in srgb, var(--cd-spot, #bef4ff) calc(95% * var(--cd-lit)), transparent),
+    transparent 70%
+  );
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+}
+
+.card-spot::after {
+  background: radial-gradient(
+    300px circle at var(--cd-mx, 50%) var(--cd-my, 0),
+    color-mix(in srgb, var(--cd-spot, #bef4ff) calc(18% * var(--cd-lit)), transparent),
+    color-mix(in srgb, var(--cd-spot, #bef4ff) calc(5% * var(--cd-lit)), transparent) 45%,
+    transparent 72%
+  );
 }

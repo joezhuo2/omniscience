@@ -1,5 +1,6 @@
 import { Card } from '../dashboard/Card';
 import { useNativeControl } from './useNativeControl';
+import { Tip } from '../Tip';
 
 type Mode = 'auto' | 'med' | 'min';
 export type GpuStatus = {
@@ -25,25 +26,25 @@ export function GpuModeCard({ active = true }: { active?: boolean }) {
     <Card section="gpu-mode" title="GPU mode">
       <div className="grid grid-cols-3 gap-1" role="group" aria-label="GPU mode">
         {modes.map(({ value, label, description }) => (
-          <button
-            type="button"
-            key={value}
-            className="config-button"
-            title={description}
-            aria-pressed={selected === value}
-            disabled={!status?.supported || busy || status.restart_required}
-            onClick={() =>
-              void apply(
-                'set_gpu_mode',
-                { mode: value },
-                selected
-                  ? { label: 'GPU mode', command: 'set_gpu_mode', args: { mode: selected } }
-                  : undefined,
-              )
-            }
-          >
-            {label}
-          </button>
+          <Tip key={value} content={description}>
+            <button
+              type="button"
+              className="config-button"
+              aria-pressed={selected === value}
+              disabled={!status?.supported || busy || status.restart_required}
+              onClick={() =>
+                void apply(
+                  'set_gpu_mode',
+                  { mode: value },
+                  selected
+                    ? { label: 'GPU mode', command: 'set_gpu_mode', args: { mode: selected } }
+                    : undefined,
+                )
+              }
+            >
+              {label}
+            </button>
+          </Tip>
         ))}
       </div>
       {selectedMode && (

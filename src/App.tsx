@@ -1,9 +1,14 @@
 import { invoke, isEmbedded, listen } from './lib/ipc';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { GlassIsland } from '@crystalflux/island-glass';
 import { Pill } from './components/Pill';
+import { useIslandImage } from './lib/islandImage';
+import { ScrollArea } from './components/ScrollArea';
+import { useSmoothScroll } from '@crystalflux/smooth-scroll';
 import { UpdateBanner } from './components/UpdateBanner';
 import { Dashboard } from './components/dashboard/Dashboard';
 import { SettingsView } from './components/settings/SettingsView';
+import { StyleEditor } from './components/StyleEditor';
 import { useIsland } from './hooks/useIsland';
 import { useTelemetry } from './hooks/useTelemetry';
 import { isMounted, isOpen } from './lib/island';
@@ -19,6 +24,8 @@ import { saveSectionCollapsed } from './lib/sections';
 
 /** Matches `--fade-ms`: how long the outgoing view takes to fade before the swap. */
 const VIEW_FADE_MS = 140;
+
+type View = 'dashboard' | 'settings' | 'style';
 
 /** Window height beyond the island: top gap plus a little room, as in islet. */
 const WINDOW_EXTRA = 16;
@@ -43,7 +50,8 @@ function useFitWindow(ref: React.RefObject<HTMLDivElement | null>, active: boole
 
 function EmbeddedApp() {
   useTelemetry();
-  const [view, setView] = useState<'dashboard' | 'settings'>('dashboard');
+  useSmoothScroll();
+  const [view, setView] = useState<View>('dashboard');
 
   useEffect(() => {
     void useSettingsStore.getState().load();
@@ -66,12 +74,16 @@ function EmbeddedApp() {
 
   return (
     <main data-testid="embedded" className="mx-auto max-w-[1600px] p-4">
-      {view === 'settings' ? (
-        <div className="mx-auto max-w-xl">
-          <SettingsView onBack={() => setView('dashboard')} />
-        </div>
+      {view === 'dashboard' ? (
+        <Dashboard onSettings={() => setView('settings')} onStyle={() => setView('style')} />
       ) : (
-        <Dashboard onSettings={() => setView('settings')} />
+        <div className="mx-auto max-w-xl">
+          {view === 'settings' ? (
+            <SettingsView onBack={() => setView('dashboard')} />
+          ) : (
+            <StyleEditor onBack={() => setView('dashboard')} />
+          )}
+        </div>
       )}
     </main>
   );
@@ -87,10 +99,10 @@ function OverlayApp() {
   const checkNow = useUpdaterStore((s) => s.checkNow);
   const [settingsPinned, setSettingsPinned] = useState(false);
   const [systemUpdatesRequest, setSystemUpdatesRequest] = useState(0);
-  const [view, setView] = useState<'dashboard' | 'settings'>('dashboard');
+  const [view, setView] = useState<View>('dashboard');
   const [fading, setFading] = useState(false);
   const fadeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const switchView = (next: 'dashboard' | 'settings') => {
+  const switchView = (next: View) => {
     clearTimeout(fadeTimer.current);
     setFading(true);
     fadeTimer.current = setTimeout(() => {
@@ -106,6 +118,7 @@ function OverlayApp() {
     dashboardPinned,
   );
   const open = isOpen(phase);
+  const image = useIslandImage((s) => s.image);
   const islandRef = useRef<HTMLDivElement>(null);
   useFitWindow(islandRef, open);
 
@@ -156,11 +169,14 @@ function OverlayApp() {
     <UpdateBanner />
   ) : view === 'settings' ? (
     <SettingsView onBack={() => switchView('dashboard')} />
+  ) : view === 'style' ? (
+    <StyleEditor onBack={() => switchView('dashboard')} />
   ) : (
     <Dashboard
       key={systemUpdatesRequest}
       showSystemUpdates={systemUpdatesRequest}
       onSettings={() => switchView('settings')}
+      onStyle={() => switchView('style')}
       pinned={dashboardPinned}
       onTogglePin={() => setDashboardPinned((p) => !p)}
     />
@@ -171,22 +187,30 @@ function OverlayApp() {
       ref={islandRef}
       data-testid="island"
       data-phase={phase}
-      className={`island${open ? ' expanded' : ''}`}
-      onTransitionEnd={(e) => {
-        if (e.propertyName === 'clip-path' && phase === 'collapsing') {
-          setView('dashboard');
-          onClosed();
-        }
-      }}
+      className={`island-host${open ? ' expanded' : ''}`}
     >
-      <Pill />
-      {isMounted(phase) && (
-        <div className="panel">
-          <div className="panel-scroll view-fade" data-fading={fading}>
-            {panel}
+      <GlassIsland
+        open={open}
+        onOpenChange={() => {}}
+        pill={<Pill />}
+        radius={22}
+        className="island-shell"
+        style={image ? ({ '--island-image': `url(${image})` } as CSSProperties) : undefined}
+        onTransitionEnd={(e) => {
+          if (e.propertyName === '--t' && phase === 'collapsing') {
+            setView('dashboard');
+            onClosed();
+          }
+        }}
+      >
+        {isMounted(phase) && (
+          <div className="panel">
+            <ScrollArea className="panel-scroll view-fade" data-fading={fading}>
+              {panel}
+            </ScrollArea>
           </div>
-        </div>
-      )}
+        )}
+      </GlassIsland>
     </div>
   );
 }

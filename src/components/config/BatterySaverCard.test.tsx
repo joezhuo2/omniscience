@@ -23,7 +23,7 @@ it('shows the state and threshold, and writes each control', async () => {
   );
   fireEvent.click(screen.getByRole('button', { name: 'Turn on' }));
   await waitFor(() => expect(calls).toContainEqual(['set_battery_saver', { on: true }]));
-  expect(await screen.findByRole('button', { name: 'Turn off' })).toBeEnabled();
+  expect(await screen.findByRole('button', { name: /Turned on|Turn off/ })).toBeInTheDocument();
   expect(screen.getByRole('status')).toHaveTextContent('Battery saver is on.');
 });
 
