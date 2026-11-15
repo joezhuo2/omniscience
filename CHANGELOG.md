@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-11-15
+
+### Changed
+
+- The open dashboard uses less CPU and memory. The process list refreshes every 3 seconds instead of every second, and stops entirely (including per-app disk, network and GPU memory tracking) while **Top processes** is collapsed or the config tab is shown.
+- Per-app disk and network tracking reads its events more cheaply, battery details no longer re-scan battery devices every second, and each card redraws on its own.
+
 ## [0.3.0] - 2026-11-15
 
 ### Added
