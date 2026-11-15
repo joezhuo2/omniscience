@@ -1,0 +1,121 @@
+.region {
+  position: fixed;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  pointer-events: none;
+}
+
+.region[data-position^='bottom'] {
+  bottom: 0;
+  flex-direction: column-reverse;
+}
+
+.region[data-position^='top'] {
+  top: 0;
+}
+
+.region[data-position$='right'] {
+  right: 0;
+  align-items: flex-end;
+}
+
+.region[data-position$='center'] {
+  left: 50%;
+  translate: -50% 0;
+  align-items: center;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 18px;
+  max-width: min(420px, calc(100vw - 32px));
+  pointer-events: auto;
+  animation: toast-in 260ms var(--cd-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+}
+
+.toast[data-closing] {
+  animation: toast-out 160ms var(--cd-ease, ease-out) forwards;
+}
+
+.message {
+  min-width: 0;
+}
+
+.fuse {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.fuse rect {
+  x: 1px;
+  y: 1px;
+  width: calc(100% - 2px);
+  height: calc(100% - 2px);
+  fill: none;
+  stroke: var(--cd-accent, #a8e0ff);
+  stroke-width: 2px;
+  stroke-linecap: round;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 0;
+  animation: fuse var(--duration) linear forwards;
+}
+
+.toast:hover .fuse rect,
+.toast:focus-within .fuse rect {
+  animation-play-state: paused;
+}
+
+.action {
+  appearance: none;
+  border: 0;
+  border-radius: 8px;
+  padding: 4px 10px;
+  background: rgb(255 255 255 / 0.16);
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.action:hover {
+  background: rgb(255 255 255 / 0.26);
+}
+
+.action:focus-visible {
+  outline: 2px solid var(--cd-accent, #a8e0ff);
+  outline-offset: 2px;
+}
+
+@keyframes fuse {
+  to { stroke-dashoffset: 100; }
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.92); }
+}
+
+@keyframes toast-out {
+  to { opacity: 0; transform: scale(0.94); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast,
+  .toast[data-closing] {
+    animation: none;
+  }
+
+  .fuse rect {
+    animation: none;
+    stroke-dasharray: none;
+    opacity: 0.4;
+  }
+}

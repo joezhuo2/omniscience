@@ -14,7 +14,23 @@
     "verbatimModuleSyntax": true,
     "skipLibCheck": true,
     "noEmit": true,
-    "types": ["vite/client", "node"]
+    "types": ["vite/client", "node"],
+    "paths": {
+      "@crystalflux/accordion-glass": ["./src/vendor/crystal/accordion-glass/index.ts"],
+      "@crystalflux/checkbox-glass": ["./src/vendor/crystal/checkbox-glass/index.ts"],
+      "@crystalflux/feedback-button": ["./src/vendor/crystal/feedback-button/index.ts"],
+      "@crystalflux/island-glass": ["./src/vendor/crystal/island-glass/index.ts"],
+      "@crystalflux/position": ["./src/vendor/crystal/position/index.ts"],
+      "@crystalflux/skeleton-glass": ["./src/vendor/crystal/skeleton-glass/index.ts"],
+      "@crystalflux/smooth-scroll": ["./src/vendor/crystal/smooth-scroll/index.ts"],
+      "@crystalflux/surface-glass": ["./src/vendor/crystal/surface-glass/index.ts"],
+      "@crystalflux/switch-glass": ["./src/vendor/crystal/switch-glass/index.ts"],
+      "@crystalflux/toast-glass": ["./src/vendor/crystal/toast-glass/index.ts"],
+      "@crystalflux/tooltip-glass": ["./src/vendor/crystal/tooltip-glass/index.ts"],
+      "@crystalflux/smooth-range": ["./src/vendor/crystal/smooth-range/index.ts"],
+      "@crystalflux/select-glass": ["./src/vendor/crystal/select-glass/index.ts"],
+      "@crystalflux/spotlight": ["./src/vendor/crystal/spotlight/index.ts"]
+    }
   },
   "include": ["src"]
 }

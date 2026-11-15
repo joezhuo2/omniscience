@@ -1,0 +1,49 @@
+:where(.root)[data-state='busy'] {
+  cursor: progress;
+}
+
+:where(.live) {
+  display: inline-flex;
+}
+
+:where(.swap) {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  animation: swap-in 0.3s var(--cd-ease, cubic-bezier(0.2, 0.8, 0.2, 1));
+}
+
+:where(.root)[data-state='busy'] .swap {
+  animation:
+    swap-in 0.3s var(--cd-ease, cubic-bezier(0.2, 0.8, 0.2, 1)),
+    pulse 0.8s ease-in-out infinite;
+}
+
+:where(.root)[data-state='done'] {
+  color: var(--cd-accent, #a8e0ff);
+}
+
+:where(.root)[data-state='error'] {
+  color: #ff453a;
+}
+
+@keyframes swap-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+    filter: blur(2px);
+  }
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where(.swap),
+  :where(.root)[data-state='busy'] .swap {
+    animation: none;
+  }
+}

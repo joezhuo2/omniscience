@@ -1,0 +1,82 @@
+:where(.root) {
+  overflow: hidden;
+}
+
+.item + .item {
+  border-top: 1px solid rgb(255 255 255 / 0.18);
+}
+
+.heading {
+  margin: 0;
+  font: inherit;
+}
+
+:where(.trigger) {
+  appearance: none;
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  padding: 16px 20px;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.trigger:hover {
+  background: rgb(255 255 255 / 0.07);
+}
+
+.trigger:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: -4px;
+}
+
+.chevron {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 0.3s var(--cd-ease, cubic-bezier(0.2, 0.8, 0.2, 1));
+}
+
+.item[data-open='true'] .chevron {
+  transform: rotate(180deg);
+}
+
+.panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s var(--cd-ease, cubic-bezier(0.2, 0.8, 0.2, 1));
+}
+
+.item[data-open='true'] .panel {
+  grid-template-rows: 1fr;
+}
+
+.inner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.content {
+  padding: 0 20px 16px;
+  opacity: 0.85;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel,
+  .chevron {
+    transition: none;
+  }
+}

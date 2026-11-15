@@ -1,0 +1,7 @@
+:where(.glass) {
+  position: relative;
+  box-sizing: border-box;
+  color: var(--cd-fg, #fff);
+  background: var(--cd-raised, #1c1c1e);
+  box-shadow: inset 0 0 0 1px var(--cd-line, #3a3a3c);
+}
