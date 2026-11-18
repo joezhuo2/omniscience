@@ -34,6 +34,7 @@ standalone = [
   "windows-sys/Win32_Devices_Display",
   "windows-sys/Win32_Graphics_Gdi",
   "windows-sys/Win32_System_LibraryLoader",
+  "windows-sys/Win32_System_Registry",
   "windows-sys/Win32_System_SystemInformation",
   "windows-sys/Win32_UI_HiDpi",
   "windows-sys/Win32_UI_Input_KeyboardAndMouse",
