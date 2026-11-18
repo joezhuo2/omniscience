@@ -205,6 +205,24 @@ pub struct AdapterPerf {
     pub fan_rpm: Option<u32>,
     /// At or past the driver's temperature warning point, where the GPU slows itself down.
     pub throttling: bool,
+    pub core_clock_mhz: Option<u32>,
+    pub mem_clock_mhz: Option<u32>,
+}
+
+/// Committed bytes and the commit limit.
+pub fn commit() -> Option<(u64, u64)> {
+    use windows_sys::Win32::System::ProcessStatus::{GetPerformanceInfo, PERFORMANCE_INFORMATION};
+    // SAFETY: the struct is a zeroed local whose size is passed alongside it.
+    unsafe {
+        let mut p: PERFORMANCE_INFORMATION = std::mem::zeroed();
+        let size = std::mem::size_of::<PERFORMANCE_INFORMATION>() as u32;
+        (GetPerformanceInfo(&mut p, size) != 0).then(|| {
+            (
+                p.CommitTotal as u64 * p.PageSize as u64,
+                p.CommitLimit as u64 * p.PageSize as u64,
+            )
+        })
+    }
 }
 
 /// Whether a temperature has reached the warning point (both deci-Celsius; 0 = not reported).
@@ -267,6 +285,7 @@ pub fn adapter_perf(luid: (i32, u32)) -> AdapterPerf {
             // Integrated GPUs and fanless (or stopped) fans report 0.
             fan_rpm: (perf.FanRPM > 0).then_some(perf.FanRPM),
             throttling: at_thermal_limit(perf.Temperature, warning),
+            ..Default::default()
         }
     }
 }

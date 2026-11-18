@@ -3,9 +3,12 @@
 
 mod alerts;
 mod battery;
+mod drives;
 #[cfg(any(windows, test))]
 mod fans;
 pub mod history;
+#[cfg(windows)]
+mod nvml;
 #[cfg(any(windows, test))]
 mod parse;
 mod peak;
@@ -18,6 +21,8 @@ mod sampler;
 mod slow;
 pub mod types;
 mod usage;
+#[cfg(windows)]
+mod wifi;
 #[cfg(windows)]
 mod windows;
 

@@ -1,6 +1,7 @@
 //! Round-trip latency to a user-chosen host, measured on its own thread so a slow or lost reply
 //! never delays a telemetry tick. ICMP echo through `IcmpSendEcho` needs no admin rights.
 
+use std::collections::VecDeque;
 use std::net::{Ipv4Addr, ToSocketAddrs};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
@@ -61,16 +62,32 @@ pub fn ping(_addr: Ipv4Addr, _timeout_ms: u32) -> Option<f32> {
     None
 }
 
+const WINDOW: usize = 30;
+
+/// Mean absolute difference between consecutive successful round trips; `None` under two.
+pub fn jitter_ms(results: &VecDeque<Option<f32>>) -> Option<f32> {
+    let ok: Vec<f32> = results.iter().flatten().copied().collect();
+    (ok.len() >= 2)
+        .then(|| ok.windows(2).map(|w| (w[1] - w[0]).abs()).sum::<f32>() / (ok.len() - 1) as f32)
+}
+
+/// Lost replies as a percentage of all results; `None` before any result.
+pub fn loss_pct(results: &VecDeque<Option<f32>>) -> Option<f32> {
+    (!results.is_empty()).then(|| {
+        results.iter().filter(|r| r.is_none()).count() as f32 / results.len() as f32 * 100.0
+    })
+}
+
 /// Pings `target` every two seconds until dropped.
 pub struct Pinger {
     target: Arc<str>,
-    latest: Arc<Mutex<Option<f32>>>,
+    results: Arc<Mutex<VecDeque<Option<f32>>>>,
     stop: Arc<AtomicBool>,
 }
 
 impl Pinger {
     pub fn start(target: Arc<str>) -> Self {
-        let latest = Arc::new(Mutex::new(None));
+        let latest = Arc::new(Mutex::new(VecDeque::with_capacity(WINDOW)));
         let stop = Arc::new(AtomicBool::new(false));
         let (host, out, done) = (target.clone(), latest.clone(), stop.clone());
         let spawned = std::thread::Builder::new()
@@ -78,7 +95,12 @@ impl Pinger {
             .spawn(move || {
                 while !done.load(Ordering::SeqCst) {
                     let ms = resolve(&host).and_then(|a| ping(a, TIMEOUT_MS));
-                    *out.lock().unwrap_or_else(|e| e.into_inner()) = ms;
+                    let mut r = out.lock().unwrap_or_else(|e| e.into_inner());
+                    if r.len() == WINDOW {
+                        r.pop_front();
+                    }
+                    r.push_back(ms);
+                    drop(r);
                     std::thread::sleep(EVERY);
                 }
             });
@@ -87,7 +109,7 @@ impl Pinger {
         }
         Self {
             target,
-            latest,
+            results: latest,
             stop,
         }
     }
@@ -98,7 +120,18 @@ impl Pinger {
 
     /// The last round trip in milliseconds, `None` before the first reply or after a lost one.
     pub fn latest(&self) -> Option<f32> {
-        *self.latest.lock().unwrap_or_else(|e| e.into_inner())
+        self.results
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .back()
+            .copied()
+            .flatten()
+    }
+
+    /// Jitter and loss over the last 30 results.
+    pub fn quality(&self) -> (Option<f32>, Option<f32>) {
+        let r = self.results.lock().unwrap_or_else(|e| e.into_inner());
+        (jitter_ms(&r), loss_pct(&r))
     }
 }
 
@@ -116,6 +149,31 @@ mod tests {
     fn resolves_literal_addresses() {
         assert_eq!(resolve("127.0.0.1"), Some(Ipv4Addr::LOCALHOST));
         assert_eq!(resolve(" 1.1.1.1 "), Some(Ipv4Addr::new(1, 1, 1, 1)));
+    }
+
+    fn window(v: &[Option<f32>]) -> VecDeque<Option<f32>> {
+        v.iter().copied().collect()
+    }
+
+    #[test]
+    fn jitter_is_mean_step_between_successes() {
+        assert_eq!(jitter_ms(&window(&[])), None);
+        assert_eq!(jitter_ms(&window(&[Some(10.0)])), None);
+        assert_eq!(jitter_ms(&window(&[None, Some(10.0), None])), None);
+        assert_eq!(
+            jitter_ms(&window(&[Some(10.0), Some(14.0), None, Some(12.0)])),
+            Some(3.0)
+        );
+    }
+
+    #[test]
+    fn loss_is_lost_over_total() {
+        assert_eq!(loss_pct(&window(&[])), None);
+        assert_eq!(loss_pct(&window(&[Some(1.0), Some(2.0)])), Some(0.0));
+        assert_eq!(
+            loss_pct(&window(&[None, Some(2.0), None, None])),
+            Some(75.0)
+        );
     }
 
     #[test]

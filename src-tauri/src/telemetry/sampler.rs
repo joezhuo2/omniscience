@@ -49,6 +49,8 @@ struct Detail {
     win: Option<super::windows::Query>,
     #[cfg(windows)]
     fans: super::fans::FanSource,
+    #[cfg(windows)]
+    nvml: Option<super::nvml::Nvml>,
     battery: battery::Devices,
     slow: super::slow::SlowProbe,
     pinger: Option<Pinger>,
@@ -266,6 +268,14 @@ impl Sampler {
             win: super::windows::Query::new(&win::DETAIL_COUNTERS),
             #[cfg(windows)]
             fans: super::fans::FanSource::start(),
+            #[cfg(windows)]
+            nvml: self
+                .win
+                .adapters
+                .iter()
+                .any(|a| a.name.contains("NVIDIA"))
+                .then(super::nvml::Nvml::load)
+                .flatten(),
             battery: battery::Devices::find(),
             slow: super::slow::SlowProbe::start(),
             pinger: None,
@@ -320,10 +330,31 @@ impl Sampler {
         }
 
         #[cfg(windows)]
-        let (temps, gpus, power, cpu_limit) =
-            win::detail(detail.win.as_mut(), win, &self.win.adapters);
+        let (temps, gpus, power, cpu_limit, memory, drive_rates) = {
+            let r = win::detail(
+                detail.win.as_mut(),
+                win,
+                &self.win.adapters,
+                detail.nvml.as_ref(),
+            );
+            (
+                r.temps,
+                r.gpus,
+                r.power,
+                r.cpu_limit,
+                r.memory,
+                r.drive_rates,
+            )
+        };
         #[cfg(not(windows))]
-        let (temps, gpus, power, cpu_limit) = (Vec::new(), Vec::new(), None, None);
+        let (temps, gpus, power, cpu_limit, memory, drive_rates) = (
+            Vec::new(),
+            Vec::new(),
+            None,
+            None,
+            None,
+            std::collections::HashMap::new(),
+        );
 
         let cpus = self.sys.cpus().len();
         // Search must include quiet apps too; the frontend filters, sorts and limits rows.
@@ -351,6 +382,12 @@ impl Sampler {
         });
 
         let slow = detail.slow.latest();
+        let quality = detail.pinger.as_ref().map_or((None, None), Pinger::quality);
+
+        #[cfg(windows)]
+        let wifi = super::wifi::current();
+        #[cfg(not(windows))]
+        let wifi = None;
 
         #[cfg(windows)]
         let fans = detail.fans.latest();
@@ -365,6 +402,8 @@ impl Sampler {
             cpu_limit_pct: cpu_limit.map(round1),
             net_adapters: self.net_adapters.clone(),
             ping_ms: detail.pinger.as_ref().and_then(Pinger::latest),
+            ping_jitter_ms: quality.0.map(round1),
+            ping_loss_pct: quality.1.map(round1),
             public_ip: self
                 .public_ip
                 .as_ref()
@@ -373,16 +412,14 @@ impl Sampler {
             battery: battery::estimate(&detail.battery.read()),
             fans,
             processes: groups,
-            drives: Vec::new(),
+            drives: super::drives::list(&drive_rates),
             disks: slow.disks,
-            wifi: None,
-            ping_jitter_ms: None,
-            ping_loss_pct: None,
+            wifi,
             data_today_bytes: None,
             data_month_bytes: None,
             metered: slow.metered,
-            memory: None,
-            boot_ms: None,
+            memory,
+            boot_ms: Some(System::boot_time() * 1000),
             power_events: slow.power_events,
             bluetooth: slow.bluetooth,
             energy_today_wh: None,
@@ -400,9 +437,11 @@ impl Default for Sampler {
 mod win {
     use std::collections::HashMap;
 
+    use super::super::nvml::Nvml;
     use super::super::parse::{self, EnergyReadings};
-    use super::super::types::{GpuDetail, GpuKind, PowerBreakdown, TempSample};
-    use super::super::windows::{Adapter, AdapterPerf, Query, adapter_perf, adapters};
+    use super::super::types::{GpuDetail, GpuKind, MemoryDetail, PowerBreakdown, TempSample};
+    use super::super::windows::{Adapter, AdapterPerf, Query, adapter_perf, adapters, commit};
+    use super::round1;
 
     const DISK_IDLE: usize = 0;
     const GPU_ENGINE: usize = 1;
@@ -422,10 +461,21 @@ mod win {
     const GPU_DEDICATED: usize = 0;
     const GPU_SHARED: usize = 1;
     const CPU_LIMIT: usize = 2;
-    pub const DETAIL_COUNTERS: [&str; 3] = [
+    const DRIVE_READ: usize = 3;
+    const DRIVE_WRITE: usize = 4;
+    const MEM_CACHED: std::ops::Range<usize> = 5..9;
+    const MEM_COMPRESSED: usize = 9;
+    pub const DETAIL_COUNTERS: [&str; 10] = [
         r"\GPU Adapter Memory(*)\Dedicated Usage",
         r"\GPU Adapter Memory(*)\Shared Usage",
         r"\Processor Information(_Total)\% Performance Limit",
+        r"\LogicalDisk(*)\Disk Read Bytes/sec",
+        r"\LogicalDisk(*)\Disk Write Bytes/sec",
+        r"\Memory\Standby Cache Normal Priority Bytes",
+        r"\Memory\Standby Cache Reserve Bytes",
+        r"\Memory\Standby Cache Core Bytes",
+        r"\Memory\Modified Page List Bytes",
+        r"\Process(Memory Compression)\Working Set",
     ];
 
     /// Per-process instances are expensive to expand, so this query lives only with the
@@ -589,19 +639,40 @@ mod win {
         (usage, mem)
     }
 
+    pub struct DetailRead {
+        pub temps: Vec<TempSample>,
+        pub gpus: Vec<GpuDetail>,
+        pub power: Option<PowerBreakdown>,
+        pub cpu_limit: Option<f32>,
+        pub drive_rates: HashMap<String, (f64, f64)>,
+        pub memory: Option<MemoryDetail>,
+    }
+
     pub fn detail(
         query: Option<&mut Query>,
         core: &CoreSample,
         adapters: &[Adapter],
-    ) -> (
-        Vec<TempSample>,
-        Vec<GpuDetail>,
-        Option<PowerBreakdown>,
-        Option<f32>,
-    ) {
+        nvml: Option<&Nvml>,
+    ) -> DetailRead {
         let (mut dedicated, mut shared) = (HashMap::new(), HashMap::new());
         let mut cpu_limit = None;
+        let mut drive_rates = HashMap::new();
+        let mut cached = None;
+        let mut compressed = None;
         if let Some(q) = query.filter(|q| q.collect_ok()) {
+            drive_rates = parse::drive_rates(
+                &q.items(DRIVE_READ).unwrap_or_default(),
+                &q.items(DRIVE_WRITE).unwrap_or_default(),
+            );
+            cached = MEM_CACHED
+                .filter_map(|i| {
+                    q.items(i)
+                        .and_then(|v| v.first().map(|(_, b)| b.max(0.0) as u64))
+                })
+                .reduce(|a, b| a + b);
+            compressed = q
+                .items(MEM_COMPRESSED)
+                .and_then(|v| v.first().map(|(_, b)| b.max(0.0) as u64));
             dedicated = q
                 .items(GPU_DEDICATED)
                 .map(|v| parse::sum_by_adapter(&v))
@@ -615,6 +686,9 @@ mod win {
                     .and_then(|(_, pct)| parse::performance_loss_pct(*pct))
             });
         }
+        let decode = parse::engine_pct_by_adapter(&core.gpu_engines, "VideoDecode");
+        let encode = parse::engine_pct_by_adapter(&core.gpu_engines, "VideoEncode");
+        let mut nvidia = 0;
         let gpus = adapters
             .iter()
             .map(|a| {
@@ -622,6 +696,20 @@ mod win {
                 let discrete = a.kind == GpuKind::Discrete;
                 let unavailable = AdapterPerf::default();
                 let perf = core.gpu_perf.get(&a.luid_key).unwrap_or(&unavailable);
+                let clocks = if a.name.contains("NVIDIA") {
+                    nvidia += 1;
+                    guarded_perf(a.kind, usage, || {
+                        let (core_mhz, mem_mhz) =
+                            nvml.map_or((None, None), |n| n.clocks(nvidia - 1));
+                        AdapterPerf {
+                            core_clock_mhz: core_mhz,
+                            mem_clock_mhz: mem_mhz,
+                            ..Default::default()
+                        }
+                    })
+                } else {
+                    AdapterPerf::default()
+                };
                 GpuDetail {
                     name: a.name.clone(),
                     kind: a.kind,
@@ -635,17 +723,30 @@ mod win {
                     temp_c: perf.temp_c,
                     fan_rpm: perf.fan_rpm,
                     throttling: perf.throttling,
-                    core_clock_mhz: None,
-                    mem_clock_mhz: None,
-                    encode_pct: None,
-                    decode_pct: None,
+                    core_clock_mhz: clocks.core_clock_mhz,
+                    mem_clock_mhz: clocks.mem_clock_mhz,
+                    encode_pct: encode.get(&a.luid_key).map(|p| round1(*p)),
+                    decode_pct: decode.get(&a.luid_key).map(|p| round1(*p)),
                 }
             })
             .collect();
         let b = &core.energy.breakdown;
         let power = (b.apu.is_some() || b.cpu.is_some() || b.gpu.is_some() || b.npu.is_some())
             .then(|| b.clone());
-        (core.temps.clone(), gpus, power, cpu_limit)
+        let memory = commit().map(|(committed_bytes, commit_limit_bytes)| MemoryDetail {
+            committed_bytes,
+            commit_limit_bytes,
+            cached_bytes: cached,
+            compressed_bytes: compressed,
+        });
+        DetailRead {
+            temps: core.temps.clone(),
+            gpus,
+            power,
+            cpu_limit,
+            drive_rates,
+            memory,
+        }
     }
 }
 
