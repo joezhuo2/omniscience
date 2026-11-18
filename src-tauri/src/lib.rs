@@ -50,7 +50,14 @@ use std::sync::Arc;
 use tauri::Manager;
 
 #[cfg(feature = "standalone")]
+const AUTOSTART_ARG: &str = "--autostarted";
+
+#[cfg(feature = "standalone")]
 pub fn run() {
+    // A stale login entry can point at a dev build, which has no bundled UI and opens a console.
+    if tauri::is_dev() && std::env::args().any(|a| a == AUTOSTART_ARG) {
+        return;
+    }
     let telemetry = telemetry::Telemetry::new(telemetry::Control::default());
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
@@ -59,7 +66,7 @@ pub fn run() {
         }))
         .plugin(tauri_plugin_autostart::init(
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
-            Some(vec!["--autostarted"]),
+            Some(vec![AUTOSTART_ARG]),
         ))
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_notification::init())
