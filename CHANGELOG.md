@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-18
+
+### Added
+
+- Alerts are configurable: **Settings > Alerts** sets a threshold and duration for CPU, memory, disk activity and each GPU, and adds CPU and GPU temperature, low disk space, network down and ping spike alerts.
+- Add battery reminders (off by default): **Unplug reminder** at a chosen charge while plugged in, and **Low battery**.
+- Add **Quiet hours** and snooze (1 h or 8 h in settings, **Snooze alerts for 1 hour** in the tray menu).
+
+### Changed
+
+- The fixed alert (above 90% for 30 seconds) is now the default of the per-metric alert rules.
+
 ## [0.5.0] - 2026-11-18
 
 ### Added
