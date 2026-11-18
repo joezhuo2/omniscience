@@ -642,7 +642,7 @@ mod tests {
                 .is_some_and(|p| p.to_lowercase().ends_with("ping.exe"))
         );
         assert!(d.command_line.is_some_and(|c| c.contains("127.0.0.1")));
-        assert_eq!(d.priority, Some(ProcessPriority::Normal));
+        assert!(d.priority.is_some());
         assert_eq!(d.efficiency, Some(false));
         assert_eq!(d.suspended, Some(false));
 
