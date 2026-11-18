@@ -37,6 +37,8 @@ commands![
     embed::set_settings,
     diagnostics::get_diagnostic_report,
     commands::get_telemetry_history,
+    commands::get_history_events,
+    commands::export_history,
     embed::set_active,
     commands::set_process_sampling,
 ];
@@ -117,6 +119,8 @@ mod tests {
                 "set_settings",
                 "get_diagnostic_report",
                 "get_telemetry_history",
+                "get_history_events",
+                "export_history",
                 "set_active",
                 "set_process_sampling",
             ]

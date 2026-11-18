@@ -4,6 +4,8 @@
 mod alerts;
 mod battery;
 mod drives;
+mod events;
+pub mod export;
 #[cfg(any(windows, test))]
 mod fans;
 pub mod history;
@@ -35,8 +37,9 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tauri::{AppHandle, Emitter};
 use tauri_plugin_notification::NotificationExt;
 
+use events::{EventLog, Watch};
 use history::{History, HistorySample};
-use types::{Snapshot, Thresholds};
+use types::{HistoryEvent, HistoryEventKind, Snapshot, Thresholds};
 
 pub const TICK_EVENT: &str = "telemetry://tick";
 
@@ -86,6 +89,7 @@ pub struct Telemetry {
     wake: Condvar,
     latest: Mutex<Option<Snapshot>>,
     history: Mutex<History>,
+    events: Mutex<EventLog>,
     usage: Mutex<usage::Usage>,
     process_viewers: Mutex<HashSet<String>>,
 }
@@ -111,6 +115,7 @@ impl Telemetry {
             wake: Condvar::new(),
             latest: Mutex::new(None),
             history: Mutex::new(History::default()),
+            events: Mutex::new(EventLog::default()),
             usage: Mutex::new(usage::Usage::open(None)),
             process_viewers: Mutex::new(HashSet::new()),
         })
@@ -121,8 +126,10 @@ impl Telemetry {
             .duration_since(UNIX_EPOCH)
             .map(|d| d.as_millis() as u64)
             .unwrap_or_default();
-        let loaded = History::open(dir, now_ms, self.control().history_hours);
+        let hours = self.control().history_hours;
+        let loaded = History::open(dir, now_ms, hours);
         *self.history.lock().unwrap_or_else(|e| e.into_inner()) = loaded;
+        *self.events.lock().unwrap_or_else(|e| e.into_inner()) = EventLog::open(dir, now_ms, hours);
         *self.usage.lock().unwrap_or_else(|e| e.into_inner()) = usage::Usage::open(dir);
     }
 
@@ -131,6 +138,20 @@ impl Telemetry {
             .lock()
             .unwrap_or_else(|e| e.into_inner())
             .since(since_ms)
+    }
+
+    pub fn history_events(&self, since_ms: Option<u64>) -> Vec<HistoryEvent> {
+        self.events
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .since(since_ms)
+    }
+
+    fn record_events(&self, events: Vec<HistoryEvent>, now_ms: u64, hours: u32) {
+        let mut log = self.events.lock().unwrap_or_else(|e| e.into_inner());
+        for event in events {
+            log.record(event, now_ms, hours);
+        }
     }
 
     pub fn latest(&self) -> Option<Snapshot> {
@@ -175,6 +196,7 @@ impl Telemetry {
     fn run(&self, app: &AppHandle) {
         let mut sampler = sampler::Sampler::new();
         let mut engine = alerts::Engine::default();
+        let mut watch = Watch::default();
         loop {
             let control = {
                 let mut c = self.control.lock().unwrap_or_else(|e| e.into_inner());
@@ -205,6 +227,20 @@ impl Telemetry {
                 crate::diagnostics::log_error(format_args!("emit telemetry: {e}"));
             }
             let charge = battery::charge();
+            let ts_ms = snapshot.timestamp_ms;
+            let mut events = Vec::new();
+            let mut push = |kind, label: String| {
+                events.push(HistoryEvent { ts_ms, kind, label });
+            };
+            if let Some(label) = watch.power(charge.map(|c| c.1)) {
+                push(HistoryEventKind::PowerSource, label.to_owned());
+            }
+            if let Some(d) = &snapshot.detail {
+                let gpus = d.gpus.iter().map(|g| (g.name.as_str(), g.throttling));
+                for label in watch.throttle(gpus, d.cpu_limit_pct) {
+                    push(HistoryEventKind::Throttle, label);
+                }
+            }
             if control.sustained_alerts {
                 let notices = engine.check(
                     snapshot.timestamp_ms,
@@ -214,6 +250,7 @@ impl Telemetry {
                     &control.ping_target,
                 );
                 for notice in notices {
+                    push(HistoryEventKind::Alert, notice.body.clone());
                     let shown = app
                         .notification()
                         .builder()
@@ -227,6 +264,7 @@ impl Telemetry {
             } else {
                 engine.reset();
             }
+            self.record_events(events, ts_ms, control.history_hours);
             self.history
                 .lock()
                 .unwrap_or_else(|e| e.into_inner())

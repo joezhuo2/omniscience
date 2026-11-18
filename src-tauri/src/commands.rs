@@ -2,9 +2,9 @@
 
 use std::sync::Arc;
 
-use tauri::State;
 #[cfg(feature = "standalone")]
-use tauri::{AppHandle, WebviewWindow};
+use tauri::WebviewWindow;
+use tauri::{AppHandle, Manager, State};
 
 #[cfg(feature = "standalone")]
 use crate::positions::Positions;
@@ -12,8 +12,9 @@ use crate::positions::Positions;
 use crate::settings::Settings;
 #[cfg(feature = "standalone")]
 use crate::shell::Shell;
+use crate::telemetry::export;
 use crate::telemetry::history::HistorySample;
-use crate::telemetry::types::KillReport;
+use crate::telemetry::types::{HistoryEvent, KillReport};
 use crate::telemetry::{Telemetry, processes};
 #[cfg(feature = "standalone")]
 use crate::{webview, window};
@@ -160,4 +161,43 @@ pub fn get_telemetry_history(
     telemetry: State<'_, Arc<Telemetry>>,
 ) -> Vec<HistorySample> {
     telemetry.history(since_ms)
+}
+
+#[tauri::command]
+pub fn get_history_events(
+    since_ms: Option<u64>,
+    telemetry: State<'_, Arc<Telemetry>>,
+) -> Vec<HistoryEvent> {
+    telemetry.history_events(since_ms)
+}
+
+#[tauri::command]
+pub fn export_history(
+    format: String,
+    since_ms: Option<u64>,
+    until_ms: Option<u64>,
+    app: AppHandle,
+    telemetry: State<'_, Arc<Telemetry>>,
+) -> Result<String, String> {
+    if format != "csv" && format != "json" {
+        return Err(format!("unsupported export format: {format}"));
+    }
+    let until = until_ms.unwrap_or(u64::MAX);
+    let mut samples = telemetry.history(since_ms);
+    samples.retain(|s| s.ts_ms <= until);
+    let text = if format == "csv" {
+        export::csv(&samples)
+    } else {
+        let mut events = telemetry.history_events(since_ms);
+        events.retain(|e| e.ts_ms <= until);
+        export::json(&samples, &events)?
+    };
+    let now_ms = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_millis() as u64)
+        .unwrap_or_default();
+    let dir = app.path().download_dir().map_err(|e| e.to_string())?;
+    let path = dir.join(export::file_name(now_ms, &format));
+    std::fs::write(&path, text).map_err(|e| e.to_string())?;
+    Ok(path.to_string_lossy().into_owned())
 }

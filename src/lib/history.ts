@@ -1,7 +1,8 @@
+import type { HistoryEvent } from '../types/generated/HistoryEvent';
 import type { HistorySample } from '../types/generated/HistorySample';
 import { formatPercent, formatRate, formatTemp, formatWatts } from './format';
 
-export type { HistorySample };
+export type { HistoryEvent, HistorySample };
 
 const MINUTE_MS = 60_000;
 export const HOUR_MS = 60 * MINUTE_MS;
@@ -36,6 +37,36 @@ export function frame(hours: number, now: number, maxPoints = MAX_POINTS): Frame
   const count = Math.ceil(minutes / stepMinutes);
   const end = Math.floor((now - MINUTE_MS) / step) * step + step;
   return { from: end - count * step, step, count };
+}
+
+export function zoomFrame(from: number, to: number): Frame {
+  const span = Math.max(to - from, MINUTE_MS);
+  const step = Math.max(1, Math.ceil(span / MINUTE_MS / MAX_POINTS)) * MINUTE_MS;
+  const start = Math.floor(from / step) * step;
+  const count = Math.min(MAX_POINTS, Math.max(1, Math.ceil((to - start) / step)));
+  return { from: start, step, count };
+}
+
+export function eventIndexes(
+  events: HistoryEvent[],
+  f: Frame,
+): { index: number; event: HistoryEvent }[] {
+  return events.flatMap((event) => {
+    const index = Math.floor((event.ts_ms - f.from) / f.step);
+    return index >= 0 && index < f.count ? [{ index, event }] : [];
+  });
+}
+
+export function seriesStats(
+  values: (number | null)[],
+): { min: number; avg: number; max: number } | null {
+  const present = values.filter((v): v is number => v != null);
+  if (present.length === 0) return null;
+  return {
+    min: Math.min(...present),
+    avg: present.reduce((a, b) => a + b, 0) / present.length,
+    max: Math.max(...present),
+  };
 }
 
 type Pick = (s: HistorySample) => number | null;

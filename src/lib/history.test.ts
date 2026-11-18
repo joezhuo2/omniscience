@@ -9,6 +9,9 @@ import {
   niceMax,
   rangeFor,
   segments,
+  eventIndexes,
+  seriesStats,
+  zoomFrame,
   shapeCharts,
   type HistorySample,
 } from './history';
@@ -125,5 +128,34 @@ describe('shapeCharts', () => {
     expect(gpu.max).toBe(100);
     expect(charts.find((c) => c.title === 'Temperatures')!.max).toBe(80);
     expect(lastIndex(gpu)).toBe(10);
+  });
+});
+
+describe('history zoom, stats and events', () => {
+  it('builds a frame for an arbitrary window', () => {
+    const small = zoomFrame(NOW, NOW + 10 * MIN);
+    expect(small.step).toBe(MIN);
+    expect(small.count).toBeGreaterThanOrEqual(10);
+    expect(small.from).toBeLessThanOrEqual(NOW);
+    const wide = zoomFrame(NOW, NOW + 30 * 24 * HOUR_MS);
+    expect(wide.step).toBe(180 * MIN);
+    expect(wide.count).toBeLessThanOrEqual(240);
+    expect(wide.from + wide.count * wide.step).toBeGreaterThanOrEqual(NOW + 29 * 24 * HOUR_MS);
+    expect(zoomFrame(NOW, NOW).count).toBe(1);
+  });
+
+  it('summarizes present values only', () => {
+    expect(seriesStats([null, 2, 4, null, 9])).toEqual({ min: 2, avg: 5, max: 9 });
+    expect(seriesStats([null, null])).toBeNull();
+  });
+
+  it('maps events to bucket indexes inside the frame', () => {
+    const f = { from: NOW, step: MIN, count: 10 };
+    const ev = (ts_ms: number) => ({ ts_ms, kind: 'alert' as const, label: 'x' });
+    const found = eventIndexes(
+      [ev(NOW - 1), ev(NOW), ev(NOW + 3 * MIN + 5), ev(NOW + 10 * MIN)],
+      f,
+    );
+    expect(found.map((e) => e.index)).toEqual([0, 3]);
   });
 });
