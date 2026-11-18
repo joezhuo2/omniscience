@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add a local API (off by default): JSON at `/api/status` and Prometheus metrics at `/metrics` on `127.0.0.1`, plus a command line, `omniscience status`.
+- Add a phone view: with **Allow other devices on this network** on, open the address shown in settings on a phone or tablet on the same network to see live readings. Access needs the token in that address.
+- Add MQTT publishing with Home Assistant discovery, so readings show up as sensors automatically.
+- Add custom cards: describe a card in a small JSON file and it appears on the dashboard, with values from the live readings or from a local JSON endpoint. See `docs/custom-cards.md`.
+- Add a Stream Deck plugin (in `integrations/streamdeck`) that shows readings on keys through the local API.
+
+### Changed
+
+- Settings are grouped under headers, each with its own reset.
+
 ## [0.10.0] - 2026-11-18
 
 ### Added

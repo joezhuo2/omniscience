@@ -143,7 +143,10 @@ impl Shell {
 
     /// Validates, applies and saves new settings. Returns what was actually applied.
     pub fn update_settings(&self, app: &AppHandle, new: Settings) -> Result<Settings, String> {
-        let new = new.sanitized();
+        let mut new = new.sanitized();
+        if new.integrations.api_lan && new.integrations.api_token.is_empty() {
+            new.integrations.api_token = settings::new_token();
+        }
         let old = self.settings();
 
         if new.launch_at_startup != old.launch_at_startup {
@@ -176,6 +179,8 @@ impl Shell {
         settings::save(&dir, &new)?;
         crate::config_gate::set(new.config_enabled);
         *self.settings.lock().unwrap_or_else(|e| e.into_inner()) = new.clone();
+        crate::api_server::sync(app, &new.integrations);
+        crate::mqtt::sync(&app.state::<Arc<Telemetry>>(), &new.integrations);
         self.sync_tray();
         if !new.hide_over_fullscreen {
             self.set_fullscreen_hidden(app, false);
@@ -205,6 +210,9 @@ impl Shell {
             crate::diagnostics::log_error(e);
         }
         crate::profiles::spawn_watcher(app.clone());
+        let integrations = self.settings().integrations;
+        crate::api_server::sync(app, &integrations);
+        crate::mqtt::sync(&app.state::<Arc<Telemetry>>(), &integrations);
         self.spawn_fullscreen_watch(app.clone());
     }
 
