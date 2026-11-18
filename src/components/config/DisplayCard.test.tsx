@@ -1,7 +1,8 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { mockIPC } from '@tauri-apps/api/mocks';
 import { expect, it } from 'vitest';
-import { DisplayCard, type DisplayStatus } from './DisplayCard';
+import { useToastStore } from '../../toasts';
+import { DisplayCard, type DisplayStatus, type DisplayToggles } from './DisplayCard';
 
 const supported: DisplayStatus = {
   device: 'Built-in Display',
@@ -21,6 +22,8 @@ it('lists modes and waits for the re-read state before changing selection', asyn
   const calls: unknown[] = [];
   mockIPC((cmd, args) => {
     if (cmd === 'get_display_mode') return supported;
+    if (cmd === 'get_display_toggles')
+      return { ...toggles, hdr_supported: false, night_light: null, brightness: null };
     calls.push(args);
     return new Promise<DisplayStatus>((resolve) => {
       finish = resolve;
@@ -76,4 +79,54 @@ it('retains actual state and reports a refused write', async () => {
   fireEvent.click(screen.getByRole('button', { name: '1920×1200' }));
   expect(await screen.findByRole('alert')).toHaveTextContent('rejected');
   expect(screen.getByRole('button', { name: '2560×1600' })).toHaveAttribute('aria-pressed', 'true');
+});
+
+const toggles: DisplayToggles = {
+  hdr: true,
+  hdr_supported: true,
+  night_light: false,
+  brightness: 40,
+  error: null,
+};
+
+it('shows display toggles only when available and sets them', async () => {
+  const calls: [string, unknown][] = [];
+  mockIPC((cmd, args) => {
+    calls.push([cmd, args]);
+    if (cmd === 'get_display_toggles') return toggles;
+    if (cmd === 'set_night_light') return { ...toggles, night_light: true };
+    return supported;
+  });
+  render(<DisplayCard />);
+  expect(await screen.findByRole('switch', { name: 'HDR' })).toBeChecked();
+  expect(screen.getByRole('switch', { name: 'Night light' })).not.toBeChecked();
+  expect(screen.getByRole('slider', { name: 'Brightness' })).toHaveValue('40');
+  fireEvent.click(screen.getByRole('switch', { name: 'Night light' }));
+  await waitFor(() => expect(calls).toContainEqual(['set_night_light', { on: true }]));
+  await waitFor(() => expect(screen.getByRole('switch', { name: 'Night light' })).toBeChecked());
+});
+
+it('hides unavailable display toggles', async () => {
+  mockIPC((cmd) =>
+    cmd === 'get_display_toggles'
+      ? { hdr: null, hdr_supported: false, night_light: null, brightness: null, error: null }
+      : supported,
+  );
+  render(<DisplayCard />);
+  await screen.findByText(/Current:/);
+  expect(screen.queryByRole('switch')).toBeNull();
+  expect(screen.queryByRole('slider')).toBeNull();
+});
+
+it('toasts a toggle error', async () => {
+  mockIPC((cmd) => {
+    if (cmd === 'get_display_toggles') return toggles;
+    if (cmd === 'set_hdr') throw new Error('HDR refused');
+    return supported;
+  });
+  render(<DisplayCard />);
+  fireEvent.click(await screen.findByRole('switch', { name: 'HDR' }));
+  await waitFor(() =>
+    expect(useToastStore.getState().toasts.some((t) => t.text.includes('HDR refused'))).toBe(true),
+  );
 });

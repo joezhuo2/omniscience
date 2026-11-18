@@ -14,11 +14,13 @@ export const DEFAULT_SECTION_ORDER = [
 ] as const;
 export type SectionId = (typeof DEFAULT_SECTION_ORDER)[number];
 export const CONFIG_SECTION_ORDER = [
+  'profiles',
   'driver-updates',
   'gpu-mode',
   'power-limits',
   'cpu-boost',
   'power-mode',
+  'fan-mode',
   'battery-saver',
   'display',
 ] as const;

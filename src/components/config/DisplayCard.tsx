@@ -1,6 +1,18 @@
+import { SmoothRange } from '@crystalflux/smooth-range';
+import { GlassSwitch } from '@crystalflux/switch-glass';
+import { useEffect, useRef, useState } from 'react';
+import { useToastStore } from '../../toasts';
 import { Card } from '../dashboard/Card';
 import { useNativeControl, type Undo } from './useNativeControl';
 import { Tip } from '../Tip';
+
+export type DisplayToggles = {
+  hdr: boolean | null;
+  hdr_supported: boolean;
+  night_light: boolean | null;
+  brightness: number | null;
+  error: string | null;
+};
 
 export type DisplayStatus = {
   device: string | null;
@@ -16,6 +28,40 @@ export function DisplayCard({ active = true }: { active?: boolean }) {
   const { status, busy, error, apply } = useNativeControl<DisplayStatus>(
     'get_display_mode',
     active,
+  );
+  const toggles = useNativeControl<DisplayToggles>('get_display_toggles', active);
+  const push = useToastStore((st) => st.push);
+  const toggleError = toggles.error || toggles.status?.error;
+  useEffect(() => {
+    if (toggleError) push(toggleError);
+  }, [toggleError, push]);
+  const [draft, setDraft] = useState<number | null>(null);
+  const brightness = toggles.status?.brightness ?? null;
+  const commit = async () => {
+    if (draft === null) return;
+    await toggles.apply(
+      'set_brightness',
+      { percent: draft },
+      brightness !== null
+        ? { label: 'Brightness', command: 'set_brightness', args: { percent: brightness } }
+        : undefined,
+    );
+    setDraft(null);
+  };
+  const latestCommit = useRef(commit);
+  useEffect(() => {
+    latestCommit.current = commit;
+  });
+  const toggle = (label: string, command: string, value: boolean) => (
+    <GlassSwitch
+      className="text-xs"
+      checked={value}
+      disabled={toggles.busy}
+      label={label}
+      onChange={(on) =>
+        void toggles.apply(command, { on }, { label, command, args: { on: value } })
+      }
+    />
   );
   const disabled = !status?.supported || busy;
   const current = status?.current;
@@ -83,6 +129,35 @@ export function DisplayCard({ active = true }: { active?: boolean }) {
           </button>
         ))}
       </div>
+      {(toggles.status?.hdr_supported ||
+        toggles.status?.night_light != null ||
+        brightness !== null) && (
+        <div className="mt-2 flex flex-col gap-2">
+          {toggles.status?.hdr_supported && toggle('HDR', 'set_hdr', toggles.status.hdr === true)}
+          {toggles.status?.night_light != null &&
+            toggle('Night light', 'set_night_light', toggles.status.night_light)}
+          {brightness !== null && (
+            <label className="block text-xs">
+              <span className="flex justify-between">
+                <span>Brightness</span>
+                <span>{draft ?? brightness}%</span>
+              </span>
+              <SmoothRange
+                className="w-full"
+                min={0}
+                max={100}
+                step={1}
+                value={draft ?? brightness}
+                disabled={toggles.busy}
+                aria-label="Brightness"
+                onValue={setDraft}
+                onPointerUp={() => setTimeout(() => void latestCommit.current(), 350)}
+                onKeyUp={() => void commit()}
+              />
+            </label>
+          )}
+        </div>
+      )}
       <p className="mt-2 text-xs" role="status" aria-live="polite">
         {busy
           ? 'Applying display mode…'
