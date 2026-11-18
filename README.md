@@ -78,6 +78,10 @@ button in the header detaches the dashboard into a resizable, always-on-top wind
 - 📶 **Network extras:** Wi-Fi name, signal and link speed, ping jitter and packet loss, and data used
   today and this month with a **Metered** warning. **GPU & Power** also shows NVIDIA clocks, video
   encode/decode usage and energy used today, with an optional cost estimate.
+- 📈 **History card:** charts for CPU, memory, GPU, temperatures, disk, network, battery and power
+  over 1 hour to 7 days, with markers for power-source changes, throttling and alerts. Drag across
+  a chart to zoom every chart into that range, read min/avg/max for it, and export it as CSV or
+  JSON to your Downloads folder.
 - 🔥 **CPU heatmap:** one cell per logical core. Hover a cell for its usage, clock, per-core watts and
   the package temperature. A performance-limit chip reports lost CPU performance headroom from
   Windows power policy or platform limits; it does not directly measure thermal throttling.
