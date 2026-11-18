@@ -28,8 +28,7 @@
       "@crystalflux/toast-glass": ["./src/vendor/crystal/toast-glass/index.ts"],
       "@crystalflux/tooltip-glass": ["./src/vendor/crystal/tooltip-glass/index.ts"],
       "@crystalflux/smooth-range": ["./src/vendor/crystal/smooth-range/index.ts"],
-      "@crystalflux/select-glass": ["./src/vendor/crystal/select-glass/index.ts"],
-      "@crystalflux/spotlight": ["./src/vendor/crystal/spotlight/index.ts"]
+      "@crystalflux/select-glass": ["./src/vendor/crystal/select-glass/index.ts"]
     }
   },
   "include": ["src"]
