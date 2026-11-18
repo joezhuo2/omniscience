@@ -1,5 +1,6 @@
 import { GlassCheckbox } from '@crystalflux/checkbox-glass';
 import { useEffect, useState } from 'react';
+import { tempFromDisplay, tempSymbol, tempValue } from '../../lib/format';
 import { formatSnoozeEnd, isSnoozed, minutesToTime, timeToMinutes } from '../../lib/alerts';
 import type { Settings } from '../../settings';
 import type { AlertRule } from '../../types/generated/AlertRule';
@@ -17,12 +18,13 @@ interface RuleSpec {
   min?: number;
   max?: number;
   unit?: string;
+  temp?: boolean;
   duration?: boolean;
   needsPing?: boolean;
 }
 
 const PERCENT = { prefix: 'above', min: 1, max: 100, unit: '%', duration: true };
-const TEMP = { prefix: 'above', min: 30, max: 110, unit: '°C', duration: true };
+const TEMP = { prefix: 'above', min: 30, max: 110, unit: '°C', temp: true, duration: true };
 
 const RULES: RuleSpec[] = [
   { key: 'cpu', label: 'CPU', ...PERCENT },
@@ -105,7 +107,7 @@ export function AlertsSettings({
       </Row>
       {settings.sustained_alerts && (
         <>
-          {RULES.map(({ key, label, prefix, min, max, unit, duration, needsPing }) => {
+          {RULES.map(({ key, label, prefix, min, max, unit, temp, duration, needsPing }) => {
             const rule = alerts[key];
             const off = !rule.enabled;
             return (
@@ -124,13 +126,15 @@ export function AlertsSettings({
                     <span className="text-island-muted">{prefix}</span>
                     {unit && min !== undefined && max !== undefined && (
                       <ThresholdInput
-                        key={`${key}-t-${rule.threshold}`}
+                        key={`${key}-t-${rule.threshold}${temp ? tempSymbol() : ''}`}
                         label={`${label} threshold`}
-                        value={rule.threshold}
-                        min={min}
-                        max={max}
-                        unit={unit}
-                        onCommit={(threshold) => patchRule(key, { threshold })}
+                        value={temp ? tempValue(rule.threshold) : rule.threshold}
+                        min={temp ? tempValue(min) : min}
+                        max={temp ? tempValue(max) : max}
+                        unit={temp ? tempSymbol() : unit}
+                        onCommit={(v) =>
+                          patchRule(key, { threshold: temp ? tempFromDisplay(v) : v })
+                        }
                       />
                     )}
                     {duration && (

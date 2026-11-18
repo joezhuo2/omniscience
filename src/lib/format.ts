@@ -1,4 +1,25 @@
+import type { NetUnit } from '../types/generated/NetUnit';
+import type { TempUnit } from '../types/generated/TempUnit';
+
 const UNITS = ['B', 'KB', 'MB', 'GB', 'TB'];
+const BIT_UNITS = ['b', 'Kb', 'Mb', 'Gb', 'Tb'];
+
+let tempUnit: TempUnit = 'celsius';
+let netUnit: NetUnit = 'bytes';
+
+export function setUnits(temp: TempUnit | undefined, net: NetUnit | undefined): void {
+  tempUnit = temp ?? 'celsius';
+  netUnit = net ?? 'bytes';
+}
+
+export const tempSymbol = () => (tempUnit === 'fahrenheit' ? '°F' : '°C');
+
+export const toDisplayTemp = (c: number) => (tempUnit === 'fahrenheit' ? (c * 9) / 5 + 32 : c);
+
+export const tempValue = (c: number) => Math.round(toDisplayTemp(c));
+
+export const tempFromDisplay = (v: number) =>
+  tempUnit === 'fahrenheit' ? Math.round(((v - 32) * 50) / 9) / 10 : v;
 
 /** 1536 -> "1.5 KB". No decimals at or above 100 for compactness. */
 export function formatBytes(bytes: number | null | undefined): string {
@@ -15,6 +36,7 @@ export function formatBytes(bytes: number | null | undefined): string {
 
 /** Bytes per second -> "1.2 MB/s". */
 export function formatRate(bps: number | null | undefined): string {
+  if (netUnit === 'bits') return formatScaled(bps, BIT_UNITS, 1000, 8, false);
   const b = formatBytes(bps);
   return b === '--' ? b : `${b}/s`;
 }
@@ -31,14 +53,27 @@ export function formatUsedTotal(
 
 /** Bytes per second rounded to a whole number in the best unit: "1 MB/s", "80 KB/s". */
 export function formatRateRounded(bps: number | null | undefined): string {
+  return netUnit === 'bits'
+    ? formatScaled(bps, BIT_UNITS, 1000, 8, true)
+    : formatScaled(bps, UNITS, 1024, 1, true);
+}
+
+function formatScaled(
+  bps: number | null | undefined,
+  units: string[],
+  base: number,
+  factor: number,
+  whole: boolean,
+): string {
   if (bps == null || !Number.isFinite(bps) || bps < 0) return '--';
-  let v = bps;
+  let v = bps * factor;
   let i = 0;
-  while (Math.round(v) >= 1024 && i < UNITS.length - 1) {
-    v /= 1024;
+  while ((whole ? Math.round(v) : v) >= base && i < units.length - 1) {
+    v /= base;
     i++;
   }
-  return `${Math.round(v)} ${UNITS[i]}/s`;
+  const text = whole ? String(Math.round(v)) : v.toFixed(i === 0 || v >= 100 ? 0 : 1);
+  return `${text} ${units[i]}/s`;
 }
 
 /** MHz -> "3.2 GHz". */
@@ -64,7 +99,7 @@ export function formatWh(mwh: number | null | undefined): string {
 
 export function formatTemp(c: number | null | undefined): string {
   if (c == null || !Number.isFinite(c)) return '--';
-  return `${Math.round(c)}°C`;
+  return `${Math.round(toDisplayTemp(c))}${tempSymbol()}`;
 }
 
 export function formatRpm(rpm: number | null | undefined): string {

@@ -36,6 +36,9 @@ const makeSettings = (): Settings => ({
   dodge_browser_tabs: false,
   energy_price_per_kwh: 0,
   energy_currency: '$',
+  temp_unit: 'celsius',
+  net_unit: 'bytes',
+  metric_thresholds: { cpu: null, ram: null, igpu: null, dgpu: null, disk: null, net: null },
   alerts: {
     cpu: rule(90),
     memory: rule(90),

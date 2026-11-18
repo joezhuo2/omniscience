@@ -21,6 +21,7 @@ describe('embedded mode', () => {
             config_enabled: true,
             ping_target: '',
             alerts: { snooze_until_ms: 0 },
+            metric_thresholds: {},
           };
         if (cmd.endsWith('get_telemetry_history')) return [];
         return null;

@@ -3,8 +3,12 @@ import { GlassSelect } from '@crystalflux/select-glass';
 import { SmoothRange } from '@crystalflux/smooth-range';
 import { ArrowLeft } from 'lucide-react';
 import { useState } from 'react';
+import { Toggle } from './settings/SettingsView';
+import { isEmbedded } from '../lib/ipc';
 import {
+  ACCENT_KEY,
   COLOR_TOKENS,
+  THEME_PRESETS,
   FONT_PRESETS,
   FONT_VAR,
   SIZE_VAR,
@@ -13,7 +17,10 @@ import {
   fontLabel,
   fontValue,
   loadAppearance,
+  presetLabel,
   saveAppearance,
+  syncAccent,
+  withPreset,
   toHex,
   type Overrides,
 } from '../lib/appearance';
@@ -23,8 +30,9 @@ export function StyleEditor({ onBack }: { onBack: () => void }) {
 
   const commit = (next: Overrides) => {
     setOverrides(next);
-    applyAppearance(next);
     saveAppearance(next);
+    applyAppearance(next);
+    void syncAccent();
   };
 
   const set = (name: string, value: string | null) => {
@@ -34,6 +42,7 @@ export function StyleEditor({ onBack }: { onBack: () => void }) {
     commit(next);
   };
 
+  const current = presetLabel(overrides);
   const size = parseInt(overrides[SIZE_VAR] ?? '100', 10);
 
   return (
@@ -49,6 +58,28 @@ export function StyleEditor({ onBack }: { onBack: () => void }) {
         <h1 className="text-xs font-semibold text-island-text">Appearance</h1>
       </header>
       <section className="rounded-xl border border-island-faint bg-island-hover p-3">
+        <div className="mb-3 flex items-center justify-between gap-3 text-island-muted">
+          Theme
+          <GlassSelect
+            aria-label="Theme"
+            options={[...THEME_PRESETS.map((p) => p.label), ...(current ? [] : ['Custom'])]}
+            value={current ?? 'Custom'}
+            onChange={(label) => {
+              const found = THEME_PRESETS.find((p) => p.label === label);
+              if (found) commit(withPreset(overrides, found.overrides));
+            }}
+          />
+        </div>
+        {!isEmbedded() && (
+          <div className="mb-3 flex items-center justify-between gap-3 text-island-muted">
+            Follow Windows accent color
+            <Toggle
+              label="Follow Windows accent color"
+              checked={!!overrides[ACCENT_KEY]}
+              onChange={(on) => set(ACCENT_KEY, on ? '1' : null)}
+            />
+          </div>
+        )}
         <div className="grid grid-cols-2 gap-x-3 gap-y-2">
           {COLOR_TOKENS.map(({ name, label }) => (
             <ColorPicker

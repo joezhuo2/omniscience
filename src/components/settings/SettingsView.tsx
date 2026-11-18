@@ -11,10 +11,12 @@ import { useSettingsStore, type Settings } from '../../settings';
 import { useToastStore } from '../../toasts';
 import { Toasts } from '../dashboard/Toasts';
 import { AlertsSettings } from './AlertsSettings';
+import { BackupSettings, MetricThresholdsSettings, ResetSettings } from './SettingsTools';
 import { IslandImageField } from './IslandImageField';
 import { Segmented } from '../Segmented';
 import { useGlass } from '../../lib/glass';
 import { ALL_RINGS } from '../../lib/pill';
+import { tempFromDisplay, tempSymbol, tempValue } from '../../lib/format';
 import type { PillNumbers } from '../../types/generated/PillNumbers';
 
 const IS_MAC = typeof navigator !== 'undefined' && /Mac/i.test(navigator.platform);
@@ -27,10 +29,18 @@ const RING_LABELS: Record<string, string> = {
   disk: 'Disk',
   net: 'Network',
 };
-const PILL_NUMBERS: { value: PillNumbers; label: string }[] = [
+const pillNumbers = (): { value: PillNumbers; label: string }[] => [
   { value: 'off', label: 'Off' },
   { value: 'percent', label: '%' },
-  { value: 'temp', label: '°C' },
+  { value: 'temp', label: tempSymbol() },
+];
+const TEMP_UNITS: { value: Settings['temp_unit']; label: string }[] = [
+  { value: 'celsius', label: '°C' },
+  { value: 'fahrenheit', label: '°F' },
+];
+const NET_UNITS: { value: Settings['net_unit']; label: string }[] = [
+  { value: 'bytes', label: 'Bytes' },
+  { value: 'bits', label: 'Bits' },
 ];
 
 export function Row({
@@ -273,6 +283,15 @@ export function SettingsView({ onBack }: { onBack: () => void }) {
   const standalone = !isEmbedded();
 
   const push = useToastStore((s) => s.push);
+  const copySummary = async () => {
+    try {
+      await navigator.clipboard.writeText(await invoke<string>('get_system_summary'));
+      push('System summary copied to the clipboard.');
+    } catch (e) {
+      push(`Could not copy the system summary: ${String(e)}`);
+      throw e;
+    }
+  };
   const [includeTelemetry, setIncludeTelemetry] = useState(false);
   const copyReport = async () => {
     try {
@@ -319,26 +338,27 @@ export function SettingsView({ onBack }: { onBack: () => void }) {
           </Row>
           <Row label="CPU temp warning above">
             <ThresholdInput
-              key={`cpu-warn-${settings.cpu_temp_warn_c}`}
+              key={`cpu-warn-${settings.cpu_temp_warn_c}-${tempSymbol()}`}
               label="CPU temperature warning"
-              value={settings.cpu_temp_warn_c}
-              min={30}
-              max={109}
-              unit="°C"
-              onCommit={(v) => set({ cpu_temp_warn_c: v })}
+              value={tempValue(settings.cpu_temp_warn_c)}
+              min={tempValue(30)}
+              max={tempValue(109)}
+              unit={tempSymbol()}
+              onCommit={(v) => set({ cpu_temp_warn_c: tempFromDisplay(v) })}
             />
           </Row>
           <Row label="CPU temp critical above">
             <ThresholdInput
-              key={`cpu-crit-${settings.cpu_temp_crit_c}`}
+              key={`cpu-crit-${settings.cpu_temp_crit_c}-${tempSymbol()}`}
               label="CPU temperature critical"
-              value={settings.cpu_temp_crit_c}
-              min={31}
-              max={110}
-              unit="°C"
-              onCommit={(v) => set({ cpu_temp_crit_c: v })}
+              value={tempValue(settings.cpu_temp_crit_c)}
+              min={tempValue(31)}
+              max={tempValue(110)}
+              unit={tempSymbol()}
+              onCommit={(v) => set({ cpu_temp_crit_c: tempFromDisplay(v) })}
             />
           </Row>
+          <MetricThresholdsSettings settings={settings} set={set} />
           <Row label="Open delay">
             <ThresholdInput
               key={`open-${settings.hover_open_delay_ms}`}
@@ -384,7 +404,7 @@ export function SettingsView({ onBack }: { onBack: () => void }) {
               <Row label="Numbers on pill">
                 <Segmented
                   label="Numbers on pill"
-                  items={PILL_NUMBERS}
+                  items={pillNumbers()}
                   value={settings.pill_numbers}
                   onChange={(pill_numbers) => set({ pill_numbers })}
                 />
@@ -451,6 +471,22 @@ export function SettingsView({ onBack }: { onBack: () => void }) {
               </Row>
             </>
           )}
+          <Row label="Temperature unit">
+            <Segmented
+              label="Temperature unit"
+              items={TEMP_UNITS}
+              value={settings.temp_unit}
+              onChange={(temp_unit) => set({ temp_unit })}
+            />
+          </Row>
+          <Row label="Network speed unit">
+            <Segmented
+              label="Network speed unit"
+              items={NET_UNITS}
+              value={settings.net_unit}
+              onChange={(net_unit) => set({ net_unit })}
+            />
+          </Row>
           <Row label="Ping target">
             <TextInput
               key={`ping-${settings.ping_target}`}
@@ -546,8 +582,17 @@ export function SettingsView({ onBack }: { onBack: () => void }) {
               >
                 Copy diagnostic report
               </FeedbackButton>
+              <FeedbackButton
+                action={copySummary}
+                done="Copied"
+                className="rounded border border-island-faint px-2 py-0.5 text-[10px] text-island-text hover:border-island-muted"
+              >
+                Copy system summary
+              </FeedbackButton>
             </div>
           </Row>
+          <BackupSettings />
+          <ResetSettings />
         </div>
       )}
       {error && <p className="pt-2 text-[11px] text-island-crit">{error}</p>}

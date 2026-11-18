@@ -1,6 +1,6 @@
 import type { CoreMetrics } from '../types/telemetry';
 import type { PillNumbers } from '../types/generated/PillNumbers';
-import { formatRateRounded } from './format';
+import { formatRateRounded, toDisplayTemp } from './format';
 import type { MetricKey } from './levels';
 
 export const ALL_RINGS: MetricKey[] = ['cpu', 'ram', 'igpu', 'dgpu', 'disk', 'net'];
@@ -14,10 +14,10 @@ const percentText = (p: number | null | undefined) =>
   p == null || !Number.isFinite(p) ? '–' : `${Math.round(p)}%`;
 
 const tempText = (c: number | null | undefined) =>
-  c == null || !Number.isFinite(c) ? null : `${Math.round(c)}°`;
+  c == null || !Number.isFinite(c) ? null : `${Math.round(toDisplayTemp(c))}°`;
 
 function compactRate(bps: number): string {
-  return formatRateRounded(bps).replace('/s', '').replace(' ', '').replace('B', '');
+  return formatRateRounded(bps).replace('/s', '').replace(' ', '').replace(/[Bb]$/, '');
 }
 
 export function pillNumber(
