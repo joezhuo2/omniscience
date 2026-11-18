@@ -1,0 +1,28 @@
+{
+  "SDKVersion": 2,
+  "Name": "Omniscience",
+  "Author": "joezhuo2",
+  "Version": "0.11.0",
+  "Description": "Show Omniscience system readings on a Stream Deck key.",
+  "Category": "Omniscience",
+  "CategoryIcon": "icon",
+  "Icon": "icon",
+  "URL": "https://github.com/joezhuo2/omniscience",
+  "CodePath": "plugin.html",
+  "OS": [
+    { "Platform": "windows", "MinimumVersion": "10" },
+    { "Platform": "mac", "MinimumVersion": "10.15" }
+  ],
+  "Software": { "MinimumVersion": "6.0" },
+  "Actions": [
+    {
+      "Name": "Omniscience reading",
+      "UUID": "io.github.joezhuo2.omniscience.reading",
+      "Icon": "icon",
+      "Tooltip": "Shows one Omniscience reading.",
+      "PropertyInspectorPath": "pi.html",
+      "SupportedInMultiActions": false,
+      "States": [{ "Image": "icon", "TitleAlignment": "middle", "FontSize": "14" }]
+    }
+  ]
+}

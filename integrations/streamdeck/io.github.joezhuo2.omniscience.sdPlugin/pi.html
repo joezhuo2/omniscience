@@ -1,0 +1,54 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Omniscience reading</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        font-size: 12px;
+        color: #d8d8d8;
+        background: #2d2d2d;
+        margin: 8px;
+      }
+      label {
+        display: block;
+        margin-top: 10px;
+      }
+      select,
+      input {
+        width: 100%;
+        box-sizing: border-box;
+      }
+      p {
+        color: #999;
+      }
+    </style>
+  </head>
+  <body>
+    <label>
+      Reading
+      <select id="reading">
+        <option value="cpu">CPU %</option>
+        <option value="cpu_temp">CPU temperature</option>
+        <option value="memory">Memory %</option>
+        <option value="igpu">Integrated GPU %</option>
+        <option value="dgpu">Discrete GPU %</option>
+        <option value="disk">Disk %</option>
+        <option value="down">Download speed</option>
+        <option value="up">Upload speed</option>
+        <option value="power">Power</option>
+      </select>
+    </label>
+    <label>
+      API port
+      <input id="port" type="number" min="1" max="65535" value="9124" />
+    </label>
+    <label>
+      API token
+      <input id="token" type="password" autocomplete="off" />
+    </label>
+    <p>Turn on the Local API in Omniscience under Settings &gt; Integrations.</p>
+    <script src="pi.js"></script>
+  </body>
+</html>
