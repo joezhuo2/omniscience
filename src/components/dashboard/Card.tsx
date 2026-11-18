@@ -4,7 +4,7 @@ import { GlassSwitch } from '@crystalflux/switch-glass';
 import { useSectionDrag } from './SectionDragContext';
 import { useCallback, useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react';
 import { useSectionToggle } from '../config/sectionToggleContext';
-import { readSectionCollapsed, saveSectionCollapsed, type CardSectionId } from '../../lib/sections';
+import { readSectionCollapsed, saveSectionCollapsed } from '../../lib/sections';
 
 const INTERACTIVE =
   'button, a, input, select, textarea, label, [role=slider], [role=tab], [contenteditable], [data-no-drag]';
@@ -19,7 +19,7 @@ export function Card({
   children,
 }: {
   title: string;
-  section?: CardSectionId;
+  section?: string;
   aside?: ReactNode;
   summary?: ReactNode;
   /** Called with whether the card's content is shown, on mount and on every change. */

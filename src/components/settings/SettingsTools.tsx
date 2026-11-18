@@ -1,6 +1,5 @@
 import { GlassCheckbox } from '@crystalflux/checkbox-glass';
 import { FeedbackButton } from '@crystalflux/feedback-button';
-import { GlassSelect } from '@crystalflux/select-glass';
 import { useRef, useState } from 'react';
 import { applyAppearance, loadAppearance, saveAppearance, syncAccent } from '../../lib/appearance';
 import { useGlass } from '../../lib/glass';
@@ -91,17 +90,16 @@ export function MetricThresholdsSettings({
   );
 }
 
-export function ResetSettings() {
-  const [group, setGroup] = useState(RESET_GROUPS[0]!.id);
+export function ResetGroup({ id }: { id: string }) {
   const [armed, setArmed] = useState(false);
   const push = useToastStore((s) => s.push);
-  const label = RESET_GROUPS.find((g) => g.id === group)?.label ?? '';
+  const label = RESET_GROUPS.find((g) => g.id === id)?.label ?? '';
   const reset = async () => {
     const { settings, update } = useSettingsStore.getState();
     if (!settings) return;
     try {
       const defaults = await invoke<Settings>('get_default_settings');
-      await update(resetPatch(group, defaults, settings));
+      await update(resetPatch(id, defaults, settings));
       const error = useSettingsStore.getState().error;
       push(error ?? `${label} reset to defaults.`);
     } catch (e) {
@@ -109,30 +107,18 @@ export function ResetSettings() {
     }
   };
   return (
-    <Row label="Reset settings" hint="Puts one group back to its defaults.">
-      <span className="flex shrink-0 items-center gap-1.5">
-        <GlassSelect
-          aria-label="Settings group"
-          options={RESET_GROUPS.map((g) => g.label)}
-          value={label}
-          onChange={(l) => {
-            setGroup(RESET_GROUPS.find((g) => g.label === l)?.id ?? group);
-            setArmed(false);
-          }}
-        />
-        <button
-          className={button}
-          onBlur={() => setArmed(false)}
-          onClick={() => {
-            if (!armed) return setArmed(true);
-            setArmed(false);
-            void reset();
-          }}
-        >
-          {armed ? 'Confirm reset' : 'Reset'}
-        </button>
-      </span>
-    </Row>
+    <button
+      aria-label={`${armed ? 'Confirm reset' : 'Reset'} ${label}`}
+      className={button}
+      onBlur={() => setArmed(false)}
+      onClick={() => {
+        if (!armed) return setArmed(true);
+        setArmed(false);
+        void reset();
+      }}
+    >
+      {armed ? 'Confirm reset' : 'Reset'}
+    </button>
   );
 }
 

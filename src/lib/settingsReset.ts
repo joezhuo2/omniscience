@@ -3,13 +3,15 @@ import type { Settings } from '../settings';
 export const RESET_GROUPS: { id: string; label: string; keys: (keyof Settings)[] }[] = [
   {
     id: 'thresholds',
-    label: 'Thresholds',
+    label: 'Thresholds and units',
     keys: [
       'warn_threshold',
       'crit_threshold',
       'cpu_temp_warn_c',
       'cpu_temp_crit_c',
       'metric_thresholds',
+      'temp_unit',
+      'net_unit',
     ],
   },
   {
@@ -34,11 +36,10 @@ export const RESET_GROUPS: { id: string; label: string; keys: (keyof Settings)[]
       'sensor_details',
       'energy_price_per_kwh',
       'energy_currency',
-      'temp_unit',
-      'net_unit',
     ],
   },
   { id: 'alerts', label: 'Alerts', keys: ['sustained_alerts', 'alerts'] },
+  { id: 'integrations', label: 'Integrations', keys: ['integrations'] },
   { id: 'profiles', label: 'Profiles', keys: ['profiles', 'active_profile'] },
 ];
 

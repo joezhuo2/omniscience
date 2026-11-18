@@ -79,7 +79,7 @@ export function moveSection(order: SectionId[], active: string, over: string): S
   return next;
 }
 
-export function readSectionCollapsed(section: CardSectionId | undefined): boolean {
+export function readSectionCollapsed(section: string | undefined): boolean {
   if (!section) return false;
   try {
     return localStorage.getItem(`${PREFIX}${section}`) === 'true';
@@ -88,7 +88,7 @@ export function readSectionCollapsed(section: CardSectionId | undefined): boolea
   }
 }
 
-export function saveSectionCollapsed(section: CardSectionId, collapsed: boolean): void {
+export function saveSectionCollapsed(section: string, collapsed: boolean): void {
   try {
     if (collapsed) localStorage.setItem(`${PREFIX}${section}`, 'true');
     else localStorage.removeItem(`${PREFIX}${section}`);

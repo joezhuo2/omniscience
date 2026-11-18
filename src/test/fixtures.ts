@@ -1,3 +1,4 @@
+import type { Settings } from '../settings';
 import type { DetailMetrics, Snapshot } from '../types/telemetry';
 
 const metric = (percent: number, level: 'normal' | 'warning' | 'critical' = 'normal') => ({
@@ -122,4 +123,68 @@ export const sampleSnapshot: Snapshot = {
     package_watts: 8.2,
   },
   detail: null,
+};
+
+const alertRule = { enabled: false, threshold: 90, duration_s: 30 };
+
+export const sampleSettings: Settings = {
+  warn_threshold: 70,
+  crit_threshold: 90,
+  cpu_temp_warn_c: 80,
+  cpu_temp_crit_c: 90,
+  poll_interval_ms: 1000,
+  hotkey: 'CommandOrControl+Shift+O',
+  profiles: [],
+  active_profile: '',
+  launch_at_startup: false,
+  auto_check_updates: true,
+  hide_over_fullscreen: true,
+  ping_target: '1.1.1.1',
+  show_public_ip: false,
+  config_enabled: false,
+  sustained_alerts: false,
+  sensor_details: false,
+  history_hours: 24,
+  hover_open_delay_ms: 0,
+  hover_close_delay_ms: 0,
+  pill_rings: ['cpu', 'ram', 'igpu', 'dgpu', 'disk', 'net'],
+  pill_numbers: 'off',
+  dodge_browser_tabs: false,
+  integrations: {
+    api_enabled: false,
+    api_port: 8765,
+    api_lan: false,
+    api_token: '',
+    mqtt_enabled: false,
+    mqtt_host: 'broker.local',
+    mqtt_port: 1883,
+    mqtt_username: 'user',
+    mqtt_password: 'secret',
+    mqtt_topic: 'omniscience',
+    mqtt_interval_s: 10,
+    mqtt_discovery: false,
+  },
+  energy_price_per_kwh: 0,
+  energy_currency: '$',
+  temp_unit: 'celsius',
+  net_unit: 'bytes',
+  metric_thresholds: { cpu: null, ram: null, igpu: null, dgpu: null, disk: null, net: null },
+  alerts: {
+    cpu: alertRule,
+    memory: alertRule,
+    disk: alertRule,
+    igpu: alertRule,
+    dgpu: alertRule,
+    cpu_temp: alertRule,
+    gpu_temp: alertRule,
+    disk_space: alertRule,
+    network_down: alertRule,
+    ping_spike: alertRule,
+    battery_full: alertRule,
+    battery_low: alertRule,
+    quiet_hours: false,
+    quiet_start_min: 1320,
+    quiet_end_min: 420,
+    snooze_until_ms: 0,
+  },
 };

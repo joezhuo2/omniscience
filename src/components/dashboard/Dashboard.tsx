@@ -4,6 +4,7 @@ import { ConfigView } from '../config/ConfigView';
 import { BatteryCard } from './BatteryCard';
 import { BluetoothCard } from './BluetoothCard';
 import { CpuHeatmap } from './CpuHeatmap';
+import { CustomCards } from './CustomCards';
 import { DrivesCard } from './DrivesCard';
 import { FanCard } from './FanCard';
 import { GpuPowerCard } from './GpuPowerCard';
@@ -113,6 +114,7 @@ export function Dashboard({
                   return <Component />;
                 }}
               </SectionLayout>
+              <CustomCards />
             </InfoTabVisible.Provider>
           </div>
         </div>
