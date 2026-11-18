@@ -12,13 +12,13 @@ use crate::positions::Positions;
 use crate::settings::Settings;
 #[cfg(feature = "standalone")]
 use crate::shell::Shell;
-use crate::telemetry::export;
 use crate::telemetry::history::HistorySample;
 use crate::telemetry::process_actions::{self, Ctx};
 use crate::telemetry::types::{
     ActionOutcome, ActionResult, HistoryEvent, KillReport, ProcessDetails, ProcessPriority,
 };
 use crate::telemetry::{Telemetry, processes};
+use crate::telemetry::{export, summary};
 #[cfg(feature = "standalone")]
 use crate::{webview, window};
 
@@ -260,7 +260,35 @@ pub fn export_history(
         .map(|d| d.as_millis() as u64)
         .unwrap_or_default();
     let dir = app.path().download_dir().map_err(|e| e.to_string())?;
-    let path = dir.join(export::file_name(now_ms, &format));
+    let path = dir.join(export::file_name("history", now_ms, &format));
     std::fs::write(&path, text).map_err(|e| e.to_string())?;
     Ok(path.to_string_lossy().into_owned())
+}
+
+#[cfg(feature = "standalone")]
+const MAX_SETTINGS_EXPORT: usize = 1024 * 1024;
+
+#[cfg(feature = "standalone")]
+#[tauri::command]
+pub fn export_settings_file(contents: String, app: AppHandle) -> Result<String, String> {
+    if contents.len() > MAX_SETTINGS_EXPORT {
+        return Err("Settings file is too large to export.".into());
+    }
+    serde_json::from_str::<serde::de::IgnoredAny>(&contents).map_err(|e| e.to_string())?;
+    let now_ms = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_millis() as u64)
+        .unwrap_or_default();
+    let dir = app.path().download_dir().map_err(|e| e.to_string())?;
+    let path = dir.join(export::file_name("settings", now_ms, "json"));
+    std::fs::write(&path, contents).map_err(|e| e.to_string())?;
+    Ok(path.to_string_lossy().into_owned())
+}
+
+#[tauri::command]
+pub async fn get_system_summary(telemetry: State<'_, Arc<Telemetry>>) -> Result<String, String> {
+    let snapshot = telemetry.latest();
+    tauri::async_runtime::spawn_blocking(move || summary::render(&summary::gather(snapshot)))
+        .await
+        .map_err(|e| e.to_string())
 }

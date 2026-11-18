@@ -22,6 +22,7 @@ pub mod processes;
 mod public_ip;
 mod sampler;
 mod slow;
+pub mod summary;
 pub mod types;
 mod usage;
 #[cfg(windows)]
@@ -40,7 +41,7 @@ use tauri_plugin_notification::NotificationExt;
 
 use events::{EventLog, Watch};
 use history::{History, HistorySample};
-use types::{HistoryEvent, HistoryEventKind, Snapshot, Thresholds};
+use types::{HistoryEvent, HistoryEventKind, MetricLimits, Snapshot};
 
 pub const TICK_EVENT: &str = "telemetry://tick";
 
@@ -52,7 +53,7 @@ pub struct Control {
     /// Whether the processes section is open, so the process list is sampled.
     pub processes: bool,
     pub interval: Duration,
-    pub thresholds: Thresholds,
+    pub thresholds: MetricLimits,
     /// Host to ping while expanded; empty for none.
     pub ping_target: Arc<str>,
     /// Whether to look up the public IP while expanded.
@@ -72,7 +73,7 @@ impl Default for Control {
             visible: true,
             processes: true,
             interval: Duration::from_secs(1),
-            thresholds: Thresholds::default(),
+            thresholds: MetricLimits::default(),
             ping_target: "".into(),
             public_ip: false,
             sustained_alerts: false,

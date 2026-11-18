@@ -30,6 +30,37 @@ impl Default for Thresholds {
     }
 }
 
+#[derive(Debug, Clone, Copy, Default, PartialEq)]
+pub struct MetricLimits {
+    pub cpu: Thresholds,
+    pub ram: Thresholds,
+    pub igpu: Thresholds,
+    pub dgpu: Thresholds,
+    pub disk: Thresholds,
+    pub net: Thresholds,
+}
+
+impl MetricLimits {
+    pub fn from_settings(s: &crate::settings::Settings) -> Self {
+        let global = s.thresholds();
+        let pick = |pair: Option<crate::settings::ThresholdPair>| {
+            pair.map_or(global, |p| Thresholds {
+                warn: p.warn,
+                crit: p.crit,
+            })
+        };
+        let m = &s.metric_thresholds;
+        Self {
+            cpu: pick(m.cpu),
+            ram: pick(m.ram),
+            igpu: pick(m.igpu),
+            dgpu: pick(m.dgpu),
+            disk: pick(m.disk),
+            net: pick(m.net),
+        }
+    }
+}
+
 /// `<= warn` is normal, `<= crit` is warning, above is critical.
 pub fn classify(percent: f32, t: Thresholds) -> Level {
     if percent > t.crit {
@@ -484,6 +515,46 @@ mod tests {
         };
         assert_eq!(classify(55.0, t), Level::Warning);
         assert_eq!(classify(61.0, t), Level::Critical);
+    }
+
+    #[test]
+    fn limits_use_the_metric_pair_or_the_global_one() {
+        let mut s = crate::settings::Settings {
+            warn_threshold: 60.0,
+            crit_threshold: 80.0,
+            ..Default::default()
+        };
+        s.metric_thresholds.dgpu = Some(crate::settings::ThresholdPair {
+            warn: 30.0,
+            crit: 40.0,
+        });
+        let l = MetricLimits::from_settings(&s);
+        let global = Thresholds {
+            warn: 60.0,
+            crit: 80.0,
+        };
+        assert_eq!(l.cpu, global);
+        assert_eq!(l.net, global);
+        assert_eq!(
+            l.dgpu,
+            Thresholds {
+                warn: 30.0,
+                crit: 40.0
+            }
+        );
+    }
+
+    #[test]
+    fn a_metric_is_classified_with_its_own_pair() {
+        let l = MetricLimits {
+            dgpu: Thresholds {
+                warn: 30.0,
+                crit: 40.0,
+            },
+            ..Default::default()
+        };
+        assert_eq!(Metric::new(45.0, l.dgpu).level, Level::Critical);
+        assert_eq!(Metric::new(45.0, l.cpu).level, Level::Normal);
     }
 
     #[test]

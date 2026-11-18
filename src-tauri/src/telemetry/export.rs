@@ -20,9 +20,9 @@ fn iso_utc(ts_ms: u64) -> String {
     format!("{}Z", stamp(ts_ms as i64, "T", "-", ":"))
 }
 
-pub fn file_name(now_ms: u64, ext: &str) -> String {
+pub fn file_name(kind: &str, now_ms: u64, ext: &str) -> String {
     let local = now_ms as i64 + local_offset_ms();
-    format!("omniscience-history-{}.{ext}", stamp(local, "-", "", ""))
+    format!("omniscience-{kind}-{}.{ext}", stamp(local, "-", "", ""))
 }
 
 fn cell<T: std::fmt::Display>(v: Option<T>) -> String {
@@ -115,7 +115,7 @@ mod tests {
 
     #[test]
     fn file_names_use_compact_local_time() {
-        let name = file_name(1_700_000_040_000, "csv");
+        let name = file_name("history", 1_700_000_040_000, "csv");
         let stem = name
             .strip_prefix("omniscience-history-")
             .and_then(|n| n.strip_suffix(".csv"))

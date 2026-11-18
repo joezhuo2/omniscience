@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 use crate::telemetry::Control;
-use crate::telemetry::types::Thresholds;
+use crate::telemetry::types::{MetricLimits, Thresholds};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
 #[serde(default)]
@@ -421,7 +421,7 @@ impl Settings {
 
     /// Copies the settings the collector uses into its control state.
     pub fn apply(&self, c: &mut Control) {
-        c.thresholds = self.thresholds();
+        c.thresholds = MetricLimits::from_settings(self);
         c.interval = self.interval();
         c.ping_target = self.ping_target.as_str().into();
         c.public_ip = self.show_public_ip;
@@ -431,6 +431,11 @@ impl Settings {
         c.dodge_tabs = self.dodge_browser_tabs;
         c.alerts = self.alerts.clone();
     }
+}
+
+#[tauri::command]
+pub fn get_default_settings() -> Settings {
+    Settings::default()
 }
 
 const FILE: &str = "settings.json";

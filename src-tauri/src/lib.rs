@@ -1,3 +1,5 @@
+#[cfg(feature = "standalone")]
+mod accent;
 #[cfg(windows)]
 #[cfg_attr(not(feature = "standalone"), allow(dead_code))]
 mod asus;
@@ -102,6 +104,10 @@ pub fn run() {
             commands::get_telemetry_history,
             commands::get_history_events,
             commands::export_history,
+            commands::export_settings_file,
+            commands::get_system_summary,
+            settings::get_default_settings,
+            accent::get_accent_color,
             diagnostics::get_diagnostic_report,
             driver_updates::scan_driver_updates,
             driver_updates::get_system_update_status,
