@@ -374,6 +374,26 @@ pub struct KillReport {
     pub results: Vec<KillResult>,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, serde::Deserialize, TS)]
+#[serde(rename_all = "snake_case")]
+#[ts(export)]
+#[allow(dead_code)]
+pub enum HistoryEventKind {
+    PowerSource,
+    Throttle,
+    Alert,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, serde::Deserialize, TS)]
+#[ts(export)]
+#[allow(dead_code)]
+pub struct HistoryEvent {
+    #[ts(type = "number")]
+    pub ts_ms: u64,
+    pub kind: HistoryEventKind,
+    pub label: String,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
