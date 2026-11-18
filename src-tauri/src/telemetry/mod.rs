@@ -58,6 +58,7 @@ pub struct Control {
     pub pill_w: f64,
     pub dodge_tabs: bool,
     pub widget: bool,
+    pub alerts: crate::settings::AlertSettings,
 }
 
 impl Default for Control {
@@ -75,6 +76,7 @@ impl Default for Control {
             pill_w: 260.0,
             dodge_tabs: false,
             widget: false,
+            alerts: crate::settings::AlertSettings::default(),
         }
     }
 }
