@@ -5,7 +5,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use tauri::menu::{CheckMenuItem, Menu, MenuItem};
+use tauri::menu::{CheckMenuItem, Menu, MenuItem, Submenu};
 use tauri::{AppHandle, Emitter, Manager, Wry};
 use tauri_plugin_autostart::ManagerExt as _;
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
@@ -24,6 +24,7 @@ pub struct TrayChecks {
     pub hide_over_fullscreen: CheckMenuItem<Wry>,
     pub menu: Menu<Wry>,
     pub system_updates: MenuItem<Wry>,
+    pub profiles: Submenu<Wry>,
     pub snooze: MenuItem<Wry>,
 }
 
@@ -78,8 +79,26 @@ impl Shell {
             let shown = t.menu.get(t.system_updates.id()).is_some();
             if s.config_enabled && !shown {
                 let _ = t.menu.insert(&t.system_updates, 8);
+                let _ = t.menu.insert(&t.profiles, 8);
             } else if !s.config_enabled && shown {
                 let _ = t.menu.remove(&t.system_updates);
+                let _ = t.menu.remove(&t.profiles);
+            }
+            for item in t.profiles.items().unwrap_or_default() {
+                let _ = t.profiles.remove(&item);
+            }
+            for p in &s.profiles {
+                let id = format!("{}{}", crate::profiles::MENU_PREFIX, p.id);
+                if let Ok(item) = CheckMenuItem::with_id(
+                    t.profiles.app_handle(),
+                    id,
+                    &p.name,
+                    true,
+                    p.id == s.active_profile,
+                    None::<&str>,
+                ) {
+                    let _ = t.profiles.append(&item);
+                }
             }
         }
     }
@@ -139,8 +158,17 @@ impl Shell {
             };
             r.map_err(|e| format!("launch at startup: {e}"))?;
         }
+        crate::profiles::validate_hotkeys(&new.profiles, &new.hotkey)?;
         if new.hotkey != old.hotkey {
             register_hotkey(app, &new.hotkey)?;
+        }
+        if let Err(e) = crate::profiles::sync_hotkeys(app, &old.profiles, &new.profiles) {
+            if new.hotkey != old.hotkey {
+                let _ = app.global_shortcut().unregister(new.hotkey.as_str());
+            }
+            return Err(e);
+        }
+        if new.hotkey != old.hotkey {
             let _ = app.global_shortcut().unregister(old.hotkey.as_str());
         }
         app.state::<Arc<Telemetry>>().update(|c| new.apply(c));
@@ -165,14 +193,18 @@ impl Shell {
                 crate::diagnostics::log_error(format_args!("launch at startup: {e}"));
             }
         }
-        let hotkey = {
+        let (hotkey, profiles) = {
             let mut s = self.settings.lock().unwrap_or_else(|e| e.into_inner());
             s.launch_at_startup = launch;
-            s.hotkey.clone()
+            (s.hotkey.clone(), s.profiles.clone())
         };
         if let Err(e) = register_hotkey(app, &hotkey) {
             crate::diagnostics::log_error(e);
         }
+        if let Err(e) = crate::profiles::sync_hotkeys(app, &[], &profiles) {
+            crate::diagnostics::log_error(e);
+        }
+        crate::profiles::spawn_watcher(app.clone());
         self.spawn_fullscreen_watch(app.clone());
     }
 

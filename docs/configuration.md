@@ -13,6 +13,20 @@ The gear icon still opens application settings. Config cards can be collapsed or
 with their headings; their collapsed state is remembered across dashboard reopening and app
 restarts. Collapsed controls are removed from keyboard navigation.
 
+## Profiles
+
+Config > Profiles bundles several settings so they can be applied together. Gaming, Quiet and
+Battery exist by default; each profile can set the power mode, power limits, CPU boost, refresh
+rate and fan mode, and any of them can be left as "Don't change". A profile is applied for the
+current power source (plugged in or battery) from its **Apply** button, the tray's **Profiles**
+menu, or a hotkey recorded in the profile's editor. Settings a device does not support are
+reported and the rest are still applied.
+
+A profile can also list apps (executable names, comma-separated). While one of them is running
+the profile is applied, and when it closes the previous profile is applied again. Omniscience
+checks every 5 seconds and only acts when an app appears or disappears, so a profile you pick by
+hand in the meantime is left alone.
+
 ## Driver and software updates
 
 Choose **Check now** in **Driver & software updates**, or right-click the tray icon and choose
@@ -109,6 +123,16 @@ resolution row lists the resolutions Windows offers at the current color depth a
 orientation. Changing resolution keeps the refresh rate when available, otherwise uses the
 highest one (or Auto's choice). Windows remembers the resolution itself; Omniscience only
 saves whether Auto is on. Rejected modes are reported and the actual state is re-read.
+
+HDR, Night light and Brightness appear below the resolution row when the hardware supports
+them: HDR for displays that report advanced color, Night light once Windows has a saved night
+light state, and Brightness for a built-in panel.
+
+## Fan mode
+
+Requires a supported ASUS laptop. Config > Fan mode switches between Silent, Performance and
+Turbo through the same ASUS firmware interface as the other ASUS controls. The firmware does not
+report the current mode, so the card highlights the mode last set from Omniscience.
 
 The update query uses Microsoft's
 [Windows Update Agent search API](https://learn.microsoft.com/en-us/windows/win32/api/wuapi/nf-wuapi-iupdatesearcher-search).

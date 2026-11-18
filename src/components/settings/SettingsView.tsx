@@ -217,7 +217,15 @@ function PillRings({ value, onChange }: { value: string[]; onChange: (v: string[
   );
 }
 
-function HotkeyRecorder({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+export function HotkeyRecorder({
+  value,
+  onChange,
+  label = 'Show/hide hotkey',
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  label?: string;
+}) {
   const [recording, setRecording] = useState(false);
   useEffect(() => {
     if (!recording) return;
@@ -236,7 +244,7 @@ function HotkeyRecorder({ value, onChange }: { value: string; onChange: (v: stri
   }, [recording, value, onChange]);
   return (
     <button
-      aria-label="Show/hide hotkey"
+      aria-label={label}
       onClick={() => setRecording((r) => !r)}
       className={`rounded border px-2 py-0.5 font-mono text-[10px] ${
         recording

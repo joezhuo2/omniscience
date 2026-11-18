@@ -120,6 +120,10 @@ plan, with separate Plugged in and Battery tabs.
 power source, applied when the source changes.
 **Display** switches the built-in panel's refresh rate (with an Auto mode that uses a lower
 rate on battery) and resolution.
+**Profiles** (Gaming, Quiet, Battery or your own) bundle power mode, power limits, CPU boost, refresh
+rate and fan mode, and switch from the Config tab, the tray, a hotkey, or automatically while a
+chosen app runs. The Config tab also has ASUS **Fan mode** and HDR, Night light and Brightness.
+
 See [System configuration](docs/configuration.md) for coverage and usage.
 
 ### Lives in the tray

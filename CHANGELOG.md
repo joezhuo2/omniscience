@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-11-18
+
+### Added
+
+- Add **Profiles** to the Config tab: Gaming, Quiet and Battery by default, each bundling power mode, power limits, CPU boost, refresh rate and fan mode. Apply one from the card, the tray's **Profiles** menu or a hotkey you choose per profile.
+- Add per-app rules: a profile can list apps, and it is applied while one of them runs and reverted when it closes.
+- Add a **Fan mode** card for supported ASUS laptops: Silent, Performance and Turbo.
+- Add **HDR**, **Night light** and **Brightness** controls to the Display card where the hardware supports them.
+
 ## [0.6.0] - 2026-11-18
 
 ### Added

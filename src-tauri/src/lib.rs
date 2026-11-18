@@ -14,8 +14,12 @@ mod diagnostics;
 #[cfg(feature = "standalone")]
 mod display;
 #[cfg(feature = "standalone")]
+mod display_toggles;
+#[cfg(feature = "standalone")]
 mod driver_updates;
 pub mod embed;
+#[cfg(feature = "standalone")]
+mod fan_mode;
 #[cfg(feature = "standalone")]
 mod fullscreen;
 #[cfg(feature = "standalone")]
@@ -30,6 +34,8 @@ mod positions;
 mod power_limits;
 #[cfg(feature = "standalone")]
 mod power_mode;
+#[cfg(feature = "standalone")]
+mod profiles;
 mod settings;
 #[cfg(feature = "standalone")]
 mod shell;
@@ -98,6 +104,7 @@ pub fn run() {
             cpu_boost::set_cpu_boost,
             power_mode::get_power_mode,
             power_mode::set_power_mode,
+            profiles::apply_profile,
             battery_saver::get_battery_saver,
             battery_saver::set_battery_saver_threshold,
             battery_saver::set_battery_saver,
@@ -105,7 +112,13 @@ pub fn run() {
             display::set_display_refresh,
             display::set_display_resolution,
             charge_limit::get_charge_limit,
-            charge_limit::set_charge_limit
+            charge_limit::set_charge_limit,
+            fan_mode::get_fan_mode,
+            fan_mode::set_fan_mode,
+            display_toggles::get_display_toggles,
+            display_toggles::set_hdr,
+            display_toggles::set_night_light,
+            display_toggles::set_brightness
         ])
         .on_window_event(|window, event| {
             if matches!(event, tauri::WindowEvent::Destroyed) && window.label() == "widget" {

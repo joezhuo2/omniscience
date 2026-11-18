@@ -1,5 +1,7 @@
 import { BatterySaverCard } from './BatterySaverCard';
 import { CpuBoostCard } from './CpuBoostCard';
+import { FanModeCard } from './FanModeCard';
+import { ProfilesCard } from './ProfilesCard';
 import { DriverUpdatesCard } from './DriverUpdatesCard';
 import { DisplayCard } from './DisplayCard';
 import { GpuModeCard } from './GpuModeCard';
@@ -14,6 +16,9 @@ export function ConfigView({ active = true }: { active?: boolean }) {
       <div className="flex justify-end">
         <UndoButton />
       </div>
+      <SectionToggleProvider section="profiles" active={active}>
+        {(on) => <ProfilesCard active={on} />}
+      </SectionToggleProvider>
       <SectionToggleProvider section="driver-updates" active={active}>
         {(on) => <DriverUpdatesCard active={on} />}
       </SectionToggleProvider>
@@ -28,6 +33,9 @@ export function ConfigView({ active = true }: { active?: boolean }) {
       </SectionToggleProvider>
       <SectionToggleProvider section="power-mode" active={active}>
         {(on) => <PowerModeCard active={on} />}
+      </SectionToggleProvider>
+      <SectionToggleProvider section="fan-mode" active={active}>
+        {(on) => <FanModeCard active={on} />}
       </SectionToggleProvider>
       <SectionToggleProvider section="battery-saver" active={active}>
         {(on) => <BatterySaverCard active={on} />}

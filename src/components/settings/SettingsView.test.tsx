@@ -12,6 +12,8 @@ const defaults: Settings = {
   cpu_temp_crit_c: 90,
   poll_interval_ms: 1000,
   hotkey: 'CommandOrControl+Shift+O',
+  profiles: [],
+  active_profile: '',
   launch_at_startup: false,
   auto_check_updates: true,
   hide_over_fullscreen: true,
