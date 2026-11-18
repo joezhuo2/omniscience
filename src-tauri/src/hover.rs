@@ -55,6 +55,7 @@ fn tabs_under_pill(
     top < pill_bottom && top + TAB_STRIP_H * scale > pill_top && center >= left && center <= right
 }
 
+#[cfg(windows)]
 const BROWSERS: &[&str] = &[
     "chrome",
     "msedge",
