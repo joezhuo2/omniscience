@@ -79,6 +79,8 @@ pub fn run() {
             commands::set_overlay_height,
             commands::kill_process_group,
             commands::set_process_sampling,
+            commands::open_widget,
+            commands::set_widget_active,
             commands::get_settings,
             commands::set_settings,
             commands::reset_position,
@@ -106,6 +108,11 @@ pub fn run() {
             charge_limit::set_charge_limit
         ])
         .on_window_event(|window, event| {
+            if matches!(event, tauri::WindowEvent::Destroyed) && window.label() == "widget" {
+                let telemetry = window.app_handle().state::<Arc<telemetry::Telemetry>>();
+                telemetry.set_process_viewer("widget", false);
+                telemetry.update(|c| c.widget = false);
+            }
             if let (tauri::WindowEvent::Moved(pos), Some(main)) =
                 (event, window.app_handle().get_webview_window("main"))
                 && window.label() == "main"
