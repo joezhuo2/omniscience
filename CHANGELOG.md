@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- History charts show event markers for power-source changes, throttling and alerts; hover a marker's time to see what happened.
+- Drag across a history chart to zoom into that time range (all charts follow), with **Reset zoom** to go back.
+- Each history chart shows the minimum, average and maximum for the visible range.
+- Add **CSV** and **JSON** export of the visible history range, saved to the Downloads folder.
+
 ## [0.7.0] - 2026-11-18
 
 ### Added
