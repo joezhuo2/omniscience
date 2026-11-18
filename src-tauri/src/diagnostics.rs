@@ -328,6 +328,7 @@ mod tests {
                 disk_bps: None,
                 net_bps: None,
             }]),
+            ..Default::default()
         }
     }
 

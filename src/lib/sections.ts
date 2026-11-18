@@ -5,6 +5,10 @@ export const DEFAULT_SECTION_ORDER = [
   'fans',
   'cpu-cores',
   'network',
+  'drives',
+  'memory',
+  'system',
+  'bluetooth',
   'processes',
   'history',
 ] as const;
@@ -27,6 +31,10 @@ export const SECTION_LABELS: Record<SectionId, string> = {
   fans: 'Fans',
   'cpu-cores': 'CPU cores',
   network: 'Network',
+  drives: 'Drives',
+  memory: 'Memory',
+  system: 'System',
+  bluetooth: 'Bluetooth',
   processes: 'Top processes',
   history: 'History',
 };

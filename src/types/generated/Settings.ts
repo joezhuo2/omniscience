@@ -50,4 +50,4 @@ sustained_alerts: boolean,
 /**
  * Shows each reading's source, age and proxy status on the dashboard. Problems always show.
  */
-sensor_details: boolean, history_hours: number, hover_open_delay_ms: number, hover_close_delay_ms: number, pill_rings: Array<string>, pill_numbers: PillNumbers, dodge_browser_tabs: boolean, };
+sensor_details: boolean, history_hours: number, hover_open_delay_ms: number, hover_close_delay_ms: number, pill_rings: Array<string>, pill_numbers: PillNumbers, dodge_browser_tabs: boolean, energy_price_per_kwh: number, energy_currency: string, };

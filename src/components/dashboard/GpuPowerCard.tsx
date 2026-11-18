@@ -1,6 +1,7 @@
 import { Zap } from 'lucide-react';
-import { formatBytes, formatPercent, formatRpm, formatWatts } from '../../lib/format';
+import { formatBytes, formatEnergy, formatPercent, formatRpm, formatWatts } from '../../lib/format';
 import { ACCENTS } from '../../lib/levels';
+import { useSettingsStore } from '../../settings';
 import { useTelemetryStore } from '../../store';
 import type { GpuDetail } from '../../types/telemetry';
 import { Card } from './Card';
@@ -16,9 +17,21 @@ function memoryText(g: GpuDetail): string {
   return g.mem_used_bytes != null ? `${formatBytes(g.mem_used_bytes)} shared` : '--';
 }
 
+function clockText(g: GpuDetail): string {
+  return [
+    g.core_clock_mhz != null && `Core ${Math.round(g.core_clock_mhz)} MHz`,
+    g.mem_clock_mhz != null && `Mem ${Math.round(g.mem_clock_mhz)} MHz`,
+    g.encode_pct != null && `Enc ${formatPercent(g.encode_pct)}`,
+    g.decode_pct != null && `Dec ${formatPercent(g.decode_pct)}`,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+}
+
 function GpuRow({ gpu }: { gpu: GpuDetail }) {
   const accent = gpu.kind === 'discrete' ? ACCENTS.dgpu : ACCENTS.igpu;
   const usage = gpu.usage_pct ?? 0;
+  const clocks = clockText(gpu);
   return (
     <div className="space-y-1">
       <div className="flex items-baseline justify-between gap-2 text-[11px]">
@@ -43,6 +56,11 @@ function GpuRow({ gpu }: { gpu: GpuDetail }) {
           style={{ width: `${Math.min(100, usage)}%`, background: accent }}
         />
       </div>
+      {clocks && (
+        <div data-testid="gpu-clocks" className="text-[10px] text-island-muted tabular-nums">
+          {clocks}
+        </div>
+      )}
     </div>
   );
 }
@@ -51,6 +69,9 @@ export function GpuPowerCard() {
   const detail = useTelemetryStore((s) => s.snapshot?.detail);
   const packageWatts = useTelemetryStore((s) => s.snapshot?.core.package_watts);
   const power = detail?.power;
+  const price = useSettingsStore((s) => s.settings?.energy_price_per_kwh ?? 0);
+  const currency = useSettingsStore((s) => s.settings?.energy_currency ?? '$');
+  const energy = detail?.energy_today_wh;
   const parts = power
     ? (
         [
@@ -97,6 +118,12 @@ export function GpuPowerCard() {
                   {label} {formatWatts(w)}
                 </span>
               ))}
+            </div>
+          )}
+          {energy != null && Number.isFinite(energy) && (
+            <div data-testid="energy-today" className="text-[10px] text-island-muted tabular-nums">
+              Energy today {formatEnergy(energy)}
+              {price > 0 && ` · ${currency}${((energy / 1000) * price).toFixed(2)}`}
             </div>
           )}
         </div>

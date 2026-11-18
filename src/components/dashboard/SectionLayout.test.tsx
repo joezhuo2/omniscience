@@ -33,7 +33,18 @@ describe('section drag layout', () => {
   it('restores saved order and omits absent cards without forgetting their place', () => {
     saveSectionOrder(['processes', 'network', 'battery', 'cpu-cores', 'gpu-power']);
     const view = layout(['battery']);
-    expect(order()).toEqual(['processes', 'network', 'cpu-cores', 'gpu-power', 'fans', 'history']);
+    expect(order()).toEqual([
+      'processes',
+      'network',
+      'cpu-cores',
+      'gpu-power',
+      'fans',
+      'drives',
+      'memory',
+      'system',
+      'bluetooth',
+      'history',
+    ]);
     expect(screen.queryByRole('article', { name: 'Battery' })).not.toBeInTheDocument();
     view.unmount();
     layout();
@@ -44,6 +55,10 @@ describe('section drag layout', () => {
       'cpu-cores',
       'gpu-power',
       'fans',
+      'drives',
+      'memory',
+      'system',
+      'bluetooth',
       'history',
     ]);
   });
@@ -95,6 +110,10 @@ describe('section drag layout', () => {
       'fans',
       'cpu-cores',
       'network',
+      'drives',
+      'memory',
+      'system',
+      'bluetooth',
       'processes',
       'history',
     ]);

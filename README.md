@@ -72,6 +72,12 @@ button in the header detaches the dashboard into a resizable, always-on-top wind
 - 🔋 **Battery card** (laptops): charge, charging or draining with the rate in watts, and time left or
   time to full, read from the battery driver. With System config on, supported ASUS laptops get a draggable bar that sets the maximum charge
   (20-100%), saved and reapplied at launch. A skeleton appears while battery data loads; the card hides on machines without a battery.
+- 💽 **Drives, Memory, System and Bluetooth cards:** free space and read/write speed per drive with
+  each disk's type, health, temperature and wear; committed, cached and compressed memory; uptime,
+  last boot and recent sleep/wake events; battery levels of connected Bluetooth devices.
+- 📶 **Network extras:** Wi-Fi name, signal and link speed, ping jitter and packet loss, and data used
+  today and this month with a **Metered** warning. **GPU & Power** also shows NVIDIA clocks, video
+  encode/decode usage and energy used today, with an optional cost estimate.
 - 🔥 **CPU heatmap:** one cell per logical core. Hover a cell for its usage, clock, per-core watts and
   the package temperature. A performance-limit chip reports lost CPU performance headroom from
   Windows power policy or platform limits; it does not directly measure thermal throttling.

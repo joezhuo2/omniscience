@@ -17,4 +17,4 @@ fan_rpm: number | null,
 /**
  * Hot enough that the GPU is slowing itself down (thermal throttling).
  */
-throttling: boolean, };
+throttling: boolean, core_clock_mhz: number | null, mem_clock_mhz: number | null, encode_pct: number | null, decode_pct: number | null, };

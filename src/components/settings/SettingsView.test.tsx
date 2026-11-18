@@ -26,6 +26,8 @@ const defaults: Settings = {
   pill_rings: ['cpu', 'ram', 'igpu', 'dgpu', 'disk', 'net'],
   pill_numbers: 'off',
   dodge_browser_tabs: false,
+  energy_price_per_kwh: 0,
+  energy_currency: '$',
 };
 
 describe('SettingsView', () => {

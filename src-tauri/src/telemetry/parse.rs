@@ -67,6 +67,54 @@ pub fn gpu_usage_by_adapter(items: &[(String, f64)]) -> HashMap<String, f32> {
     out
 }
 
+/// Utilization of one engine type (e.g. `VideoDecode`) per adapter: every instance summed, capped
+/// at 100. Adapters without such an engine are absent.
+pub fn engine_pct_by_adapter(items: &[(String, f64)], engtype: &str) -> HashMap<String, f32> {
+    let mut out: HashMap<String, f64> = HashMap::new();
+    for (name, value) in items {
+        let Some(luid) = luid_key(name) else { continue };
+        if name.rsplit_once("engtype_").map(|(_, t)| t) == Some(engtype) {
+            *out.entry(luid).or_default() += value.max(0.0);
+        }
+    }
+    out.into_iter()
+        .map(|(luid, sum)| (luid, sum.min(100.0) as f32))
+        .collect()
+}
+
+/// Read and write bytes per second by drive letter (`C:`) from the `LogicalDisk` counters,
+/// skipping `_Total`, `HarddiskVolume*` and mount-point instances.
+pub fn drive_rates(read: &[(String, f64)], write: &[(String, f64)]) -> HashMap<String, (f64, f64)> {
+    let letter = |name: &str| {
+        let b = name.as_bytes();
+        (b.len() == 2 && b[0].is_ascii_alphabetic() && b[1] == b':').then(|| name.to_uppercase())
+    };
+    let mut out: HashMap<String, (f64, f64)> = HashMap::new();
+    for (name, v) in read {
+        if let Some(k) = letter(name) {
+            out.entry(k).or_default().0 = v.max(0.0);
+        }
+    }
+    for (name, v) in write {
+        if let Some(k) = letter(name) {
+            out.entry(k).or_default().1 = v.max(0.0);
+        }
+    }
+    out
+}
+
+/// Link speed in Mbps from the WLAN rx/tx rates (kbps); 0 means unknown.
+pub fn wifi_link_mbps(rx_kbps: u32, tx_kbps: u32) -> Option<f32> {
+    let kbps = rx_kbps.max(tx_kbps);
+    (kbps > 0).then(|| kbps as f32 / 1000.0)
+}
+
+/// SSID text from the fixed 32-byte WLAN buffer and its length.
+pub fn ssid_text(bytes: &[u8], len: u32) -> String {
+    let n = (len as usize).min(bytes.len());
+    String::from_utf8_lossy(&bytes[..n]).into_owned()
+}
+
 /// Process id from a per-process GPU counter instance such as
 /// `pid_12_luid_0x00000000_0x00012980_phys_0_eng_3_engtype_3D`.
 pub fn pid_of(instance: &str) -> Option<u32> {
@@ -227,6 +275,65 @@ mod tests {
 
     fn items(v: &[(&str, f64)]) -> Vec<(String, f64)> {
         v.iter().map(|(n, x)| (n.to_string(), *x)).collect()
+    }
+
+    #[test]
+    fn sums_video_engines_per_adapter() {
+        let v = items(&[
+            (
+                "pid_1_luid_0x00000000_0x0000AAAA_phys_0_eng_5_engtype_VideoDecode",
+                30.0,
+            ),
+            (
+                "pid_2_luid_0x00000000_0x0000AAAA_phys_0_eng_5_engtype_VideoDecode",
+                80.0,
+            ),
+            (
+                "pid_2_luid_0x00000000_0x0000AAAA_phys_0_eng_6_engtype_VideoEncode",
+                12.5,
+            ),
+            (
+                "pid_2_luid_0x00000000_0x0000BBBB_phys_0_eng_0_engtype_3D",
+                50.0,
+            ),
+            (
+                "pid_2_luid_0x00000000_0x0000BBBB_phys_0_eng_1_engtype_VideoDecode",
+                4.0,
+            ),
+        ]);
+        let dec = engine_pct_by_adapter(&v, "VideoDecode");
+        assert_eq!(dec["0x00000000_0x0000aaaa"], 100.0);
+        assert_eq!(dec["0x00000000_0x0000bbbb"], 4.0);
+        let enc = engine_pct_by_adapter(&v, "VideoEncode");
+        assert_eq!(enc["0x00000000_0x0000aaaa"], 12.5);
+        assert!(!enc.contains_key("0x00000000_0x0000bbbb"));
+    }
+
+    #[test]
+    fn keeps_only_drive_letter_instances() {
+        let read = items(&[
+            ("C:", 10.0),
+            ("_Total", 99.0),
+            ("HarddiskVolume3", 5.0),
+            ("d:", 2.0),
+        ]);
+        let write = items(&[("C:", 7.0), ("_Total", 99.0), ("E:", 1.0)]);
+        let r = drive_rates(&read, &write);
+        assert_eq!(r.len(), 3);
+        assert_eq!(r["C:"], (10.0, 7.0));
+        assert_eq!(r["D:"], (2.0, 0.0));
+        assert_eq!(r["E:"], (0.0, 1.0));
+    }
+
+    #[test]
+    fn reads_wifi_fields() {
+        assert_eq!(wifi_link_mbps(866_700, 300_000), Some(866.7));
+        assert_eq!(wifi_link_mbps(0, 0), None);
+        let mut buf = [0u8; 32];
+        buf[..4].copy_from_slice(b"Home");
+        assert_eq!(ssid_text(&buf, 4), "Home");
+        assert_eq!(ssid_text(&buf, 99).len(), 32);
+        assert_eq!(ssid_text(&buf, 0), "");
     }
 
     #[test]

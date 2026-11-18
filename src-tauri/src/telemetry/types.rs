@@ -189,6 +189,78 @@ pub struct GpuDetail {
     pub fan_rpm: Option<u32>,
     /// Hot enough that the GPU is slowing itself down (thermal throttling).
     pub throttling: bool,
+    pub core_clock_mhz: Option<u32>,
+    pub mem_clock_mhz: Option<u32>,
+    pub encode_pct: Option<f32>,
+    pub decode_pct: Option<f32>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, TS)]
+#[ts(export)]
+pub struct DriveInfo {
+    pub name: String,
+    pub label: Option<String>,
+    #[ts(type = "number")]
+    pub total_bytes: u64,
+    #[ts(type = "number")]
+    pub free_bytes: u64,
+    pub read_bps: Option<f64>,
+    pub write_bps: Option<f64>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, TS)]
+#[ts(export)]
+pub struct PhysicalDisk {
+    pub name: String,
+    pub kind: Option<String>,
+    pub health: Option<String>,
+    pub temp_c: Option<f32>,
+    pub wear_pct: Option<f32>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, TS)]
+#[ts(export)]
+pub struct WifiInfo {
+    pub ssid: String,
+    pub signal_pct: u8,
+    pub link_mbps: Option<f32>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, TS)]
+#[ts(export)]
+pub struct MemoryDetail {
+    #[ts(type = "number")]
+    pub committed_bytes: u64,
+    #[ts(type = "number")]
+    pub commit_limit_bytes: u64,
+    #[ts(type = "number | null")]
+    pub cached_bytes: Option<u64>,
+    #[ts(type = "number | null")]
+    pub compressed_bytes: Option<u64>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, TS)]
+#[serde(rename_all = "snake_case")]
+#[ts(export)]
+#[allow(dead_code)]
+pub enum PowerEventKind {
+    Sleep,
+    Wake,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, TS)]
+#[ts(export)]
+pub struct PowerEvent {
+    #[ts(type = "number")]
+    pub ts_ms: u64,
+    pub kind: PowerEventKind,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, TS)]
+#[ts(export)]
+pub struct BluetoothBattery {
+    pub name: String,
+    pub percent: u8,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Serialize, TS)]
@@ -223,7 +295,7 @@ pub struct ProcessGroup {
     pub net_bps: Option<f64>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, TS)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, TS)]
 #[ts(export)]
 pub struct DetailMetrics {
     pub cores: Vec<CoreSample>,
@@ -246,6 +318,22 @@ pub struct DetailMetrics {
     /// Sent only on ticks that refresh the list (one in three) while the processes section is
     /// open; `None` otherwise, and the frontend keeps the last list.
     pub processes: Option<Vec<ProcessGroup>>,
+    pub drives: Vec<DriveInfo>,
+    pub disks: Vec<PhysicalDisk>,
+    pub wifi: Option<WifiInfo>,
+    pub ping_jitter_ms: Option<f32>,
+    pub ping_loss_pct: Option<f32>,
+    #[ts(type = "number | null")]
+    pub data_today_bytes: Option<u64>,
+    #[ts(type = "number | null")]
+    pub data_month_bytes: Option<u64>,
+    pub metered: Option<bool>,
+    pub memory: Option<MemoryDetail>,
+    #[ts(type = "number | null")]
+    pub boot_ms: Option<u64>,
+    pub power_events: Vec<PowerEvent>,
+    pub bluetooth: Vec<BluetoothBattery>,
+    pub energy_today_wh: Option<f32>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, TS)]

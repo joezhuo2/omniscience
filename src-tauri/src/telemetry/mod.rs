@@ -3,9 +3,12 @@
 
 mod alerts;
 mod battery;
+mod drives;
 #[cfg(any(windows, test))]
 mod fans;
 pub mod history;
+#[cfg(windows)]
+mod nvml;
 #[cfg(any(windows, test))]
 mod parse;
 mod peak;
@@ -15,7 +18,11 @@ mod process_io;
 pub mod processes;
 mod public_ip;
 mod sampler;
+mod slow;
 pub mod types;
+mod usage;
+#[cfg(windows)]
+mod wifi;
 #[cfg(windows)]
 mod windows;
 
@@ -77,6 +84,7 @@ pub struct Telemetry {
     wake: Condvar,
     latest: Mutex<Option<Snapshot>>,
     history: Mutex<History>,
+    usage: Mutex<usage::Usage>,
     process_viewers: Mutex<HashSet<String>>,
 }
 
@@ -101,6 +109,7 @@ impl Telemetry {
             wake: Condvar::new(),
             latest: Mutex::new(None),
             history: Mutex::new(History::default()),
+            usage: Mutex::new(usage::Usage::open(None)),
             process_viewers: Mutex::new(HashSet::new()),
         })
     }
@@ -112,6 +121,7 @@ impl Telemetry {
             .unwrap_or_default();
         let loaded = History::open(dir, now_ms, self.control().history_hours);
         *self.history.lock().unwrap_or_else(|e| e.into_inner()) = loaded;
+        *self.usage.lock().unwrap_or_else(|e| e.into_inner()) = usage::Usage::open(dir);
     }
 
     pub fn history(&self, since_ms: Option<u64>) -> Vec<HistorySample> {
@@ -174,11 +184,21 @@ impl Telemetry {
                 c.clone()
             };
             sampler.set_network(control.ping_target.clone(), control.public_ip);
-            let snapshot = sampler.sample(
+            let mut snapshot = sampler.sample(
                 control.thresholds,
                 control.expanded || control.widget,
                 control.processes,
             );
+            {
+                let mut usage = self.usage.lock().unwrap_or_else(|e| e.into_inner());
+                usage.record(snapshot.timestamp_ms, &snapshot.core);
+                if let Some(d) = snapshot.detail.as_mut() {
+                    let t = usage.totals(snapshot.timestamp_ms);
+                    d.data_today_bytes = Some(t.data_today_bytes);
+                    d.data_month_bytes = Some(t.data_month_bytes);
+                    d.energy_today_wh = t.energy_today_wh;
+                }
+            }
             if let Err(e) = app.emit(TICK_EVENT, &snapshot) {
                 crate::diagnostics::log_error(format_args!("emit telemetry: {e}"));
             }

@@ -443,6 +443,30 @@ export function SettingsView({ onBack }: { onBack: () => void }) {
               onCommit={(v) => set({ ping_target: v })}
             />
           </Row>
+          <Row
+            label="Energy price per kWh"
+            hint="Shows a cost estimate next to today's energy. 0 turns it off."
+          >
+            <TextInput
+              key={`price-${settings.energy_price_per_kwh}`}
+              label="Energy price per kWh"
+              value={String(settings.energy_price_per_kwh)}
+              onCommit={(v) => {
+                const n = Number(v.replace(',', '.'));
+                if (v !== '' && Number.isFinite(n) && n >= 0) set({ energy_price_per_kwh: n });
+              }}
+            />
+          </Row>
+          {settings.energy_price_per_kwh > 0 && (
+            <Row label="Currency symbol">
+              <TextInput
+                key={`currency-${settings.energy_currency}`}
+                label="Currency symbol"
+                value={settings.energy_currency}
+                onCommit={(v) => set({ energy_currency: v })}
+              />
+            </Row>
+          )}
           <Row label="Show public IP (asks OpenDNS)">
             <Toggle
               label="Show public IP"
