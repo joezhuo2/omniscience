@@ -21,6 +21,11 @@ const defaults: Settings = {
   sustained_alerts: true,
   sensor_details: false,
   history_hours: 24,
+  hover_open_delay_ms: 0,
+  hover_close_delay_ms: 0,
+  pill_rings: ['cpu', 'ram', 'igpu', 'dgpu', 'disk', 'net'],
+  pill_numbers: 'off',
+  dodge_browser_tabs: false,
 };
 
 describe('SettingsView', () => {
@@ -83,6 +88,26 @@ describe('SettingsView', () => {
     fireEvent.change(input, { target: { value: '95' } });
     fireEvent.blur(input);
     await waitFor(() => expect(saved.at(-1)?.cpu_temp_crit_c).toBe(95));
+  });
+
+  it('saves the open delay with a 50 ms step', async () => {
+    render(<SettingsView onBack={() => {}} />);
+    fireEvent.click(await screen.findByLabelText('Increase Open delay'));
+    await waitFor(() => expect(saved.at(-1)?.hover_open_delay_ms).toBe(50));
+  });
+
+  it('reorders pill rings and keeps the last visible ring', async () => {
+    render(<SettingsView onBack={() => {}} />);
+    fireEvent.click(await screen.findByLabelText('Move RAM up'));
+    await waitFor(() => expect(saved.at(-1)?.pill_rings.slice(0, 2)).toEqual(['ram', 'cpu']));
+  });
+
+  it('hides a ring and picks pill numbers', async () => {
+    render(<SettingsView onBack={() => {}} />);
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'Disk' }));
+    await waitFor(() => expect(saved.at(-1)?.pill_rings).not.toContain('disk'));
+    fireEvent.click(screen.getByRole('radio', { name: '%' }));
+    await waitFor(() => expect(saved.at(-1)?.pill_numbers).toBe('percent'));
   });
 
   it('commits a trimmed ping target on Enter', async () => {

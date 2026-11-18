@@ -6,7 +6,7 @@ import { CpuHeatmap } from './CpuHeatmap';
 import { FanCard } from './FanCard';
 import { GpuPowerCard } from './GpuPowerCard';
 import { HistoryCard } from './HistoryCard';
-import { isEmbedded } from '../../lib/ipc';
+import { isEmbedded, isWidget } from '../../lib/ipc';
 import { useSettingsStore } from '../../settings';
 import type { SectionId } from '../../lib/sections';
 import { useTelemetryStore } from '../../store';
@@ -35,15 +35,18 @@ export function Dashboard({
   onStyle,
   pinned,
   onTogglePin,
+  onDetach,
   showSystemUpdates = 0,
 }: {
   onSettings?: () => void;
   onStyle?: () => void;
   pinned?: boolean;
   onTogglePin?: () => void;
+  onDetach?: () => void;
   showSystemUpdates?: number;
 }) {
   const embedded = isEmbedded();
+  const fullPage = embedded || isWidget();
   const configEnabled = useSettingsStore((s) => !embedded && (s.settings?.config_enabled ?? false));
   const [chosenTab, setTab] = useState<'info' | 'config'>(
     showSystemUpdates > 0 ? 'config' : 'info',
@@ -62,7 +65,13 @@ export function Dashboard({
   if (!hasFans) hiddenSections.push('fans');
   return (
     <div data-testid="dashboard" className="flex flex-col gap-2 pt-1">
-      <Header onSettings={onSettings} onStyle={onStyle} pinned={pinned} onTogglePin={onTogglePin} />
+      <Header
+        onSettings={onSettings}
+        onStyle={onStyle}
+        pinned={pinned}
+        onTogglePin={onTogglePin}
+        onDetach={onDetach}
+      />
       {configEnabled && (
         <div className="card-surface rounded-[10px]">
           <Segmented
@@ -84,9 +93,9 @@ export function Dashboard({
             <MetricStrip />
           </div>
           <SensorDetails />
-          <div className={embedded ? 'embed-grid' : 'contents'}>
+          <div className={fullPage ? 'embed-grid' : 'contents'}>
             <InfoTabVisible.Provider value={tab === 'info'}>
-              <SectionLayout hidden={hiddenSections} grid={embedded}>
+              <SectionLayout hidden={hiddenSections} grid={fullPage}>
                 {(id) => {
                   const Component = SECTIONS[id];
                   return <Component />;

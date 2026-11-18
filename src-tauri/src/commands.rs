@@ -63,8 +63,49 @@ pub fn set_overlay_height(
 
 /// Turns process-list sampling on while the processes section is open and visible.
 #[tauri::command]
-pub fn set_process_sampling(enabled: bool, telemetry: State<'_, Arc<Telemetry>>) {
-    telemetry.update(|c| c.processes = enabled);
+pub fn set_process_sampling(
+    enabled: bool,
+    window: tauri::Window,
+    telemetry: State<'_, Arc<Telemetry>>,
+) {
+    telemetry.set_process_viewer(window.label(), enabled);
+}
+
+#[cfg(feature = "standalone")]
+const WIDGET_BROWSER_ARGS: &str =
+    "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection --disable-gpu";
+
+#[cfg(feature = "standalone")]
+#[tauri::command]
+pub async fn open_widget(app: AppHandle) -> Result<(), String> {
+    use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
+
+    if let Some(w) = app.get_webview_window("widget") {
+        let _ = w.unminimize();
+        return w.set_focus().map_err(|e| e.to_string());
+    }
+    WebviewWindowBuilder::new(
+        &app,
+        "widget",
+        WebviewUrl::App("index.html?widget=1".into()),
+    )
+    .title("Omniscience")
+    .inner_size(420.0, 640.0)
+    .min_inner_size(320.0, 240.0)
+    .resizable(true)
+    .always_on_top(true)
+    .decorations(true)
+    .skip_taskbar(false)
+    .additional_browser_args(WIDGET_BROWSER_ARGS)
+    .build()
+    .map(|_| ())
+    .map_err(|e| e.to_string())
+}
+
+#[cfg(feature = "standalone")]
+#[tauri::command]
+pub fn set_widget_active(active: bool, telemetry: State<'_, Arc<Telemetry>>) {
+    telemetry.update(|c| c.widget = active);
 }
 
 /// Ends every process in the group `key`, refusing protected ones.

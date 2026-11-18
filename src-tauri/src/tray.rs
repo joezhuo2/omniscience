@@ -1,12 +1,15 @@
 //! Tray icon: the app's only presence (no taskbar button, no Alt+Tab entry).
 
 use std::sync::Arc;
+use std::time::Duration;
 
 use tauri::menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::{AppHandle, Emitter, Manager};
 
 use crate::shell::{OPEN_SETTINGS_EVENT, Shell, TrayChecks};
+use crate::telemetry::Telemetry;
+use crate::telemetry::types::CoreMetrics;
 
 const SHOW_HIDE: &str = "show_hide";
 const LAUNCH_AT_STARTUP: &str = "launch_at_startup";
@@ -108,7 +111,47 @@ pub fn init(app: &AppHandle) -> tauri::Result<()> {
     }
     builder.build(app)?;
     app.state::<Arc<Shell>>().set_tray(checks);
+    spawn_tooltip(app.clone());
     Ok(())
+}
+
+fn tooltip(core: &CoreMetrics) -> String {
+    let mut text = format!("Omniscience\nCPU {:.0}%", core.cpu.percent);
+    if let Some(t) = core.cpu_temp_c {
+        text.push_str(&format!(" {t:.0}°C"));
+    }
+    text.push_str(&format!("\nRAM {:.0}%", core.ram.percent));
+    if let Some(gpu) = core.dgpu.as_ref().or(core.igpu.as_ref()) {
+        text.push_str(&format!("\nGPU {:.0}%", gpu.percent));
+    }
+    if let Some(disk) = &core.disk {
+        text.push_str(&format!("\nDisk {:.0}%", disk.percent));
+    }
+    text
+}
+
+fn spawn_tooltip(app: AppHandle) {
+    std::thread::Builder::new()
+        .name("tray-tooltip".into())
+        .spawn(move || {
+            let mut shown = String::new();
+            loop {
+                std::thread::sleep(Duration::from_secs(2));
+                let Some(snapshot) = app.state::<Arc<Telemetry>>().latest() else {
+                    continue;
+                };
+                let text = tooltip(&snapshot.core);
+                if text == shown {
+                    continue;
+                }
+                if let Some(tray) = app.tray_by_id("main")
+                    && tray.set_tooltip(Some(&text)).is_ok()
+                {
+                    shown = text;
+                }
+            }
+        })
+        .expect("spawn tray tooltip");
 }
 
 fn on_menu(app: &AppHandle, id: &str) {
@@ -150,5 +193,58 @@ fn on_menu(app: &AppHandle, id: &str) {
         crate::diagnostics::log_error(format_args!("tray setting: {e}"));
         // The menu already toggled its checkmark; put it back to the unchanged setting.
         shell.sync_tray();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::telemetry::types::{Level, MemoryMetric, Metric, NetMetric, Thresholds};
+
+    fn core() -> CoreMetrics {
+        let t = Thresholds::default();
+        CoreMetrics {
+            cpu: Metric::new(23.4, t),
+            cpu_mhz: None,
+            cpu_temp_c: Some(61.0),
+            igpu_temp_c: None,
+            dgpu_temp_c: None,
+            ram: MemoryMetric {
+                used_bytes: 1,
+                total_bytes: 2,
+                percent: 54.0,
+                level: Level::Normal,
+            },
+            disk: Some(Metric::new(3.0, t)),
+            net: NetMetric {
+                down_bps: 0.0,
+                up_bps: 0.0,
+                down_pct: 0.0,
+                up_pct: 0.0,
+                level: Level::Normal,
+            },
+            igpu: Some(Metric::new(5.0, t)),
+            dgpu: Some(Metric::new(12.0, t)),
+            package_watts: None,
+        }
+    }
+
+    #[test]
+    fn tooltip_lists_every_value() {
+        assert_eq!(
+            tooltip(&core()),
+            "Omniscience\nCPU 23% 61°C\nRAM 54%\nGPU 12%\nDisk 3%"
+        );
+    }
+
+    #[test]
+    fn tooltip_omits_missing_values() {
+        let mut c = core();
+        c.cpu_temp_c = None;
+        c.disk = None;
+        c.dgpu = None;
+        assert_eq!(tooltip(&c), "Omniscience\nCPU 23%\nRAM 54%\nGPU 5%");
+        c.igpu = None;
+        assert_eq!(tooltip(&c), "Omniscience\nCPU 23%\nRAM 54%");
     }
 }

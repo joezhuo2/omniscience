@@ -1,7 +1,6 @@
 import { CSS } from '@dnd-kit/utilities';
 import { GlassAccordion, GlassAccordionItem } from '@crystalflux/accordion-glass';
 import { GlassSwitch } from '@crystalflux/switch-glass';
-import { useSpotlight } from '@crystalflux/spotlight';
 import { useSectionDrag } from './SectionDragContext';
 import { useCallback, useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react';
 import { useSectionToggle } from '../config/sectionToggleContext';
@@ -38,11 +37,8 @@ export function Card({
     isDragging,
     transition,
   } = useSectionDrag() ?? {};
-  const spot = useRef<HTMLElement | null>(null);
-  useSpotlight(spot);
   const cardRef = useCallback(
     (node: HTMLElement | null) => {
-      spot.current = node;
       setNodeRef?.(node);
       setActivatorNodeRef?.(node);
     },
@@ -121,7 +117,7 @@ export function Card({
             }
           : undefined
       }
-      className={`card-accordion card-spot relative min-w-0 shrink-0 rounded-xl ${attributes ? 'section-sortable cursor-grab focus-visible:ring-1 focus-visible:ring-island-muted focus-visible:outline-none' : ''}`}
+      className={`card-accordion relative min-w-0 shrink-0 rounded-xl ${attributes ? 'section-sortable cursor-grab focus-visible:ring-1 focus-visible:ring-island-muted focus-visible:outline-none' : ''}`}
     >
       <GlassAccordion radius={12} className="card-surface">
         <GlassAccordionItem

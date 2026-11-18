@@ -19,6 +19,7 @@ pub mod types;
 #[cfg(windows)]
 mod windows;
 
+use std::collections::HashSet;
 use std::panic::AssertUnwindSafe;
 use std::path::Path;
 use std::sync::{Arc, Condvar, Mutex};
@@ -47,6 +48,9 @@ pub struct Control {
     pub public_ip: bool,
     pub sustained_alerts: bool,
     pub history_hours: u32,
+    pub pill_w: f64,
+    pub dodge_tabs: bool,
+    pub widget: bool,
 }
 
 impl Default for Control {
@@ -61,6 +65,9 @@ impl Default for Control {
             public_ip: false,
             sustained_alerts: false,
             history_hours: 24,
+            pill_w: 260.0,
+            dodge_tabs: false,
+            widget: false,
         }
     }
 }
@@ -70,15 +77,31 @@ pub struct Telemetry {
     wake: Condvar,
     latest: Mutex<Option<Snapshot>>,
     history: Mutex<History>,
+    process_viewers: Mutex<HashSet<String>>,
 }
 
 impl Telemetry {
+    pub fn set_process_viewer(&self, label: &str, enabled: bool) {
+        let mut viewers = self
+            .process_viewers
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
+        if enabled {
+            viewers.insert(label.to_owned());
+        } else {
+            viewers.remove(label);
+        }
+        let any = !viewers.is_empty();
+        self.update(|c| c.processes = any);
+    }
+
     pub fn new(control: Control) -> Arc<Self> {
         Arc::new(Self {
             control: Mutex::new(control),
             wake: Condvar::new(),
             latest: Mutex::new(None),
             history: Mutex::new(History::default()),
+            process_viewers: Mutex::new(HashSet::new()),
         })
     }
 
@@ -143,7 +166,7 @@ impl Telemetry {
         loop {
             let control = {
                 let mut c = self.control.lock().unwrap_or_else(|e| e.into_inner());
-                while !c.visible {
+                while !c.visible && !c.widget {
                     sampler.suspend_detail();
                     sustained.reset();
                     c = self.wake.wait(c).unwrap_or_else(|e| e.into_inner());
@@ -151,7 +174,11 @@ impl Telemetry {
                 c.clone()
             };
             sampler.set_network(control.ping_target.clone(), control.public_ip);
-            let snapshot = sampler.sample(control.thresholds, control.expanded, control.processes);
+            let snapshot = sampler.sample(
+                control.thresholds,
+                control.expanded || control.widget,
+                control.processes,
+            );
             if let Err(e) = app.emit(TICK_EVENT, &snapshot) {
                 crate::diagnostics::log_error(format_args!("emit telemetry: {e}"));
             }

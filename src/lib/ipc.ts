@@ -7,8 +7,13 @@ export function isEmbedded(): boolean {
   return new URLSearchParams(window.location.search).get('embed') === '1';
 }
 
+export function isWidget(): boolean {
+  return new URLSearchParams(window.location.search).get('widget') === '1';
+}
+
 // Inside the host page's iframe the Tauri globals live on the parent window.
 export function initEmbed(): void {
+  if (isWidget()) document.documentElement.classList.add('embed', 'widget');
   if (!isEmbedded()) return;
   const self = window as unknown as Record<string, unknown>;
   const parent = window.parent as unknown as Record<string, unknown>;

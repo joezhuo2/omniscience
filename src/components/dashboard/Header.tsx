@@ -1,4 +1,4 @@
-import { Pencil, Pin, Settings } from 'lucide-react';
+import { Pencil, PictureInPicture2, Pin, Settings } from 'lucide-react';
 import { StaleDot } from './StaleDot';
 
 /** Dashboard header. */
@@ -7,11 +7,13 @@ export function Header({
   onStyle,
   pinned = false,
   onTogglePin,
+  onDetach,
 }: {
   onSettings?: () => void;
   onStyle?: () => void;
   pinned?: boolean;
   onTogglePin?: () => void;
+  onDetach?: () => void;
 }) {
   return (
     <header className="flex h-9 items-center gap-2 px-1">
@@ -27,6 +29,15 @@ export function Header({
           onClick={onTogglePin}
         >
           <Pin size={14} aria-hidden fill={pinned ? 'currentColor' : 'none'} />
+        </button>
+      )}
+      {onDetach && (
+        <button
+          aria-label="Open in a window"
+          className="rounded-md p-1 text-island-muted hover:bg-island-track/50 hover:text-island-text"
+          onClick={onDetach}
+        >
+          <PictureInPicture2 size={14} aria-hidden />
         </button>
       )}
       {onStyle && (

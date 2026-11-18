@@ -42,7 +42,25 @@ pub struct Settings {
     /// Shows each reading's source, age and proxy status on the dashboard. Problems always show.
     pub sensor_details: bool,
     pub history_hours: u32,
+    pub hover_open_delay_ms: u32,
+    pub hover_close_delay_ms: u32,
+    pub pill_rings: Vec<String>,
+    pub pill_numbers: PillNumbers,
+    pub dodge_browser_tabs: bool,
 }
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "snake_case")]
+#[ts(export)]
+pub enum PillNumbers {
+    #[default]
+    Off,
+    Percent,
+    Temp,
+}
+
+pub const RING_KEYS: [&str; 6] = ["cpu", "ram", "igpu", "dgpu", "disk", "net"];
+const MAX_HOVER_DELAY_MS: u32 = 2000;
 
 impl Default for Settings {
     fn default() -> Self {
@@ -62,6 +80,11 @@ impl Default for Settings {
             sustained_alerts: true,
             sensor_details: false,
             history_hours: 24,
+            hover_open_delay_ms: 150,
+            hover_close_delay_ms: 250,
+            pill_rings: RING_KEYS.iter().map(|k| k.to_string()).collect(),
+            pill_numbers: PillNumbers::Off,
+            dodge_browser_tabs: true,
         }
     }
 }
@@ -95,7 +118,30 @@ impl Settings {
         }
         // 253 is the longest DNS name.
         self.ping_target = self.ping_target.trim().chars().take(253).collect();
+        self.hover_open_delay_ms = self.hover_open_delay_ms.min(MAX_HOVER_DELAY_MS);
+        self.hover_close_delay_ms = self.hover_close_delay_ms.min(MAX_HOVER_DELAY_MS);
+        let mut rings: Vec<String> = Vec::new();
+        for key in &self.pill_rings {
+            if RING_KEYS.contains(&key.as_str()) && !rings.contains(key) {
+                rings.push(key.clone());
+            }
+        }
+        self.pill_rings = if rings.is_empty() {
+            d.pill_rings
+        } else {
+            rings
+        };
         self
+    }
+
+    pub fn pill_width(&self) -> f64 {
+        let n = self.pill_rings.len() as f64;
+        let numbers = if self.pill_numbers == PillNumbers::Off {
+            0.0
+        } else {
+            n * 24.0
+        };
+        88.0 + n * 22.0 + (n - 1.0) * 8.0 + numbers
     }
 
     pub fn thresholds(&self) -> Thresholds {
@@ -117,6 +163,8 @@ impl Settings {
         c.public_ip = self.show_public_ip;
         c.sustained_alerts = self.sustained_alerts;
         c.history_hours = self.history_hours;
+        c.pill_w = self.pill_width();
+        c.dodge_tabs = self.dodge_browser_tabs;
     }
 }
 
@@ -215,6 +263,40 @@ mod tests {
             ..Settings::default()
         };
         assert_eq!(high.sanitized().history_hours, 720);
+    }
+
+    #[test]
+    fn sanitizes_pill_rings_and_hover_delays() {
+        let s = Settings {
+            pill_rings: vec!["ram".into(), "bogus".into(), "cpu".into(), "ram".into()],
+            hover_open_delay_ms: 99_999,
+            ..Settings::default()
+        }
+        .sanitized();
+        assert_eq!(s.pill_rings, ["ram", "cpu"]);
+        assert_eq!(s.hover_open_delay_ms, 2000);
+        let empty = Settings {
+            pill_rings: vec![],
+            ..Settings::default()
+        }
+        .sanitized();
+        assert_eq!(empty.pill_rings.len(), 6);
+    }
+
+    #[test]
+    fn pill_width_follows_rings_and_numbers() {
+        let d = Settings::default();
+        assert_eq!(d.pill_width(), 260.0);
+        let numbers = Settings {
+            pill_numbers: PillNumbers::Percent,
+            ..Settings::default()
+        };
+        assert_eq!(numbers.pill_width(), 404.0);
+        let two = Settings {
+            pill_rings: vec!["cpu".into(), "ram".into()],
+            ..Settings::default()
+        };
+        assert_eq!(two.pill_width(), 140.0);
     }
 
     #[test]

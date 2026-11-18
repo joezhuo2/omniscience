@@ -114,6 +114,9 @@ impl Shell {
         let old = self.settings();
 
         if new.launch_at_startup != old.launch_at_startup {
+            if new.launch_at_startup && tauri::is_dev() {
+                return Err("launch at startup needs an installed build, not a dev build".into());
+            }
             let autolaunch = app.autolaunch();
             let r = if new.launch_at_startup {
                 autolaunch.enable()
@@ -142,6 +145,12 @@ impl Shell {
     /// Applies loaded settings at startup (autostart state is read from the OS).
     pub fn init(self: &Arc<Self>, app: &AppHandle) {
         let launch = app.autolaunch().is_enabled().unwrap_or(false);
+        if launch && !tauri::is_dev() {
+            // Repoint the login entry at this exe in case another copy registered its own path.
+            if let Err(e) = app.autolaunch().enable() {
+                crate::diagnostics::log_error(format_args!("launch at startup: {e}"));
+            }
+        }
         let hotkey = {
             let mut s = self.settings.lock().unwrap_or_else(|e| e.into_inner());
             s.launch_at_startup = launch;

@@ -47,12 +47,17 @@
 - 🚦 Rings are colored by load: the metric's own accent color normally, amber above the warning
   threshold (default 70%), and pulsing red above the critical threshold (default 90%).
 - ➖ A ring is drawn dashed when its sensor is missing on your machine, instead of showing a fake 0%.
+- 🎛️ **Settings > Pill rings** picks which rings show and in what order, and **Numbers on pill** adds
+  a tiny % or °C next to each ring (off by default).
+- 🧭 While a browser's tabs are under the cursor the pill fades and waits a second before opening, so
+  it stays out of the way (**Dodge browser tabs**, on by default).
 
 ### The dashboard
 
-Hover the pill and it expands in place with a 280 ms clip-path morph. It opens the moment the cursor
-arrives and collapses the moment it leaves; coming back mid-collapse reverses it. Press **Esc** to
-close it.
+Hover the pill and it expands in place with a 280 ms clip-path morph. It opens after a short wait
+(**Open delay**, 150 ms by default) and collapses shortly after the cursor leaves (**Close delay**,
+250 ms); coming back mid-collapse reverses it. Press **Esc** to close it. The **Open in a window**
+button in the header detaches the dashboard into a resizable, always-on-top window.
 
 - ⚡ **Header:** pin, Appearance (pencil) and Settings buttons, and an amber indicator if telemetry stops arriving. Package
   watts live in GPU & Power; CPU temperature sits below the CPU ring.
@@ -116,6 +121,7 @@ See [System configuration](docs/configuration.md) for coverage and usage.
 - 🫥 No taskbar button and no Alt+Tab entry. Everything else is in the tray menu: **Show / Hide**,
   **Launch at startup**, **Auto-check for updates**, **Hide over fullscreen apps**, **Check for
   updates now**, **Check for system updates**, **Settings…**, and **Quit**.
+- 📊 The tray icon's tooltip shows live CPU, memory, GPU and disk values.
 - ⌨️ A global show/hide hotkey, `Ctrl+Shift+O` by default (`Cmd+Shift+O` on macOS).
 - 🖐️ Drag the pill (the row of rings) to move the overlay. It snaps to nearby screen edges and the
   top-center, never stays partly off-screen, and its spot is remembered per monitor layout and per
