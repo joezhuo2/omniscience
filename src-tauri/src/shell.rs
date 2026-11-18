@@ -24,6 +24,14 @@ pub struct TrayChecks {
     pub hide_over_fullscreen: CheckMenuItem<Wry>,
     pub menu: Menu<Wry>,
     pub system_updates: MenuItem<Wry>,
+    pub snooze: MenuItem<Wry>,
+}
+
+pub fn now_ms() -> u64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_millis() as u64)
+        .unwrap_or_default()
 }
 
 pub struct Shell {
@@ -61,9 +69,15 @@ impl Shell {
             let _ = t.launch_at_startup.set_checked(s.launch_at_startup);
             let _ = t.auto_check_updates.set_checked(s.auto_check_updates);
             let _ = t.hide_over_fullscreen.set_checked(s.hide_over_fullscreen);
+            let snoozed = s.alerts.snooze_until_ms > now_ms();
+            let _ = t.snooze.set_text(if snoozed {
+                "Resume alerts"
+            } else {
+                "Snooze alerts for 1 hour"
+            });
             let shown = t.menu.get(t.system_updates.id()).is_some();
             if s.config_enabled && !shown {
-                let _ = t.menu.insert(&t.system_updates, 7);
+                let _ = t.menu.insert(&t.system_updates, 8);
             } else if !s.config_enabled && shown {
                 let _ = t.menu.remove(&t.system_updates);
             }

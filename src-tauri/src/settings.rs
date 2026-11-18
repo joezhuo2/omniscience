@@ -49,6 +49,101 @@ pub struct Settings {
     pub dodge_browser_tabs: bool,
     pub energy_price_per_kwh: f32,
     pub energy_currency: String,
+    pub alerts: AlertSettings,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct AlertRule {
+    pub enabled: bool,
+    pub threshold: f32,
+    pub duration_s: u32,
+}
+
+impl AlertRule {
+    const fn new(enabled: bool, threshold: f32, duration_s: u32) -> Self {
+        Self {
+            enabled,
+            threshold,
+            duration_s,
+        }
+    }
+
+    fn sanitized(mut self, default: Self, min: f32, max: f32) -> Self {
+        if !self.threshold.is_finite() {
+            self.threshold = default.threshold;
+        }
+        self.threshold = self.threshold.clamp(min, max);
+        self.duration_s = self.duration_s.min(3600);
+        self
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
+#[serde(default)]
+#[ts(export)]
+pub struct AlertSettings {
+    pub cpu: AlertRule,
+    pub memory: AlertRule,
+    pub disk: AlertRule,
+    pub igpu: AlertRule,
+    pub dgpu: AlertRule,
+    pub cpu_temp: AlertRule,
+    pub gpu_temp: AlertRule,
+    pub disk_space: AlertRule,
+    pub network_down: AlertRule,
+    pub ping_spike: AlertRule,
+    pub battery_full: AlertRule,
+    pub battery_low: AlertRule,
+    pub quiet_hours: bool,
+    pub quiet_start_min: u16,
+    pub quiet_end_min: u16,
+    #[ts(type = "number")]
+    pub snooze_until_ms: u64,
+}
+
+impl Default for AlertSettings {
+    fn default() -> Self {
+        Self {
+            cpu: AlertRule::new(true, 90.0, 30),
+            memory: AlertRule::new(true, 90.0, 30),
+            disk: AlertRule::new(true, 90.0, 30),
+            igpu: AlertRule::new(true, 90.0, 30),
+            dgpu: AlertRule::new(true, 90.0, 30),
+            cpu_temp: AlertRule::new(false, 95.0, 30),
+            gpu_temp: AlertRule::new(false, 90.0, 30),
+            disk_space: AlertRule::new(false, 10.0, 0),
+            network_down: AlertRule::new(false, 0.0, 30),
+            ping_spike: AlertRule::new(false, 200.0, 30),
+            battery_full: AlertRule::new(false, 80.0, 0),
+            battery_low: AlertRule::new(false, 20.0, 0),
+            quiet_hours: false,
+            quiet_start_min: 22 * 60,
+            quiet_end_min: 7 * 60,
+            snooze_until_ms: 0,
+        }
+    }
+}
+
+impl AlertSettings {
+    fn sanitized(mut self) -> Self {
+        let d = Self::default();
+        self.cpu = self.cpu.sanitized(d.cpu, 1.0, 100.0);
+        self.memory = self.memory.sanitized(d.memory, 1.0, 100.0);
+        self.disk = self.disk.sanitized(d.disk, 1.0, 100.0);
+        self.igpu = self.igpu.sanitized(d.igpu, 1.0, 100.0);
+        self.dgpu = self.dgpu.sanitized(d.dgpu, 1.0, 100.0);
+        self.cpu_temp = self.cpu_temp.sanitized(d.cpu_temp, 30.0, 110.0);
+        self.gpu_temp = self.gpu_temp.sanitized(d.gpu_temp, 30.0, 110.0);
+        self.disk_space = self.disk_space.sanitized(d.disk_space, 1.0, 90.0);
+        self.network_down = self.network_down.sanitized(d.network_down, 0.0, 0.0);
+        self.ping_spike = self.ping_spike.sanitized(d.ping_spike, 10.0, 5000.0);
+        self.battery_full = self.battery_full.sanitized(d.battery_full, 50.0, 100.0);
+        self.battery_low = self.battery_low.sanitized(d.battery_low, 5.0, 50.0);
+        self.quiet_start_min = self.quiet_start_min.min(1439);
+        self.quiet_end_min = self.quiet_end_min.min(1439);
+        self
+    }
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
@@ -89,6 +184,7 @@ impl Default for Settings {
             dodge_browser_tabs: true,
             energy_price_per_kwh: 0.0,
             energy_currency: "$".into(),
+            alerts: AlertSettings::default(),
         }
     }
 }
@@ -129,6 +225,7 @@ impl Settings {
         }
         self.energy_price_per_kwh = self.energy_price_per_kwh.clamp(0.0, 1000.0);
         self.energy_currency = self.energy_currency.trim().chars().take(4).collect();
+        self.alerts = self.alerts.sanitized();
         let mut rings: Vec<String> = Vec::new();
         for key in &self.pill_rings {
             if RING_KEYS.contains(&key.as_str()) && !rings.contains(key) {
@@ -174,6 +271,7 @@ impl Settings {
         c.history_hours = self.history_hours;
         c.pill_w = self.pill_width();
         c.dodge_tabs = self.dodge_browser_tabs;
+        c.alerts = self.alerts.clone();
     }
 }
 
@@ -306,6 +404,31 @@ mod tests {
             ..Settings::default()
         };
         assert_eq!(two.pill_width(), 140.0);
+    }
+
+    #[test]
+    fn alert_defaults_match_the_old_fixed_alert() {
+        let a = AlertSettings::default();
+        for rule in [a.cpu, a.memory, a.disk, a.igpu, a.dgpu] {
+            assert_eq!(rule, AlertRule::new(true, 90.0, 30));
+        }
+        assert!(!a.cpu_temp.enabled && !a.battery_full.enabled && !a.battery_low.enabled);
+        let old: Settings = serde_json::from_str(r#"{"sustained_alerts": true}"#).unwrap();
+        assert_eq!(old.alerts, a);
+    }
+
+    #[test]
+    fn sanitizes_alert_rules() {
+        let mut s = Settings::default();
+        s.alerts.cpu.threshold = f32::NAN;
+        s.alerts.ping_spike.threshold = 1.0;
+        s.alerts.battery_low.duration_s = 999_999;
+        s.alerts.quiet_start_min = 5000;
+        let s = s.sanitized();
+        assert_eq!(s.alerts.cpu.threshold, 90.0);
+        assert_eq!(s.alerts.ping_spike.threshold, 10.0);
+        assert_eq!(s.alerts.battery_low.duration_s, 3600);
+        assert_eq!(s.alerts.quiet_start_min, 1439);
     }
 
     #[test]

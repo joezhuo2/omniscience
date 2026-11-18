@@ -128,6 +128,9 @@ See [System configuration](docs/configuration.md) for coverage and usage.
   **Launch at startup**, **Auto-check for updates**, **Hide over fullscreen apps**, **Check for
   updates now**, **Check for system updates**, **Settings…**, and **Quit**.
 - 📊 The tray icon's tooltip shows live CPU, memory, GPU and disk values.
+- 🔔 **Alerts:** desktop notifications when a reading stays past its limit. **Settings > Alerts** sets
+  a threshold and duration per metric (CPU, memory, disk, GPUs, temperatures), plus low disk space,
+  network down, ping spike and battery reminders, with quiet hours and snooze (also in the tray menu).
 - ⌨️ A global show/hide hotkey, `Ctrl+Shift+O` by default (`Cmd+Shift+O` on macOS).
 - 🖐️ Drag the pill (the row of rings) to move the overlay. It snaps to nearby screen edges and the
   top-center, never stays partly off-screen, and its spot is remembered per monitor layout and per

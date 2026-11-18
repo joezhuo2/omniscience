@@ -28,6 +28,28 @@ const defaults: Settings = {
   dodge_browser_tabs: false,
   energy_price_per_kwh: 0,
   energy_currency: '$',
+  alerts: {
+    ...Object.fromEntries(
+      [
+        'cpu',
+        'memory',
+        'disk',
+        'igpu',
+        'dgpu',
+        'cpu_temp',
+        'gpu_temp',
+        'disk_space',
+        'network_down',
+        'ping_spike',
+        'battery_full',
+        'battery_low',
+      ].map((k) => [k, { enabled: false, threshold: 90, duration_s: 30 }]),
+    ),
+    quiet_hours: false,
+    quiet_start_min: 1320,
+    quiet_end_min: 420,
+    snooze_until_ms: 0,
+  } as Settings['alerts'],
 };
 
 describe('SettingsView', () => {
