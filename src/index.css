@@ -55,6 +55,12 @@ html.embed #root {
   overflow: visible;
 }
 
+html.widget,
+html.widget body,
+html.widget #root {
+  background: var(--color-island-bg);
+}
+
 .embed-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
@@ -115,6 +121,13 @@ body {
   left: 50%;
   width: var(--panel-w);
   transform: translateX(-50%);
+}
+
+.island-host {
+  transition: opacity 0.15s ease-out;
+}
+.island-host[data-dodge] {
+  opacity: 0.12;
 }
 
 .island-shell {

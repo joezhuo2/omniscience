@@ -1,9 +1,12 @@
 import { invoke, listen } from '../lib/ipc';
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { COLLAPSE_FALLBACK_MS, nextPhase, type Phase } from '../lib/island';
+import { useSettingsStore } from '../settings';
 
 /** Emitted by the backend cursor poll (the collapsed window ignores the mouse). */
 export const HOVER_EVENT = 'hover';
+export const HOVER_DODGE_EVENT = 'hover-dodge';
+export const DODGE_MIN_DELAY_MS = 1000;
 
 type Timer = ReturnType<typeof setTimeout> | undefined;
 
@@ -22,11 +25,23 @@ export function useIsland(pinned: boolean, sticky: boolean, onUnpin: () => void,
   const stickyRef = useRef(sticky);
   const lockedRef = useRef(locked);
   const hoveredRef = useRef(false);
+  const phaseRef = useRef<Phase>(phase);
+  const dodgeRef = useRef(false);
+  const openTimer = useRef<Timer>(undefined);
+  const closeTimer = useRef<Timer>(undefined);
+  const [dodging, setDodging] = useState(false);
+  const openDelay = useSettingsStore((s) => s.settings?.hover_open_delay_ms ?? 0);
+  const closeDelay = useSettingsStore((s) => s.settings?.hover_close_delay_ms ?? 0);
+  const delays = useRef({ openDelay, closeDelay });
   useEffect(() => {
     unpin.current = onUnpin;
     stickyRef.current = sticky;
     lockedRef.current = locked;
-  }, [onUnpin, sticky, locked]);
+    delays.current = { openDelay, closeDelay };
+  }, [onUnpin, sticky, locked, openDelay, closeDelay]);
+  useEffect(() => {
+    phaseRef.current = phase;
+  }, [phase]);
 
   // Backend side effects on phase transitions.
   useEffect(() => {
@@ -57,33 +72,60 @@ export function useIsland(pinned: boolean, sticky: boolean, onUnpin: () => void,
   }, [held]);
 
   useEffect(() => {
+    const clearTimers = () => {
+      clearTimeout(openTimer.current);
+      clearTimeout(closeTimer.current);
+    };
+    const unlistenDodge = listen<boolean>(HOVER_DODGE_EVENT, (e) => {
+      dodgeRef.current = e.payload;
+      setDodging(e.payload);
+    });
     const unlisten = listen<boolean>(HOVER_EVENT, (e) => {
       const inside = e.payload;
       hoveredRef.current = inside;
       setHovered(inside);
+      clearTimers();
       if (inside) {
-        dispatch('expand');
+        const { openDelay } = delays.current;
+        const wait = dodgeRef.current ? Math.max(openDelay, DODGE_MIN_DELAY_MS) : openDelay;
+        if (phaseRef.current === 'collapsed' && wait > 0) {
+          openTimer.current = setTimeout(() => dispatch('expand'), wait);
+        } else {
+          dispatch('expand');
+        }
       } else {
         // Leaving after a pinned open releases the pin.
         unpin.current();
-        if (!stickyRef.current && !lockedRef.current) dispatch('collapse');
+        if (!stickyRef.current && !lockedRef.current) {
+          const { closeDelay } = delays.current;
+          if (closeDelay > 0) {
+            closeTimer.current = setTimeout(() => {
+              if (!stickyRef.current && !lockedRef.current) dispatch('collapse');
+            }, closeDelay);
+          } else {
+            dispatch('collapse');
+          }
+        }
       }
     });
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape' || e.defaultPrevented || stickyRef.current || lockedRef.current)
         return;
+      clearTimers();
       unpin.current();
       dispatch('collapse');
     };
     window.addEventListener('keydown', onKey);
     return () => {
       unlisten.then((f) => f()).catch(() => {});
+      unlistenDodge.then((f) => f()).catch(() => {});
       window.removeEventListener('keydown', onKey);
+      clearTimers();
       clearTimeout(fallbackTimer.current);
     };
   }, []);
 
   const onClosed = useCallback(() => dispatch('closed'), []);
 
-  return { phase, hovered, onClosed };
+  return { phase, hovered, dodging, onClosed };
 }

@@ -1,4 +1,4 @@
-import { invoke, isEmbedded, listen } from './lib/ipc';
+import { invoke, isEmbedded, isWidget, listen } from './lib/ipc';
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { GlassIsland } from '@crystalflux/island-glass';
 import { Pill } from './components/Pill';
@@ -48,18 +48,24 @@ function useFitWindow(ref: React.RefObject<HTMLDivElement | null>, active: boole
   }, [ref, active]);
 }
 
-function EmbeddedApp() {
+function FullPageApp({ widget }: { widget: boolean }) {
   useTelemetry();
   useSmoothScroll();
   const [view, setView] = useState<View>('dashboard');
 
   useEffect(() => {
     void useSettingsStore.getState().load();
-  }, []);
+    return widget ? subscribeSettings() : undefined;
+  }, [widget]);
 
   // Detail-tier sampling only runs while the host shows this page.
   useEffect(() => {
-    const expand = (expanded: boolean) => void invoke('set_expanded', { expanded }).catch(() => {});
+    const expand = (expanded: boolean) =>
+      void (
+        widget
+          ? invoke('set_widget_active', { active: expanded })
+          : invoke('set_expanded', { expanded })
+      ).catch(() => {});
     const sync = () => expand(document.visibilityState === 'visible');
     const hide = () => expand(false);
     sync();
@@ -70,10 +76,10 @@ function EmbeddedApp() {
       window.removeEventListener('pagehide', hide);
       hide();
     };
-  }, []);
+  }, [widget]);
 
   return (
-    <main data-testid="embedded" className="mx-auto max-w-[1600px] p-4">
+    <main data-testid={widget ? 'widget' : 'embedded'} className="mx-auto max-w-[1600px] p-4">
       {view === 'dashboard' ? (
         <Dashboard onSettings={() => setView('settings')} onStyle={() => setView('style')} />
       ) : (
@@ -90,7 +96,7 @@ function EmbeddedApp() {
 }
 
 export default function App() {
-  return isEmbedded() ? <EmbeddedApp /> : <OverlayApp />;
+  return isEmbedded() || isWidget() ? <FullPageApp widget={isWidget()} /> : <OverlayApp />;
 }
 
 function OverlayApp() {
@@ -111,7 +117,7 @@ function OverlayApp() {
     }, VIEW_FADE_MS);
   };
   const [dashboardPinned, setDashboardPinned] = useState(false);
-  const { phase, onClosed } = useIsland(
+  const { phase, dodging, onClosed } = useIsland(
     settingsPinned,
     banner != null,
     () => setSettingsPinned(false),
@@ -179,6 +185,7 @@ function OverlayApp() {
       onStyle={() => switchView('style')}
       pinned={dashboardPinned}
       onTogglePin={() => setDashboardPinned((p) => !p)}
+      onDetach={() => void invoke('open_widget').catch(() => {})}
     />
   );
 
@@ -187,6 +194,7 @@ function OverlayApp() {
       ref={islandRef}
       data-testid="island"
       data-phase={phase}
+      data-dodge={dodging && phase === 'collapsed' ? '' : undefined}
       className={`island-host${open ? ' expanded' : ''}`}
     >
       <GlassIsland

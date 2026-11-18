@@ -13,9 +13,24 @@ import { Toasts } from '../dashboard/Toasts';
 import { IslandImageField } from './IslandImageField';
 import { Segmented } from '../Segmented';
 import { useGlass } from '../../lib/glass';
+import { ALL_RINGS } from '../../lib/pill';
+import type { PillNumbers } from '../../types/generated/PillNumbers';
 
 const IS_MAC = typeof navigator !== 'undefined' && /Mac/i.test(navigator.platform);
 const INTERVALS = [500, 1000, 2000, 5000];
+const RING_LABELS: Record<string, string> = {
+  cpu: 'CPU',
+  ram: 'RAM',
+  igpu: 'iGPU',
+  dgpu: 'dGPU',
+  disk: 'Disk',
+  net: 'Network',
+};
+const PILL_NUMBERS: { value: PillNumbers; label: string }[] = [
+  { value: 'off', label: 'Off' },
+  { value: 'percent', label: '%' },
+  { value: 'temp', label: '°C' },
+];
 
 function Row({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
   return (
@@ -86,6 +101,7 @@ function ThresholdInput({
   min = 1,
   max = 99,
   unit = '%',
+  step: stepSize = 1,
 }: {
   value: number;
   label: string;
@@ -93,6 +109,7 @@ function ThresholdInput({
   min?: number;
   max?: number;
   unit?: string;
+  step?: number;
 }) {
   // Remounted (via `key`) when the applied value changes, which resets the draft.
   const [draft, setDraft] = useState(String(value));
@@ -110,10 +127,18 @@ function ThresholdInput({
   return (
     <span className="flex items-center gap-1">
       <span className="flex flex-col">
-        <button aria-label={`Increase ${label}`} className={stepButton} onClick={() => step(1)}>
+        <button
+          aria-label={`Increase ${label}`}
+          className={stepButton}
+          onClick={() => step(stepSize)}
+        >
           <ChevronUp size={10} aria-hidden />
         </button>
-        <button aria-label={`Decrease ${label}`} className={stepButton} onClick={() => step(-1)}>
+        <button
+          aria-label={`Decrease ${label}`}
+          className={stepButton}
+          onClick={() => step(-stepSize)}
+        >
           <ChevronDown size={10} aria-hidden />
         </button>
       </span>
@@ -122,6 +147,7 @@ function ThresholdInput({
         type="number"
         min={min}
         max={max}
+        step={stepSize}
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
         onBlur={commit}
@@ -130,6 +156,55 @@ function ThresholdInput({
       />
       {unit}
     </span>
+  );
+}
+
+function PillRings({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
+  const hidden = ALL_RINGS.filter((k) => !value.includes(k));
+  const rows = [...value, ...hidden];
+  const move = (i: number, delta: number) => {
+    const next = [...value];
+    next.splice(i + delta, 0, ...next.splice(i, 1));
+    onChange(next);
+  };
+  const arrow =
+    'rounded p-0.5 text-island-muted hover:text-island-text disabled:opacity-30 disabled:hover:text-island-muted';
+  return (
+    <ul className="flex flex-col gap-1">
+      {rows.map((key, i) => {
+        const shown = i < value.length;
+        const name = RING_LABELS[key] ?? key;
+        return (
+          <li key={key} className="flex items-center justify-between gap-3">
+            <GlassCheckbox
+              className="text-[10px] text-island-text"
+              checked={shown}
+              disabled={shown && value.length === 1}
+              onChange={(on) => onChange(on ? [...value, key] : value.filter((k) => k !== key))}
+              label={name}
+            />
+            <span className="flex">
+              <button
+                aria-label={`Move ${name} up`}
+                className={arrow}
+                disabled={!shown || i === 0}
+                onClick={() => move(i, -1)}
+              >
+                <ChevronUp size={12} aria-hidden />
+              </button>
+              <button
+                aria-label={`Move ${name} down`}
+                className={arrow}
+                disabled={!shown || i === value.length - 1}
+                onClick={() => move(i, 1)}
+              >
+                <ChevronDown size={12} aria-hidden />
+              </button>
+            </span>
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 
@@ -247,6 +322,58 @@ export function SettingsView({ onBack }: { onBack: () => void }) {
               onCommit={(v) => set({ cpu_temp_crit_c: v })}
             />
           </Row>
+          <Row label="Open delay">
+            <ThresholdInput
+              key={`open-${settings.hover_open_delay_ms}`}
+              label="Open delay"
+              value={settings.hover_open_delay_ms}
+              min={0}
+              max={2000}
+              step={50}
+              unit="ms"
+              onCommit={(v) => set({ hover_open_delay_ms: v })}
+            />
+          </Row>
+          <Row label="Close delay">
+            <ThresholdInput
+              key={`close-${settings.hover_close_delay_ms}`}
+              label="Close delay"
+              value={settings.hover_close_delay_ms}
+              min={0}
+              max={2000}
+              step={50}
+              unit="ms"
+              onCommit={(v) => set({ hover_close_delay_ms: v })}
+            />
+          </Row>
+          {standalone && (
+            <>
+              <Row
+                label="Dodge browser tabs"
+                hint="Fades the pill and waits a second before opening while a browser's tabs are under the cursor."
+              >
+                <Toggle
+                  label="Dodge browser tabs"
+                  checked={settings.dodge_browser_tabs}
+                  onChange={(v) => set({ dodge_browser_tabs: v })}
+                />
+              </Row>
+              <Row label="Pill rings">
+                <PillRings
+                  value={settings.pill_rings}
+                  onChange={(pill_rings) => set({ pill_rings })}
+                />
+              </Row>
+              <Row label="Numbers on pill">
+                <Segmented
+                  label="Numbers on pill"
+                  items={PILL_NUMBERS}
+                  value={settings.pill_numbers}
+                  onChange={(pill_numbers) => set({ pill_numbers })}
+                />
+              </Row>
+            </>
+          )}
           <Row label="Update every">
             <Segmented
               label="Update interval"
