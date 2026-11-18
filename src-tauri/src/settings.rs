@@ -50,6 +50,71 @@ pub struct Settings {
     pub energy_price_per_kwh: f32,
     pub energy_currency: String,
     pub alerts: AlertSettings,
+    pub profiles: Vec<Profile>,
+    pub active_profile: String,
+}
+
+pub const POWER_MODES: [&str; 3] = ["efficiency", "balanced", "performance"];
+pub const FAN_MODES: [&str; 3] = ["silent", "performance", "turbo"];
+const MAX_PROFILES: usize = 12;
+
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, TS)]
+#[serde(default)]
+#[ts(export)]
+pub struct Profile {
+    pub id: String,
+    pub name: String,
+    #[ts(type = "'efficiency' | 'balanced' | 'performance' | null")]
+    pub power_mode: Option<String>,
+    pub spl_w: Option<u32>,
+    pub sppt_w: Option<u32>,
+    pub cpu_boost: Option<u32>,
+    pub refresh_hz: Option<u32>,
+    #[ts(type = "'silent' | 'performance' | 'turbo' | null")]
+    pub fan_mode: Option<String>,
+    pub hotkey: String,
+    pub apps: Vec<String>,
+}
+
+impl Profile {
+    fn preset(id: &str, name: &str, power: &str, boost: u32, fan: &str) -> Self {
+        Self {
+            id: id.into(),
+            name: name.into(),
+            power_mode: Some(power.into()),
+            cpu_boost: Some(boost),
+            fan_mode: Some(fan.into()),
+            ..Self::default()
+        }
+    }
+
+    fn sanitized(mut self) -> Self {
+        self.id = self.id.trim().chars().take(32).collect();
+        self.name = self.name.trim().chars().take(32).collect();
+        self.power_mode = self
+            .power_mode
+            .filter(|m| POWER_MODES.contains(&m.as_str()));
+        self.fan_mode = self.fan_mode.filter(|m| FAN_MODES.contains(&m.as_str()));
+        self.hotkey = self.hotkey.trim().to_string();
+        let mut apps: Vec<String> = Vec::new();
+        for app in &self.apps {
+            let key = app.trim().to_lowercase();
+            let key = key.strip_suffix(".exe").unwrap_or(&key).to_string();
+            if !key.is_empty() && !apps.contains(&key) && apps.len() < 32 {
+                apps.push(key);
+            }
+        }
+        self.apps = apps;
+        self
+    }
+}
+
+pub fn default_profiles() -> Vec<Profile> {
+    vec![
+        Profile::preset("gaming", "Gaming", "performance", 2, "turbo"),
+        Profile::preset("quiet", "Quiet", "balanced", 0, "silent"),
+        Profile::preset("battery", "Battery", "efficiency", 0, "silent"),
+    ]
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, TS)]
@@ -185,6 +250,8 @@ impl Default for Settings {
             energy_price_per_kwh: 0.0,
             energy_currency: "$".into(),
             alerts: AlertSettings::default(),
+            profiles: default_profiles(),
+            active_profile: String::new(),
         }
     }
 }
@@ -226,6 +293,18 @@ impl Settings {
         self.energy_price_per_kwh = self.energy_price_per_kwh.clamp(0.0, 1000.0);
         self.energy_currency = self.energy_currency.trim().chars().take(4).collect();
         self.alerts = self.alerts.sanitized();
+        let mut profiles: Vec<Profile> = Vec::new();
+        for profile in std::mem::take(&mut self.profiles) {
+            let profile = profile.sanitized();
+            let unique = !profiles.iter().any(|p| p.id == profile.id);
+            if !profile.id.is_empty() && unique && profiles.len() < MAX_PROFILES {
+                profiles.push(profile);
+            }
+        }
+        self.profiles = profiles;
+        if !self.profiles.iter().any(|p| p.id == self.active_profile) {
+            self.active_profile.clear();
+        }
         let mut rings: Vec<String> = Vec::new();
         for key in &self.pill_rings {
             if RING_KEYS.contains(&key.as_str()) && !rings.contains(key) {
@@ -429,6 +508,39 @@ mod tests {
         assert_eq!(s.alerts.ping_spike.threshold, 10.0);
         assert_eq!(s.alerts.battery_low.duration_s, 3600);
         assert_eq!(s.alerts.quiet_start_min, 1439);
+    }
+
+    #[test]
+    fn sanitizes_profiles() {
+        let d = Settings::default();
+        assert_eq!(
+            d.profiles.iter().map(|p| p.id.as_str()).collect::<Vec<_>>(),
+            ["gaming", "quiet", "battery"]
+        );
+        let s = Settings {
+            profiles: vec![
+                Profile {
+                    id: "a".into(),
+                    power_mode: Some("warp".into()),
+                    fan_mode: Some("turbo".into()),
+                    apps: vec![" Game.EXE ".into(), "game".into(), "".into()],
+                    ..Profile::default()
+                },
+                Profile {
+                    id: "a".into(),
+                    ..Profile::default()
+                },
+                Profile::default(),
+            ],
+            active_profile: "missing".into(),
+            ..Settings::default()
+        }
+        .sanitized();
+        assert_eq!(s.profiles.len(), 1);
+        assert_eq!(s.profiles[0].power_mode, None);
+        assert_eq!(s.profiles[0].fan_mode.as_deref(), Some("turbo"));
+        assert_eq!(s.profiles[0].apps, ["game"]);
+        assert_eq!(s.active_profile, "");
     }
 
     #[test]
