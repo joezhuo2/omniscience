@@ -91,6 +91,8 @@ pub fn run() {
             commands::set_settings,
             commands::reset_position,
             commands::get_telemetry_history,
+            commands::get_history_events,
+            commands::export_history,
             diagnostics::get_diagnostic_report,
             driver_updates::scan_driver_updates,
             driver_updates::get_system_update_status,
