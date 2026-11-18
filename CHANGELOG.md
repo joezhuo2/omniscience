@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Right-click a process for a menu: open file location, copy path or command line, set priority, Efficiency mode, suspend or resume, and end the whole process tree.
+- Processes that run several copies (shown as ×N) expand to list each one with its own CPU and memory use.
+- Pin a process to keep it at the top of the list whatever the sorting.
+- Add a **Startup apps** card to the Config tab to see and turn off the apps that start with Windows.
+
 ## [0.8.0] - 2026-11-18
 
 ### Added
