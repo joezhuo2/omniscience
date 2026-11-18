@@ -30,6 +30,9 @@ const defaults: Settings = {
   dodge_browser_tabs: false,
   energy_price_per_kwh: 0,
   energy_currency: '$',
+  temp_unit: 'celsius',
+  net_unit: 'bytes',
+  metric_thresholds: { cpu: null, ram: null, igpu: null, dgpu: null, disk: null, net: null },
   alerts: {
     ...Object.fromEntries(
       [

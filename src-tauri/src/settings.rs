@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 use crate::telemetry::Control;
-use crate::telemetry::types::Thresholds;
+use crate::telemetry::types::{MetricLimits, Thresholds};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
 #[serde(default)]
@@ -52,6 +52,78 @@ pub struct Settings {
     pub alerts: AlertSettings,
     pub profiles: Vec<Profile>,
     pub active_profile: String,
+    pub temp_unit: TempUnit,
+    pub net_unit: NetUnit,
+    pub metric_thresholds: MetricThresholds,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "snake_case")]
+#[ts(export)]
+pub enum TempUnit {
+    #[default]
+    Celsius,
+    Fahrenheit,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "snake_case")]
+#[ts(export)]
+pub enum NetUnit {
+    #[default]
+    Bytes,
+    Bits,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct ThresholdPair {
+    pub warn: f32,
+    pub crit: f32,
+}
+
+impl ThresholdPair {
+    fn sanitized(self, fallback: Thresholds) -> Self {
+        let warn = if self.warn.is_finite() {
+            self.warn
+        } else {
+            fallback.warn
+        }
+        .clamp(1.0, 98.0);
+        let crit = if self.crit.is_finite() {
+            self.crit
+        } else {
+            fallback.crit
+        }
+        .clamp(warn + 1.0, 99.0);
+        Self { warn, crit }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Serialize, Deserialize, TS)]
+#[serde(default)]
+#[ts(export)]
+pub struct MetricThresholds {
+    pub cpu: Option<ThresholdPair>,
+    pub ram: Option<ThresholdPair>,
+    pub igpu: Option<ThresholdPair>,
+    pub dgpu: Option<ThresholdPair>,
+    pub disk: Option<ThresholdPair>,
+    pub net: Option<ThresholdPair>,
+}
+
+impl MetricThresholds {
+    fn sanitized(self, fallback: Thresholds) -> Self {
+        let fix = |pair: Option<ThresholdPair>| pair.map(|p| p.sanitized(fallback));
+        Self {
+            cpu: fix(self.cpu),
+            ram: fix(self.ram),
+            igpu: fix(self.igpu),
+            dgpu: fix(self.dgpu),
+            disk: fix(self.disk),
+            net: fix(self.net),
+        }
+    }
 }
 
 pub const POWER_MODES: [&str; 3] = ["efficiency", "balanced", "performance"];
@@ -252,6 +324,9 @@ impl Default for Settings {
             alerts: AlertSettings::default(),
             profiles: default_profiles(),
             active_profile: String::new(),
+            temp_unit: TempUnit::Celsius,
+            net_unit: NetUnit::Bytes,
+            metric_thresholds: MetricThresholds::default(),
         }
     }
 }
@@ -293,6 +368,10 @@ impl Settings {
         self.energy_price_per_kwh = self.energy_price_per_kwh.clamp(0.0, 1000.0);
         self.energy_currency = self.energy_currency.trim().chars().take(4).collect();
         self.alerts = self.alerts.sanitized();
+        self.metric_thresholds = self.metric_thresholds.sanitized(Thresholds {
+            warn: self.warn_threshold,
+            crit: self.crit_threshold,
+        });
         let mut profiles: Vec<Profile> = Vec::new();
         for profile in std::mem::take(&mut self.profiles) {
             let profile = profile.sanitized();
@@ -342,7 +421,7 @@ impl Settings {
 
     /// Copies the settings the collector uses into its control state.
     pub fn apply(&self, c: &mut Control) {
-        c.thresholds = self.thresholds();
+        c.thresholds = MetricLimits::from_settings(self);
         c.interval = self.interval();
         c.ping_target = self.ping_target.as_str().into();
         c.public_ip = self.show_public_ip;
@@ -352,6 +431,11 @@ impl Settings {
         c.dodge_tabs = self.dodge_browser_tabs;
         c.alerts = self.alerts.clone();
     }
+}
+
+#[tauri::command]
+pub fn get_default_settings() -> Settings {
+    Settings::default()
 }
 
 const FILE: &str = "settings.json";
@@ -541,6 +625,36 @@ mod tests {
         assert_eq!(s.profiles[0].fan_mode.as_deref(), Some("turbo"));
         assert_eq!(s.profiles[0].apps, ["game"]);
         assert_eq!(s.active_profile, "");
+    }
+
+    #[test]
+    fn sanitizes_per_metric_thresholds() {
+        let mut s = Settings::default();
+        assert_eq!(s.metric_thresholds, MetricThresholds::default());
+        s.metric_thresholds.cpu = Some(ThresholdPair {
+            warn: 95.0,
+            crit: 10.0,
+        });
+        s.metric_thresholds.ram = Some(ThresholdPair {
+            warn: f32::NAN,
+            crit: 500.0,
+        });
+        let s = s.sanitized();
+        assert_eq!(
+            s.metric_thresholds.cpu,
+            Some(ThresholdPair {
+                warn: 95.0,
+                crit: 96.0
+            })
+        );
+        assert_eq!(
+            s.metric_thresholds.ram,
+            Some(ThresholdPair {
+                warn: 70.0,
+                crit: 99.0
+            })
+        );
+        assert_eq!(s.metric_thresholds.disk, None);
     }
 
     #[test]

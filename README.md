@@ -141,6 +141,10 @@ See [System configuration](docs/configuration.md) for coverage and usage.
   **Launch at startup**, **Auto-check for updates**, **Hide over fullscreen apps**, **Check for
   updates now**, **Check for system updates**, **Settings…**, and **Quit**.
 - 📊 The tray icon's tooltip shows live CPU, memory, GPU and disk values.
+- 🎨 **Make it yours:** show temperatures in °C or °F and network speed in bytes or bits; give any
+  metric its own warning and critical thresholds; pick a theme preset (Dark, Light, Midnight, High
+  contrast) or follow the Windows accent color in **Appearance**; export, import or reset settings
+  by group; and copy a system summary (specs and current readings) for a support post.
 - 🔔 **Alerts:** desktop notifications when a reading stays past its limit. **Settings > Alerts** sets
   a threshold and duration per metric (CPU, memory, disk, GPUs, temperatures), plus low disk space,
   network down, ping spike and battery reminders, with quiet hours and snooze (also in the tray menu).

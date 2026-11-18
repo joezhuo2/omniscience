@@ -12,8 +12,8 @@ use super::ping::Pinger;
 use super::processes;
 use super::public_ip::PublicIp;
 use super::types::{
-    CoreMetrics, CoreSample, DetailMetrics, MemoryMetric, Metric, NetAdapter, NetMetric, Snapshot,
-    Thresholds, classify,
+    CoreMetrics, CoreSample, DetailMetrics, MemoryMetric, Metric, MetricLimits, NetAdapter,
+    NetMetric, Snapshot, Thresholds, classify,
 };
 
 /// Network rings are scaled to the busiest second of the last minute, never below 1 MB/s.
@@ -129,7 +129,7 @@ impl Sampler {
     }
 
     /// `processes`: whether the processes section is open, so the process list is worth reading.
-    pub fn sample(&mut self, t: Thresholds, expanded: bool, processes: bool) -> Snapshot {
+    pub fn sample(&mut self, t: MetricLimits, expanded: bool, processes: bool) -> Snapshot {
         if !expanded {
             self.detail = None;
         }
@@ -147,13 +147,13 @@ impl Sampler {
             0.0
         };
 
-        let net = self.sample_net(t);
+        let net = self.sample_net(t.net);
 
         #[cfg(windows)]
         let (disk, igpu, dgpu, package_watts) = (
-            win.disk_pct.map(|p| Metric::new(round1(p), t)),
-            win.igpu_pct.map(|p| Metric::new(round1(p), t)),
-            win.dgpu_pct.map(|p| Metric::new(round1(p), t)),
+            win.disk_pct.map(|p| Metric::new(round1(p), t.disk)),
+            win.igpu_pct.map(|p| Metric::new(round1(p), t.igpu)),
+            win.dgpu_pct.map(|p| Metric::new(round1(p), t.dgpu)),
             win.energy.package_watts,
         );
         #[cfg(not(windows))]
@@ -170,7 +170,7 @@ impl Sampler {
         };
 
         let core = CoreMetrics {
-            cpu: Metric::new(round1(self.sys.global_cpu_usage()), t),
+            cpu: Metric::new(round1(self.sys.global_cpu_usage()), t.cpu),
             cpu_mhz,
             #[cfg(windows)]
             cpu_temp_c: win.temps.iter().map(|t| t.celsius).reduce(f32::max),
@@ -188,7 +188,7 @@ impl Sampler {
                 used_bytes: used,
                 total_bytes: total,
                 percent: round1(ram_pct),
-                level: classify(ram_pct, t),
+                level: classify(ram_pct, t.ram),
             },
             disk,
             net,
@@ -199,9 +199,9 @@ impl Sampler {
 
         let detail = if expanded {
             #[cfg(windows)]
-            let d = self.sample_detail(t, processes, &win);
+            let d = self.sample_detail(t.cpu, processes, &win);
             #[cfg(not(windows))]
-            let d = self.sample_detail(t, processes);
+            let d = self.sample_detail(t.cpu, processes);
             d
         } else {
             None
@@ -758,7 +758,7 @@ mod tests {
     fn collapsed_snapshot_has_no_detail() {
         let mut s = Sampler::new();
         std::thread::sleep(sysinfo::MINIMUM_CPU_UPDATE_INTERVAL);
-        let snap = s.sample(Thresholds::default(), false, true);
+        let snap = s.sample(MetricLimits::default(), false, true);
         assert!(snap.detail.is_none());
         assert!(snap.core.ram.total_bytes > 0);
         assert!((0.0..=100.0).contains(&snap.core.cpu.percent));
@@ -767,7 +767,7 @@ mod tests {
     #[test]
     fn detail_appears_on_second_expanded_tick_and_drops_on_collapse() {
         let mut s = Sampler::new();
-        let t = Thresholds::default();
+        let t = MetricLimits::default();
         assert!(
             s.sample(t, true, true).detail.is_none(),
             "first tick only primes"
@@ -790,7 +790,7 @@ mod tests {
     #[test]
     fn processes_refresh_every_third_tick_and_stop_when_closed() {
         let mut s = Sampler::new();
-        let t = Thresholds::default();
+        let t = MetricLimits::default();
         s.sample(t, true, true);
         let sent: Vec<bool> = (0..4)
             .map(|_| {
@@ -814,7 +814,7 @@ mod tests {
     #[ignore]
     fn snapshot_live() {
         let mut s = Sampler::new();
-        let t = Thresholds::default();
+        let t = MetricLimits::default();
         s.sample(t, true, true);
         std::thread::sleep(std::time::Duration::from_secs(1));
         let snap = s.sample(t, true, true);

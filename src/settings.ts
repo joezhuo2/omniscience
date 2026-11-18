@@ -1,5 +1,6 @@
 import { invoke, listen } from './lib/ipc';
 import { create } from 'zustand';
+import { setUnits } from './lib/format';
 import type { Settings } from './types/generated/Settings';
 
 export type { Settings };
@@ -15,12 +16,17 @@ interface SettingsState {
   update: (patch: Partial<Settings>) => Promise<void>;
 }
 
+function applyUnits(s: Settings): Settings {
+  setUnits(s.temp_unit, s.net_unit);
+  return s;
+}
+
 export const useSettingsStore = create<SettingsState>((set, get) => ({
   settings: null,
   error: null,
   load: async () => {
     try {
-      set({ settings: await invoke<Settings>('get_settings'), error: null });
+      set({ settings: applyUnits(await invoke<Settings>('get_settings')), error: null });
     } catch (e) {
       set({ error: String(e) });
     }
@@ -32,7 +38,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       const applied = await invoke<Settings>('set_settings', {
         settings: { ...current, ...patch },
       });
-      set({ settings: applied, error: null });
+      set({ settings: applyUnits(applied), error: null });
     } catch (e) {
       set({ error: String(e) });
     }
@@ -42,7 +48,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
 /** Keeps the store in sync with changes made from the tray menu. */
 export function subscribeSettings(): () => void {
   const unlisten = listen<Settings>(SETTINGS_EVENT, (e) =>
-    useSettingsStore.setState({ settings: e.payload }),
+    useSettingsStore.setState({ settings: applyUnits(e.payload) }),
   );
   return () => {
     unlisten.then((f) => f()).catch(() => {});

@@ -1,3 +1,5 @@
+import { invoke, isEmbedded, isWidget } from './ipc';
+
 export type Overrides = Record<string, string>;
 
 const KEY = 'omniscience.appearance';
@@ -20,6 +22,100 @@ export const COLOR_TOKENS: { name: string; label: string }[] = [
   { name: '--color-deny-bg', label: 'Deny button' },
   { name: '--color-deny-text', label: 'Deny text' },
 ];
+
+export const EXTRA_VARS = ['color-scheme', '--glass-hi', '--glass-lo'];
+export const ACCENT_KEY = 'follow-accent';
+const CHART_1 = '--color-chart-1';
+
+const preset = (v: string[]): Overrides =>
+  Object.fromEntries(COLOR_TOKENS.map((t, i) => [t.name, v[i] as string]));
+
+export const THEME_PRESETS: { label: string; overrides: Overrides }[] = [
+  { label: 'Dark', overrides: {} },
+  {
+    label: 'Light',
+    overrides: {
+      ...preset([
+        '#f5f5f7',
+        '#1c1c1e',
+        '#6e6e73',
+        '#d1d1d6',
+        '#e5e5ea',
+        '#ffffff',
+        '#b25e00',
+        '#d70015',
+        '#1f8a3b',
+        '#0066d6',
+        '#8944ab',
+        '#c25e00',
+        '#1c1c1e',
+        '#ffffff',
+        '#e5e5ea',
+        '#1c1c1e',
+      ]),
+      'color-scheme': 'light',
+      '--glass-hi': '0 0 0',
+      '--glass-lo': '255 255 255',
+    },
+  },
+  {
+    label: 'Midnight',
+    overrides: preset([
+      '#0b1020',
+      '#e6ebff',
+      '#8a94b8',
+      '#2a3350',
+      '#1a2240',
+      '#121936',
+      '#ffc857',
+      '#ff6b6b',
+      '#4ade80',
+      '#5aa9ff',
+      '#b794f6',
+      '#f6ad55',
+      '#e6ebff',
+      '#0b1020',
+      '#1a2240',
+      '#e6ebff',
+    ]),
+  },
+  {
+    label: 'High contrast',
+    overrides: preset([
+      '#000000',
+      '#ffffff',
+      '#d0d0d0',
+      '#8a8a8a',
+      '#3a3a3a',
+      '#0a0a0a',
+      '#ffff00',
+      '#ff4d4d',
+      '#00ff7f',
+      '#00bfff',
+      '#ff66ff',
+      '#ffa500',
+      '#ffffff',
+      '#000000',
+      '#3a3a3a',
+      '#ffffff',
+    ]),
+  },
+];
+
+const COLOR_KEYS = [...COLOR_TOKENS.map((t) => t.name), ...EXTRA_VARS];
+
+export function presetLabel(overrides: Overrides): string | null {
+  return (
+    THEME_PRESETS.find((p) =>
+      COLOR_KEYS.every((k) => (overrides[k] ?? '') === (p.overrides[k] ?? '')),
+    )?.label ?? null
+  );
+}
+
+export function withPreset(overrides: Overrides, presetOverrides: Overrides): Overrides {
+  const kept = Object.entries(overrides).filter(([k]) => !COLOR_KEYS.includes(k));
+  return { ...Object.fromEntries(kept), ...presetOverrides };
+}
 
 export const FONT_VAR = '--font-sans';
 export const SIZE_VAR = 'font-size';
@@ -88,9 +184,21 @@ export function saveAppearance(overrides: Overrides): void {
 export function applyAppearance(overrides: Overrides): void {
   readDefaults();
   const style = document.documentElement.style;
-  for (const name of [...COLOR_TOKENS.map((t) => t.name), FONT_VAR, SIZE_VAR]) {
+  for (const name of [...COLOR_KEYS, FONT_VAR, SIZE_VAR]) {
     const value = overrides[name];
     if (value) style.setProperty(name, value);
     else style.removeProperty(name);
+  }
+}
+
+export async function syncAccent(): Promise<void> {
+  if (!loadAppearance()[ACCENT_KEY] || isEmbedded() || isWidget()) return;
+  try {
+    const color = await invoke<string | null>('get_accent_color');
+    if (color && /^#[0-9a-f]{6}$/i.test(color) && loadAppearance()[ACCENT_KEY]) {
+      document.documentElement.style.setProperty(CHART_1, color);
+    }
+  } catch {
+    return;
   }
 }

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-11-18
+
+### Added
+
+- Add display units: temperatures in °C or °F, and network speed in bytes or bits per second.
+- Add optional warning and critical thresholds per metric (CPU, memory, each GPU, disk, network); a metric without its own pair keeps using the global one.
+- Add theme presets in Appearance, including a light theme, and an option to follow the Windows accent color.
+- Add settings export and import (a JSON file in the Downloads folder), and a reset for each group of settings.
+- Add **Copy system summary**: your specs and current readings as text, ready to paste into a support post.
+
 ## [0.9.0] - 2026-11-18
 
 ### Added
