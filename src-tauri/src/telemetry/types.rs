@@ -308,7 +308,6 @@ pub struct ProcessMember {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, serde::Deserialize, TS)]
 #[serde(rename_all = "snake_case")]
 #[ts(export)]
-#[allow(dead_code)]
 pub enum ProcessPriority {
     Idle,
     BelowNormal,
@@ -319,7 +318,6 @@ pub enum ProcessPriority {
 
 #[derive(Debug, Clone, PartialEq, Serialize, TS)]
 #[ts(export)]
-#[allow(dead_code)]
 pub struct ProcessDetails {
     pub pid: u32,
     pub name: String,
@@ -333,7 +331,6 @@ pub struct ProcessDetails {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, TS)]
 #[serde(rename_all = "snake_case")]
 #[ts(export)]
-#[allow(dead_code)]
 pub enum ActionOutcome {
     Ok,
     Protected,
@@ -344,7 +341,6 @@ pub enum ActionOutcome {
 
 #[derive(Debug, Clone, PartialEq, Serialize, TS)]
 #[ts(export)]
-#[allow(dead_code)]
 pub struct ActionResult {
     pub pid: u32,
     pub outcome: ActionOutcome,

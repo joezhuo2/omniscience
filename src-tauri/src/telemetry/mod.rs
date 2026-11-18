@@ -15,6 +15,7 @@ mod nvml;
 mod parse;
 mod peak;
 mod ping;
+pub mod process_actions;
 #[cfg(windows)]
 mod process_io;
 pub mod processes;

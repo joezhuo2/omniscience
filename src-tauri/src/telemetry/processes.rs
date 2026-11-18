@@ -225,7 +225,7 @@ pub fn kill_group(key: &str) -> KillReport {
 }
 
 #[cfg(windows)]
-fn kill_pid(pid: u32, _sys: &System) -> KillResult {
+pub(super) fn kill_pid(pid: u32, _sys: &System) -> KillResult {
     use windows_sys::Win32::Foundation::{
         CloseHandle, ERROR_ACCESS_DENIED, ERROR_INVALID_PARAMETER, GetLastError,
     };
@@ -267,7 +267,7 @@ fn kill_pid(pid: u32, _sys: &System) -> KillResult {
 }
 
 #[cfg(not(windows))]
-fn kill_pid(pid: u32, sys: &System) -> KillResult {
+pub(super) fn kill_pid(pid: u32, sys: &System) -> KillResult {
     let outcome = match sys.process(sysinfo::Pid::from_u32(pid)) {
         None => KillOutcome::NotFound,
         Some(p) if p.kill() => KillOutcome::Killed,

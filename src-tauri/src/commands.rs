@@ -14,7 +14,10 @@ use crate::settings::Settings;
 use crate::shell::Shell;
 use crate::telemetry::export;
 use crate::telemetry::history::HistorySample;
-use crate::telemetry::types::{HistoryEvent, KillReport};
+use crate::telemetry::process_actions::{self, Ctx};
+use crate::telemetry::types::{
+    ActionOutcome, ActionResult, HistoryEvent, KillReport, ProcessDetails, ProcessPriority,
+};
 use crate::telemetry::{Telemetry, processes};
 #[cfg(feature = "standalone")]
 use crate::{webview, window};
@@ -122,6 +125,66 @@ pub async fn kill_process_group(key: String) -> KillReport {
                 message: Some(e.to_string()),
             }],
         })
+}
+
+async fn blocking<T: Send + 'static>(f: impl FnOnce() -> T + Send + 'static) -> Result<T, String> {
+    tauri::async_runtime::spawn_blocking(f)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+async fn blocking_actions(
+    pids: Vec<u32>,
+    f: impl FnOnce(Ctx, Vec<u32>) -> Vec<ActionResult> + Send + 'static,
+) -> Vec<ActionResult> {
+    let failed = pids.clone();
+    blocking(move || f(Ctx::now(), pids))
+        .await
+        .unwrap_or_else(|e| {
+            failed
+                .into_iter()
+                .map(|pid| ActionResult {
+                    pid,
+                    outcome: ActionOutcome::Failed,
+                    message: Some(e.clone()),
+                })
+                .collect()
+        })
+}
+
+#[tauri::command]
+pub async fn process_details(pid: u32) -> Result<ProcessDetails, String> {
+    blocking(move || process_actions::details(pid)).await?
+}
+
+#[tauri::command]
+pub async fn open_process_location(pid: u32) -> Result<(), String> {
+    blocking(move || process_actions::open_location(pid)).await?
+}
+
+#[tauri::command]
+pub async fn set_process_priority(pids: Vec<u32>, priority: ProcessPriority) -> Vec<ActionResult> {
+    blocking_actions(pids, move |c, p| c.set_priority(p, priority)).await
+}
+
+#[tauri::command]
+pub async fn set_process_efficiency(pids: Vec<u32>, enabled: bool) -> Vec<ActionResult> {
+    blocking_actions(pids, move |c, p| c.set_efficiency(p, enabled)).await
+}
+
+#[tauri::command]
+pub async fn suspend_processes(pids: Vec<u32>) -> Vec<ActionResult> {
+    blocking_actions(pids, |c, p| c.suspend(p)).await
+}
+
+#[tauri::command]
+pub async fn resume_processes(pids: Vec<u32>) -> Vec<ActionResult> {
+    blocking_actions(pids, |c, p| c.resume(p)).await
+}
+
+#[tauri::command]
+pub async fn kill_process_tree(pids: Vec<u32>) -> Vec<ActionResult> {
+    blocking_actions(pids, |c, p| c.kill_tree(p)).await
 }
 
 #[cfg(feature = "standalone")]
