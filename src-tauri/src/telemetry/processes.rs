@@ -120,8 +120,14 @@ pub fn groups(procs: &[ProcInfo], logical_cpus: usize) -> Vec<ProcessGroup> {
             gpu_mem_bytes: 0,
             disk_bps: p.disk_bps.map(|_| 0.0),
             net_bps: p.net_bps.map(|_| 0.0),
+            members: Vec::new(),
         });
         g.pids.push(p.pid);
+        g.members.push(super::types::ProcessMember {
+            pid: p.pid,
+            cpu_pct: (p.cpu_core_pct / cpus * 10.0).round() / 10.0,
+            mem_bytes: p.mem_bytes,
+        });
         g.cpu_pct += p.cpu_core_pct / cpus;
         g.mem_bytes += p.mem_bytes;
         g.gpu_pct += p.gpu_pct;
@@ -132,6 +138,7 @@ pub fn groups(procs: &[ProcInfo], logical_cpus: usize) -> Vec<ProcessGroup> {
     let mut list: Vec<ProcessGroup> = groups.into_values().collect();
     for g in &mut list {
         g.pids.sort_unstable();
+        g.members.sort_unstable_by_key(|m| m.pid);
         g.cpu_pct = (g.cpu_pct * 10.0).round() / 10.0;
         g.gpu_pct = (g.gpu_pct.min(100.0) * 10.0).round() / 10.0;
     }
@@ -218,7 +225,7 @@ pub fn kill_group(key: &str) -> KillReport {
 }
 
 #[cfg(windows)]
-fn kill_pid(pid: u32, _sys: &System) -> KillResult {
+pub(super) fn kill_pid(pid: u32, _sys: &System) -> KillResult {
     use windows_sys::Win32::Foundation::{
         CloseHandle, ERROR_ACCESS_DENIED, ERROR_INVALID_PARAMETER, GetLastError,
     };
@@ -260,7 +267,7 @@ fn kill_pid(pid: u32, _sys: &System) -> KillResult {
 }
 
 #[cfg(not(windows))]
-fn kill_pid(pid: u32, sys: &System) -> KillResult {
+pub(super) fn kill_pid(pid: u32, sys: &System) -> KillResult {
     let outcome = match sys.process(sysinfo::Pid::from_u32(pid)) {
         None => KillOutcome::NotFound,
         Some(p) if p.kill() => KillOutcome::Killed,

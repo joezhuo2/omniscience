@@ -40,6 +40,8 @@ mod settings;
 #[cfg(feature = "standalone")]
 mod shell;
 #[cfg(feature = "standalone")]
+mod startup_apps;
+#[cfg(feature = "standalone")]
 mod system_command;
 mod telemetry;
 #[cfg(feature = "standalone")]
@@ -84,6 +86,13 @@ pub fn run() {
             commands::set_expanded,
             commands::set_overlay_height,
             commands::kill_process_group,
+            commands::process_details,
+            commands::open_process_location,
+            commands::set_process_priority,
+            commands::set_process_efficiency,
+            commands::suspend_processes,
+            commands::resume_processes,
+            commands::kill_process_tree,
             commands::set_process_sampling,
             commands::open_widget,
             commands::set_widget_active,
@@ -120,7 +129,9 @@ pub fn run() {
             display_toggles::get_display_toggles,
             display_toggles::set_hdr,
             display_toggles::set_night_light,
-            display_toggles::set_brightness
+            display_toggles::set_brightness,
+            startup_apps::get_startup_apps,
+            startup_apps::set_startup_app_enabled
         ])
         .on_window_event(|window, event| {
             if matches!(event, tauri::WindowEvent::Destroyed) && window.label() == "widget" {

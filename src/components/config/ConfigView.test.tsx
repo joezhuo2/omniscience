@@ -18,7 +18,7 @@ describe('ConfigView card toggles', () => {
   it('defaults every card on, hides the body when off and persists', () => {
     const { unmount } = render(<ConfigView active={false} />);
     const switches = screen.getAllByRole('switch');
-    expect(switches).toHaveLength(9);
+    expect(switches).toHaveLength(10);
     switches.forEach((s) => expect(s).toBeChecked());
     const cpu = screen.getByRole('switch', { name: 'CPU boost enabled' });
     expect(screen.getByRole('group', { name: 'CPU boost' })).toBeInTheDocument();

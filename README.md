@@ -78,6 +78,11 @@ button in the header detaches the dashboard into a resizable, always-on-top wind
 - 📶 **Network extras:** Wi-Fi name, signal and link speed, ping jitter and packet loss, and data used
   today and this month with a **Metered** warning. **GPU & Power** also shows NVIDIA clocks, video
   encode/decode usage and energy used today, with an optional cost estimate.
+- 🧰 **Process actions:** right-click a process (or use its More actions button) to open its file
+  location, copy its path or command line, set its priority, turn on Efficiency mode, suspend or
+  resume it, or end its whole process tree. Rows marked ×N expand to show each process, and a pinned
+  process stays at the top of the list. Critical Windows processes and Omniscience itself are
+  always refused.
 - 📈 **History card:** charts for CPU, memory, GPU, temperatures, disk, network, battery and power
   over 1 hour to 7 days, with markers for power-source changes, throttling and alerts. Drag across
   a chart to zoom every chart into that range, read min/avg/max for it, and export it as CSV or

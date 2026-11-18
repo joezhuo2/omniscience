@@ -1,12 +1,15 @@
 import { invoke } from '../../lib/ipc';
-import { ChevronDown, Search, X } from 'lucide-react';
+import { ChevronDown, ChevronRight, MoreHorizontal, Pin, Search, X } from 'lucide-react';
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { formatBytes, formatRateRounded } from '../../lib/format';
 import {
-  COLLAPSED_PROCESSES,
   CONFIRM_MS,
+  collapsedProcesses,
   killFailure,
+  mainPid,
   processRate,
+  readPinned,
+  savePinned,
   visibleProcesses,
   type ProcessSort,
 } from '../../lib/processes';
@@ -14,6 +17,7 @@ import { useTelemetryStore } from '../../store';
 import { useToastStore } from '../../toasts';
 import type { KillReport, ProcessGroup } from '../../types/telemetry';
 import { Card } from './Card';
+import { ProcessMenu, type MenuTarget } from './ProcessMenu';
 import { InfoTabVisible } from './infoTabContext';
 import { Segmented } from '../Segmented';
 import { ScrollArea } from '../ScrollArea';
@@ -36,64 +40,160 @@ function SortToggle({ sort, onChange }: { sort: ProcessSort; onChange: (s: Proce
   );
 }
 
+type OpenMenu = (target: MenuTarget, anchor: DOMRect, opener: HTMLElement | null) => void;
+
+function MoreButton({ label, onOpen }: { label: string; onOpen: (el: HTMLElement) => void }) {
+  return (
+    <button
+      aria-label={label}
+      aria-haspopup="menu"
+      className="flex h-5 w-5 items-center justify-center rounded text-island-muted hover:bg-island-track/40 hover:text-island-text"
+      onClick={(event) => onOpen(event.currentTarget)}
+    >
+      <MoreHorizontal size={12} aria-hidden />
+    </button>
+  );
+}
+
 function Row({
   p,
   sort,
   armed,
+  pinned,
+  expanded,
   onKill,
+  onToggleExpand,
+  onTogglePin,
+  onMenu,
 }: {
   p: ProcessGroup;
   sort: ProcessSort;
   armed: boolean;
+  pinned: boolean;
+  expanded: boolean;
   onKill: (p: ProcessGroup) => void;
+  onToggleExpand: (key: string) => void;
+  onTogglePin: (key: string) => void;
+  onMenu: OpenMenu;
 }) {
+  const target: MenuTarget = {
+    name: p.name,
+    pids: p.pids,
+    mainPid: mainPid(p),
+    pinned,
+    onTogglePin: () => onTogglePin(p.key),
+  };
   // The GPU view swaps both columns for GPU usage and GPU memory.
   const gpu = sort === 'gpu';
   const throughput = sort === 'disk' || sort === 'network';
   const rate = processRate(sort === 'disk' ? p.disk_bps : p.net_bps);
   return (
-    <li className="group flex items-center gap-2 rounded-md px-1.5 py-1 text-[11px] hover:bg-island-track/30">
-      <Tip content={p.name}>
-        <span className="min-w-0 flex-1 truncate text-island-text">
-          {p.name.replace(/\.exe$/i, '')}
-          {p.pids.length > 1 && <span className="ml-1 text-island-muted">×{p.pids.length}</span>}
-        </span>
-      </Tip>
-      <Tip
-        content={
-          throughput
-            ? sort === 'disk'
-              ? 'Disk read + write'
-              : 'Network send + receive'
-            : undefined
-        }
+    <li className="group text-[11px]">
+      <div
+        className="flex items-center gap-2 rounded-md px-1.5 py-1 hover:bg-island-track/30"
+        onContextMenu={(event) => {
+          event.preventDefault();
+          onMenu(target, new DOMRect(event.clientX, event.clientY, 0, 0), null);
+        }}
       >
-        <span
-          className={`${throughput ? 'w-20' : 'w-12'} text-right text-island-text tabular-nums`}
+        {p.members.length > 1 ? (
+          <button
+            aria-label={`${expanded ? 'Hide' : 'Show'} ${p.name} processes`}
+            aria-expanded={expanded}
+            className="-mr-1 flex h-5 w-4 shrink-0 items-center justify-center text-island-muted hover:text-island-text"
+            onClick={() => onToggleExpand(p.key)}
+          >
+            <ChevronRight
+              size={11}
+              aria-hidden
+              className={`transition-transform ${expanded ? 'rotate-90' : ''}`}
+            />
+          </button>
+        ) : (
+          <span className="-mr-1 w-4 shrink-0" />
+        )}
+        <Tip content={p.name}>
+          <span className="min-w-0 flex-1 truncate text-island-text">
+            {pinned && (
+              <Pin size={10} aria-label="Pinned" className="mr-1 inline text-island-muted" />
+            )}
+            {p.name.replace(/\.exe$/i, '')}
+            {p.pids.length > 1 && <span className="ml-1 text-island-muted">×{p.pids.length}</span>}
+          </span>
+        </Tip>
+        <Tip
+          content={
+            throughput
+              ? sort === 'disk'
+                ? 'Disk read + write'
+                : 'Network send + receive'
+              : undefined
+          }
         >
-          {throughput
-            ? rate == null
-              ? '—'
-              : formatRateRounded(rate)
-            : `${(gpu ? p.gpu_pct : p.cpu_pct).toFixed(1)}%`}
-        </span>
-      </Tip>
-      <Tip content={gpu ? 'GPU memory' : 'Memory'}>
-        <span className="w-16 text-right text-island-muted tabular-nums">
-          {formatBytes(gpu ? p.gpu_mem_bytes : p.mem_bytes)}
-        </span>
-      </Tip>
-      <button
-        aria-label={armed ? `Confirm end ${p.name}` : `End ${p.name}`}
-        className={`flex h-5 items-center justify-center rounded transition-colors ${
-          armed
-            ? 'w-11 bg-island-crit text-[10px] font-semibold text-white'
-            : 'w-5 text-island-muted hover:bg-island-crit/20 hover:text-island-crit'
-        }`}
-        onClick={() => onKill(p)}
-      >
-        {armed ? 'End?' : <X size={12} aria-hidden />}
-      </button>
+          <span
+            className={`${throughput ? 'w-20' : 'w-12'} text-right text-island-text tabular-nums`}
+          >
+            {throughput
+              ? rate == null
+                ? '—'
+                : formatRateRounded(rate)
+              : `${(gpu ? p.gpu_pct : p.cpu_pct).toFixed(1)}%`}
+          </span>
+        </Tip>
+        <Tip content={gpu ? 'GPU memory' : 'Memory'}>
+          <span className="w-16 text-right text-island-muted tabular-nums">
+            {formatBytes(gpu ? p.gpu_mem_bytes : p.mem_bytes)}
+          </span>
+        </Tip>
+        <MoreButton
+          label={`More actions for ${p.name}`}
+          onOpen={(el) => onMenu(target, el.getBoundingClientRect(), el)}
+        />
+        <button
+          aria-label={armed ? `Confirm end ${p.name}` : `End ${p.name}`}
+          className={`flex h-5 items-center justify-center rounded transition-colors ${
+            armed
+              ? 'w-11 bg-island-crit text-[10px] font-semibold text-white'
+              : 'w-5 text-island-muted hover:bg-island-crit/20 hover:text-island-crit'
+          }`}
+          onClick={() => onKill(p)}
+        >
+          {armed ? 'End?' : <X size={12} aria-hidden />}
+        </button>
+      </div>
+      {expanded && (
+        <div role="group" aria-label={`${p.name} processes`} className="pb-1 pl-6">
+          {p.members.map((m) => (
+            <div
+              key={m.pid}
+              className="flex items-center gap-2 px-1.5 py-0.5 text-[10px] text-island-muted"
+              onContextMenu={(event) => {
+                event.preventDefault();
+                onMenu(
+                  { name: `${p.name} (${m.pid})`, pids: [m.pid], mainPid: m.pid },
+                  new DOMRect(event.clientX, event.clientY, 0, 0),
+                  null,
+                );
+              }}
+            >
+              <span className="min-w-0 flex-1 tabular-nums">PID {m.pid}</span>
+              <span className="w-12 text-right tabular-nums">{m.cpu_pct.toFixed(1)}%</span>
+              <span className="w-16 text-right tabular-nums">{formatBytes(m.mem_bytes)}</span>
+              <MoreButton
+                label={`More actions for ${p.name} PID ${m.pid}`}
+                onOpen={(el) =>
+                  onMenu(
+                    { name: `${p.name} (${m.pid})`, pids: [m.pid], mainPid: m.pid },
+                    el.getBoundingClientRect(),
+                    el,
+                  )
+                }
+              />
+              <span className="w-5" />
+            </div>
+          ))}
+        </div>
+      )}
     </li>
   );
 }
@@ -105,6 +205,13 @@ export function ProcessList() {
   const [armed, setArmed] = useState<string | null>(null);
   const [hidden, setHidden] = useState<ReadonlySet<string>>(new Set());
   const [showAll, setShowAll] = useState(false);
+  const [pinned, setPinned] = useState(readPinned);
+  const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());
+  const [menu, setMenu] = useState<{
+    target: MenuTarget;
+    anchor: DOMRect;
+    opener: HTMLElement | null;
+  } | null>(null);
   const [listHeight, setListHeight] = useState<number>();
   const measureList = useCallback((el: HTMLUListElement | null) => {
     if (!el) return;
@@ -148,6 +255,23 @@ export function ProcessList() {
     }
   }
 
+  function toggleIn(set: ReadonlySet<string>, key: string) {
+    const next = new Set(set);
+    if (!next.delete(key)) next.add(key);
+    return next;
+  }
+
+  function onTogglePin(key: string) {
+    const next = toggleIn(pinned, key);
+    setPinned(next);
+    savePinned(next);
+  }
+
+  function closeMenu() {
+    menu?.opener?.focus();
+    setMenu(null);
+  }
+
   async function onKill(p: ProcessGroup) {
     if (armed !== p.key) {
       setArmed(p.key);
@@ -175,8 +299,9 @@ export function ProcessList() {
     }
   }
 
-  const all = groups ? visibleProcesses(groups, hidden, sort, undefined, settledQuery) : [];
-  const rows = showAll ? all : all.slice(0, COLLAPSED_PROCESSES);
+  const all = groups ? visibleProcesses(groups, hidden, sort, undefined, settledQuery, pinned) : [];
+  const collapsed = collapsedProcesses(all, pinned);
+  const rows = showAll ? all : collapsed;
   return (
     <Card
       section="processes"
@@ -238,17 +363,28 @@ export function ProcessList() {
             >
               <ul ref={measureList} data-testid="process-rows">
                 {rows.map((p) => (
-                  <Row key={p.key} p={p} sort={sort} armed={armed === p.key} onKill={onKill} />
+                  <Row
+                    key={p.key}
+                    p={p}
+                    sort={sort}
+                    armed={armed === p.key}
+                    pinned={pinned.has(p.key)}
+                    expanded={expanded.has(p.key)}
+                    onKill={onKill}
+                    onToggleExpand={(key) => setExpanded((e) => toggleIn(e, key))}
+                    onTogglePin={onTogglePin}
+                    onMenu={(target, anchor, opener) => setMenu({ target, anchor, opener })}
+                  />
                 ))}
               </ul>
             </ScrollArea>
-            {all.length > COLLAPSED_PROCESSES && (
+            {all.length > collapsed.length && (
               <button
                 aria-expanded={showAll}
                 onClick={() => setShowAll((v) => !v)}
                 className="mt-1 flex w-full items-center justify-center gap-1 py-0.5 text-[10px] text-island-muted transition-colors hover:text-island-text"
               >
-                {showAll ? 'Show less' : `Show ${all.length - COLLAPSED_PROCESSES} more`}
+                {showAll ? 'Show less' : `Show ${all.length - collapsed.length} more`}
                 <ChevronDown
                   size={11}
                   aria-hidden
@@ -259,6 +395,7 @@ export function ProcessList() {
           </>
         )}
       </div>
+      {menu && <ProcessMenu target={menu.target} anchor={menu.anchor} onClose={closeMenu} />}
     </Card>
   );
 }

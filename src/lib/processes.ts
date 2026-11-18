@@ -1,4 +1,4 @@
-import type { KillReport, ProcessGroup } from '../types/telemetry';
+import type { ActionResult, KillReport, ProcessGroup } from '../types/telemetry';
 
 export type ProcessSort = 'cpu' | 'ram' | 'gpu' | 'disk' | 'network';
 
@@ -21,9 +21,10 @@ export function visibleProcesses(
   sort: ProcessSort,
   limit: number = VISIBLE_PROCESSES,
   query = '',
+  pinned: ReadonlySet<string> = new Set(),
 ): ProcessGroup[] {
   const search = query.trim().toLowerCase();
-  return groups
+  const sorted = groups
     .filter(
       (g) =>
         !hidden.has(g.key) &&
@@ -48,8 +49,68 @@ export function visibleProcesses(
           );
         }
       }
-    })
-    .slice(0, limit);
+    });
+  const first = sorted.filter((g) => pinned.has(g.key));
+  const rest = sorted.filter((g) => !pinned.has(g.key));
+  return [...first, ...rest].slice(0, Math.max(limit, first.length));
+}
+
+/** Rows kept when the list is collapsed: the short head plus every pinned group. */
+export function collapsedProcesses(
+  rows: ProcessGroup[],
+  pinned: ReadonlySet<string>,
+): ProcessGroup[] {
+  return rows.filter((g, i) => i < COLLAPSED_PROCESSES || pinned.has(g.key));
+}
+
+const PINNED_KEY = 'omniscience:pinned-processes';
+
+export function readPinned(): Set<string> {
+  try {
+    const value: unknown = JSON.parse(localStorage.getItem(PINNED_KEY) ?? '[]');
+    return new Set(Array.isArray(value) ? value.filter((k) => typeof k === 'string') : []);
+  } catch {
+    return new Set();
+  }
+}
+
+export function savePinned(pinned: ReadonlySet<string>): void {
+  try {
+    localStorage.setItem(PINNED_KEY, JSON.stringify([...pinned]));
+  } catch {
+    // Pins still work for this session if storage is unavailable.
+  }
+}
+
+/** The member using the most memory, which the menu inspects for the whole row. */
+export function mainPid(p: ProcessGroup): number {
+  return (
+    p.members.reduce<ProcessGroup['members'][number] | null>(
+      (best, m) => (!best || m.mem_bytes > best.mem_bytes ? m : best),
+      null,
+    )?.pid ??
+    p.pids[0] ??
+    0
+  );
+}
+
+const OUTCOME_LABELS = {
+  protected: 'protected',
+  access_denied: 'access denied',
+  not_found: 'not found',
+  failed: 'failed',
+} as const;
+
+/** Toast text for the results that were not ok, or null when everything succeeded. */
+export function actionFailure(results: ActionResult[], action: string): string | null {
+  const failed = results.filter((r) => r.outcome !== 'ok');
+  if (failed.length === 0) return null;
+  const parts = (Object.keys(OUTCOME_LABELS) as (keyof typeof OUTCOME_LABELS)[])
+    .map((o) => [failed.filter((r) => r.outcome === o).length, OUTCOME_LABELS[o]] as const)
+    .filter(([n]) => n > 0)
+    .map(([n, label]) => `${n} ${label}`);
+  const message = failed.find((r) => r.message)?.message;
+  return `${action}: ${parts.join(', ')}${message ? `. ${message}` : ''}`;
 }
 
 /**

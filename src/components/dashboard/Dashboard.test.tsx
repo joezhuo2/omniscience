@@ -393,6 +393,7 @@ describe('Dashboard', () => {
         key: `p${i}`,
         name: `p${i}.exe`,
         pids: [i + 1],
+        members: [{ pid: i + 1, cpu_pct: 10 - i, mem_bytes: 1 }],
         cpu_pct: 10 - i,
         mem_bytes: 1,
         gpu_pct: 0,
