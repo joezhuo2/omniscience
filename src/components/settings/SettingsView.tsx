@@ -10,6 +10,7 @@ import { acceleratorFromEvent, displayAccelerator } from '../../lib/hotkey';
 import { useSettingsStore, type Settings } from '../../settings';
 import { useToastStore } from '../../toasts';
 import { Toasts } from '../dashboard/Toasts';
+import { AlertsSettings } from './AlertsSettings';
 import { IslandImageField } from './IslandImageField';
 import { Segmented } from '../Segmented';
 import { useGlass } from '../../lib/glass';
@@ -32,7 +33,15 @@ const PILL_NUMBERS: { value: PillNumbers; label: string }[] = [
   { value: 'temp', label: '°C' },
 ];
 
-function Row({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
+export function Row({
+  label,
+  hint,
+  children,
+}: {
+  label: string;
+  hint?: string;
+  children: ReactNode;
+}) {
   return (
     <div className="flex min-h-9 items-center justify-between gap-3 py-1.5 text-[11px] text-island-text">
       <span>
@@ -44,7 +53,7 @@ function Row({ label, hint, children }: { label: string; hint?: string; children
   );
 }
 
-function Toggle({
+export function Toggle({
   checked,
   label,
   onChange,
@@ -94,7 +103,7 @@ function TextInput({
   );
 }
 
-function ThresholdInput({
+export function ThresholdInput({
   value,
   label,
   onCommit,
@@ -474,16 +483,7 @@ export function SettingsView({ onBack }: { onBack: () => void }) {
               onChange={(v) => set({ show_public_ip: v })}
             />
           </Row>
-          <Row
-            label="Sustained usage alerts"
-            hint="Notifies when usage stays above 90% for 30 seconds."
-          >
-            <Toggle
-              label="Sustained usage alerts"
-              checked={settings.sustained_alerts}
-              onChange={(v) => set({ sustained_alerts: v })}
-            />
-          </Row>
+          <AlertsSettings settings={settings} set={set} />
           <Row
             label="Sensor details"
             hint="Shows each reading's source, age and whether it is a proxy. Problems always show."

@@ -16,7 +16,12 @@ describe('embedded mode', () => {
       (cmd, args) => {
         calls.push({ cmd, args });
         if (cmd.endsWith('get_settings'))
-          return { history_hours: 6, config_enabled: true, ping_target: '' };
+          return {
+            history_hours: 6,
+            config_enabled: true,
+            ping_target: '',
+            alerts: { snooze_until_ms: 0 },
+          };
         if (cmd.endsWith('get_telemetry_history')) return [];
         return null;
       },
@@ -76,6 +81,6 @@ describe('embedded mode', () => {
     expect(screen.queryByText('Auto-check for updates')).not.toBeInTheDocument();
     expect(screen.queryByText(/System config/)).not.toBeInTheDocument();
     expect(screen.queryByText('Reset to top center')).not.toBeInTheDocument();
-    expect(screen.getAllByText('Sustained usage alerts')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('Alerts')[0]).toBeInTheDocument();
   });
 });
