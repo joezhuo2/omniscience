@@ -19,8 +19,11 @@ pub struct FanModeStatus {
 const THROTTLE_THERMAL_POLICY: u32 = 0x0012_0075;
 
 #[cfg(windows)]
-fn mode_from_value(value: u32) -> Option<FanMode> {
-    match value {
+static LAST_SET: std::sync::atomic::AtomicU8 = std::sync::atomic::AtomicU8::new(u8::MAX);
+
+#[cfg(windows)]
+fn remembered(raw: u8) -> Option<FanMode> {
+    match raw {
         0 => Some(FanMode::Performance),
         1 => Some(FanMode::Turbo),
         2 => Some(FanMode::Silent),
@@ -39,10 +42,14 @@ fn value_from_mode(mode: FanMode) -> u32 {
 
 #[cfg(windows)]
 pub fn read() -> FanModeStatus {
-    let value = crate::asus::Asus::open().and_then(|asus| asus.get(THROTTLE_THERMAL_POLICY));
+    let supported = crate::asus::Asus::open()
+        .and_then(|asus| asus.get(THROTTLE_THERMAL_POLICY))
+        .is_ok();
     FanModeStatus {
-        mode: value.as_ref().ok().and_then(|&v| mode_from_value(v)),
-        supported: value.is_ok(),
+        mode: supported
+            .then(|| remembered(LAST_SET.load(std::sync::atomic::Ordering::SeqCst)))
+            .flatten(),
+        supported,
         error: None,
     }
 }
@@ -57,7 +64,10 @@ pub fn read() -> FanModeStatus {
 
 #[cfg(windows)]
 pub fn write(mode: FanMode) -> Result<(), String> {
-    crate::asus::Asus::open()?.set(THROTTLE_THERMAL_POLICY, value_from_mode(mode))
+    let value = value_from_mode(mode);
+    crate::asus::Asus::open()?.set(THROTTLE_THERMAL_POLICY, value)?;
+    LAST_SET.store(value as u8, std::sync::atomic::Ordering::SeqCst);
+    Ok(())
 }
 #[cfg(not(windows))]
 pub fn write(_mode: FanMode) -> Result<(), String> {
@@ -87,14 +97,12 @@ mod tests {
     use super::*;
 
     #[test]
-    fn maps_firmware_values_both_ways() {
+    fn remembers_the_mode_by_its_firmware_value() {
         for mode in [FanMode::Silent, FanMode::Performance, FanMode::Turbo] {
-            assert_eq!(mode_from_value(value_from_mode(mode)), Some(mode));
+            assert_eq!(remembered(value_from_mode(mode) as u8), Some(mode));
         }
-        assert_eq!(mode_from_value(0), Some(FanMode::Performance));
-        assert_eq!(mode_from_value(1), Some(FanMode::Turbo));
-        assert_eq!(mode_from_value(2), Some(FanMode::Silent));
-        assert_eq!(mode_from_value(3), None);
+        assert_eq!(remembered(3), None);
+        assert_eq!(remembered(u8::MAX), None);
     }
 
     #[test]
