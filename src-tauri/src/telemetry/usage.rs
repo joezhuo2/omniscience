@@ -35,7 +35,7 @@ pub struct Usage {
 }
 
 #[cfg(windows)]
-fn local_offset_ms() -> i64 {
+pub(super) fn local_offset_ms() -> i64 {
     use windows_sys::Win32::System::Time::{GetTimeZoneInformation, TIME_ZONE_INFORMATION};
 
     // SAFETY: TIME_ZONE_INFORMATION is plain data and the pointer is valid for the call.
@@ -53,7 +53,7 @@ fn local_offset_ms() -> i64 {
 }
 
 #[cfg(not(windows))]
-fn local_offset_ms() -> i64 {
+pub(super) fn local_offset_ms() -> i64 {
     0
 }
 

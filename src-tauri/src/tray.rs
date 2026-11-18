@@ -7,7 +7,7 @@ use tauri::menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::{AppHandle, Emitter, Manager};
 
-use crate::shell::{OPEN_SETTINGS_EVENT, Shell, TrayChecks};
+use crate::shell::{OPEN_SETTINGS_EVENT, Shell, TrayChecks, now_ms};
 use crate::telemetry::Telemetry;
 use crate::telemetry::types::CoreMetrics;
 
@@ -17,6 +17,8 @@ const AUTO_CHECK_UPDATES: &str = "auto_check_updates";
 const HIDE_OVER_FULLSCREEN: &str = "hide_over_fullscreen";
 const CHECK_UPDATES: &str = "check_updates";
 const SYSTEM_UPDATES: &str = "system_updates";
+const SNOOZE_ALERTS: &str = "snooze_alerts";
+const SNOOZE_MS: u64 = 3_600_000;
 pub const OPEN_SYSTEM_UPDATES_EVENT: &str = "omniscience://open-system-updates";
 const SETTINGS: &str = "settings";
 const QUIT: &str = "quit";
@@ -56,6 +58,13 @@ pub fn init(app: &AppHandle) -> tauri::Result<()> {
         true,
         None::<&str>,
     )?;
+    let snooze = MenuItem::with_id(
+        app,
+        SNOOZE_ALERTS,
+        "Snooze alerts for 1 hour",
+        true,
+        None::<&str>,
+    )?;
     let menu = Menu::with_items(
         app,
         &[
@@ -70,6 +79,7 @@ pub fn init(app: &AppHandle) -> tauri::Result<()> {
             &launch_at_startup,
             &auto_check_updates,
             &hide_over_fullscreen,
+            &snooze,
             &PredefinedMenuItem::separator(app)?,
             &MenuItem::with_id(
                 app,
@@ -89,6 +99,7 @@ pub fn init(app: &AppHandle) -> tauri::Result<()> {
         hide_over_fullscreen,
         menu: menu.clone(),
         system_updates,
+        snooze,
     };
     let mut builder = TrayIconBuilder::with_id("main")
         .tooltip("Omniscience")
@@ -135,8 +146,15 @@ fn spawn_tooltip(app: AppHandle) {
         .name("tray-tooltip".into())
         .spawn(move || {
             let mut shown = String::new();
+            let mut snoozed = false;
             loop {
                 std::thread::sleep(Duration::from_secs(2));
+                let shell = app.state::<Arc<Shell>>();
+                let now_snoozed = shell.settings().alerts.snooze_until_ms > now_ms();
+                if now_snoozed != snoozed {
+                    snoozed = now_snoozed;
+                    shell.sync_tray();
+                }
                 let Some(snapshot) = app.state::<Arc<Telemetry>>().latest() else {
                     continue;
                 };
@@ -187,6 +205,14 @@ fn on_menu(app: &AppHandle, id: &str) {
         LAUNCH_AT_STARTUP => s.launch_at_startup = !s.launch_at_startup,
         AUTO_CHECK_UPDATES => s.auto_check_updates = !s.auto_check_updates,
         HIDE_OVER_FULLSCREEN => s.hide_over_fullscreen = !s.hide_over_fullscreen,
+        SNOOZE_ALERTS => {
+            let now = now_ms();
+            s.alerts.snooze_until_ms = if s.alerts.snooze_until_ms > now {
+                0
+            } else {
+                now + SNOOZE_MS
+            };
+        }
         _ => return,
     }
     if let Err(e) = shell.update_settings(app, s) {

@@ -174,13 +174,13 @@ impl Telemetry {
 
     fn run(&self, app: &AppHandle) {
         let mut sampler = sampler::Sampler::new();
-        let mut sustained = alerts::Sustained::default();
+        let mut engine = alerts::Engine::default();
         loop {
             let control = {
                 let mut c = self.control.lock().unwrap_or_else(|e| e.into_inner());
                 while !c.visible && !c.widget {
                     sampler.suspend_detail();
-                    sustained.reset();
+                    engine.reset();
                     c = self.wake.wait(c).unwrap_or_else(|e| e.into_inner());
                 }
                 c.clone()
@@ -204,20 +204,28 @@ impl Telemetry {
             if let Err(e) = app.emit(TICK_EVENT, &snapshot) {
                 crate::diagnostics::log_error(format_args!("emit telemetry: {e}"));
             }
+            let charge = battery::charge();
             if control.sustained_alerts {
-                for label in sustained.check(snapshot.timestamp_ms, &snapshot.core) {
+                let notices = engine.check(
+                    snapshot.timestamp_ms,
+                    &snapshot.core,
+                    charge,
+                    &control.alerts,
+                    &control.ping_target,
+                );
+                for notice in notices {
                     let shown = app
                         .notification()
                         .builder()
-                        .title("High sustained usage")
-                        .body(format!("{label} has been above 90% for 30 seconds."))
+                        .title(notice.title)
+                        .body(notice.body)
                         .show();
                     if let Err(e) = shown {
                         crate::diagnostics::log_error(format_args!("notify: {e}"));
                     }
                 }
             } else {
-                sustained.reset();
+                engine.reset();
             }
             self.history
                 .lock()
@@ -225,7 +233,7 @@ impl Telemetry {
                 .record(
                     snapshot.timestamp_ms,
                     &snapshot.core,
-                    battery::percent(),
+                    charge.map(|c| c.0),
                     control.history_hours,
                 );
             *self.latest.lock().unwrap_or_else(|e| e.into_inner()) = Some(snapshot);

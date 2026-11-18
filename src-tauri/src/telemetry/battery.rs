@@ -46,8 +46,8 @@ fn power_status() -> Option<windows_sys::Win32::System::Power::SYSTEM_POWER_STAT
 }
 
 #[cfg(windows)]
-pub fn percent() -> Option<f32> {
-    power_status().map(|s| f32::from(s.BatteryLifePercent))
+pub fn charge() -> Option<(f32, bool)> {
+    power_status().map(|s| (f32::from(s.BatteryLifePercent), s.ACLineStatus == 1))
 }
 
 /// Battery device paths, enumerated once per dashboard open instead of every tick.
@@ -272,7 +272,7 @@ impl Devices {
 }
 
 #[cfg(not(windows))]
-pub fn percent() -> Option<f32> {
+pub fn charge() -> Option<(f32, bool)> {
     None
 }
 
