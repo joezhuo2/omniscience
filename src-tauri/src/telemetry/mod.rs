@@ -47,6 +47,9 @@ pub struct Control {
     pub public_ip: bool,
     pub sustained_alerts: bool,
     pub history_hours: u32,
+    pub pill_w: f64,
+    pub dodge_tabs: bool,
+    pub widget: bool,
 }
 
 impl Default for Control {
@@ -61,6 +64,9 @@ impl Default for Control {
             public_ip: false,
             sustained_alerts: false,
             history_hours: 24,
+            pill_w: 260.0,
+            dodge_tabs: false,
+            widget: false,
         }
     }
 }
