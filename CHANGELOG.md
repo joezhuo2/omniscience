@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-18
+
+### Added
+
+- Add a **Drives** card: free space and read/write speed per drive, plus each physical disk's type, health, temperature and wear when Windows reports them.
+- Add Wi-Fi details to the **Network** card (network name, signal strength, link speed), with ping jitter and packet loss next to the latency.
+- Add data usage to the **Network** card: today and this month, with a **Metered** warning on metered connections.
+- Add GPU core and memory clocks (NVIDIA) and video encode/decode usage to **GPU & Power**.
+- Add a **Memory** card: committed, cached and compressed memory.
+- Add a **System** card: uptime, last boot, and recent sleep and wake events.
+- Add a **Bluetooth** card with the battery level of connected headsets, mice and controllers.
+- Add energy used today in Wh to **GPU & Power**, with an optional cost estimate (**Settings > Energy price per kWh**, off by default).
+
 ## [0.4.0] - 2026-11-18
 
 ### Added
