@@ -1,11 +1,20 @@
 import { describe, expect, it } from 'vitest';
 import type { KillReport, ProcessGroup } from '../types/telemetry';
-import { killFailure, visibleProcesses } from './processes';
+import {
+  actionFailure,
+  collapsedProcesses,
+  killFailure,
+  mainPid,
+  readPinned,
+  savePinned,
+  visibleProcesses,
+} from './processes';
 
 const g = (key: string, cpu: number, mem: number, gpu = 0, vram = 0): ProcessGroup => ({
   key,
   name: `${key}.exe`,
   pids: [1],
+  members: [{ pid: 1, cpu_pct: cpu, mem_bytes: mem }],
   cpu_pct: cpu,
   mem_bytes: mem,
   gpu_pct: gpu,
@@ -107,5 +116,63 @@ describe('killFailure', () => {
       results: [{ pid: 1, outcome: 'failed', message: 'Windows error 31' }],
     };
     expect(killFailure(r, 'x.exe')).toBe("Couldn't end x.exe: Windows error 31");
+  });
+});
+
+describe('pinned processes', () => {
+  const rows = [g('a', 9, 1), g('b', 5, 1), g('c', 3, 1), g('d', 2, 1), g('e', 1, 1)];
+
+  it('lists pinned groups first whatever the sort and keeps them past the limit', () => {
+    const keys = (sort: 'cpu' | 'ram', limit?: number) =>
+      visibleProcesses(rows, new Set(), sort, limit, '', new Set(['e', 'd'])).map((p) => p.key);
+    expect(keys('cpu')).toEqual(['d', 'e', 'a', 'b', 'c']);
+    expect(keys('cpu', 1)).toEqual(['d', 'e']);
+    expect(
+      visibleProcesses(rows, new Set(), 'cpu', 8, 'e.exe', new Set(['e'])).map((p) => p.key),
+    ).toEqual(['e']);
+  });
+
+  it('keeps pinned groups when collapsed', () => {
+    const all = visibleProcesses(rows, new Set(), 'cpu', 8, '', new Set(['e']));
+    expect(collapsedProcesses(all, new Set(['e'])).map((p) => p.key)).toEqual(['e', 'a', 'b']);
+    expect(collapsedProcesses(all, new Set()).map((p) => p.key)).toEqual(['e', 'a', 'b']);
+  });
+
+  it('persists and tolerates bad storage', () => {
+    savePinned(new Set(['x', 'y']));
+    expect([...readPinned()]).toEqual(['x', 'y']);
+    localStorage.setItem('omniscience:pinned-processes', '{oops');
+    expect(readPinned().size).toBe(0);
+  });
+});
+
+describe('mainPid', () => {
+  it('picks the member using the most memory', () => {
+    const p = {
+      ...g('x', 1, 1),
+      pids: [1, 2],
+      members: [
+        { pid: 1, cpu_pct: 1, mem_bytes: 5 },
+        { pid: 2, cpu_pct: 1, mem_bytes: 9 },
+      ],
+    };
+    expect(mainPid(p)).toBe(2);
+    expect(mainPid({ ...p, members: [] })).toBe(1);
+  });
+});
+
+describe('actionFailure', () => {
+  it('is null when every result is ok', () => {
+    expect(actionFailure([{ pid: 1, outcome: 'ok', message: null }], 'Suspend')).toBeNull();
+  });
+
+  it('counts outcomes and appends the first message', () => {
+    const results = [
+      { pid: 1, outcome: 'protected', message: null },
+      { pid: 2, outcome: 'protected', message: null },
+      { pid: 3, outcome: 'failed', message: 'boom' },
+      { pid: 4, outcome: 'ok', message: null },
+    ] as const;
+    expect(actionFailure([...results], 'Suspend')).toBe('Suspend: 2 protected, 1 failed. boom');
   });
 });

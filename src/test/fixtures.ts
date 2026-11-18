@@ -67,6 +67,10 @@ export const sampleDetail: DetailMetrics = {
       key: 'chrome',
       name: 'chrome.exe',
       pids: [10, 11],
+      members: [
+        { pid: 10, cpu_pct: 4, mem_bytes: 1.5 * GB },
+        { pid: 11, cpu_pct: 2, mem_bytes: 0.5 * GB },
+      ],
       cpu_pct: 6,
       mem_bytes: 2 * GB,
       gpu_pct: 2,
@@ -78,6 +82,7 @@ export const sampleDetail: DetailMetrics = {
       key: 'code',
       name: 'Code.exe',
       pids: [20],
+      members: [{ pid: 20, cpu_pct: 3, mem_bytes: 3 * GB }],
       cpu_pct: 3,
       mem_bytes: 3 * GB,
       gpu_pct: 0,

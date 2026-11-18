@@ -7,6 +7,7 @@ import { DisplayCard } from './DisplayCard';
 import { GpuModeCard } from './GpuModeCard';
 import { PowerLimitsCard } from './PowerLimitsCard';
 import { PowerModeCard } from './PowerModeCard';
+import { StartupAppsCard } from './StartupAppsCard';
 import { SectionToggleProvider } from './SectionToggle';
 import { UndoButton } from './UndoButton';
 
@@ -42,6 +43,9 @@ export function ConfigView({ active = true }: { active?: boolean }) {
       </SectionToggleProvider>
       <SectionToggleProvider section="display" active={active}>
         {(on) => <DisplayCard active={on} />}
+      </SectionToggleProvider>
+      <SectionToggleProvider section="startup-apps" active={active}>
+        {(on) => <StartupAppsCard active={on} />}
       </SectionToggleProvider>
     </div>
   );
