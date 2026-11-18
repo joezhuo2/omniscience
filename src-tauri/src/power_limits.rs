@@ -135,7 +135,7 @@ impl PowerLimits {
         })
     }
 
-    fn set(&self, ac: bool, spl: u32, sppt: u32) -> Result<PowerLimitsStatus, String> {
+    pub(crate) fn set(&self, ac: bool, spl: u32, sppt: u32) -> Result<PowerLimitsStatus, String> {
         let (spl, sppt) = normalize(spl, sppt);
         let mut prefs = self.prefs.lock().map_err(|e| e.to_string())?;
         let live = crate::gpu_mode::ac_power().ok() == Some(ac);

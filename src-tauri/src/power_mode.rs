@@ -134,7 +134,7 @@ impl PowerConfig {
         })
     }
 
-    fn set(&self, ac: bool, mode: PowerMode) -> Result<PowerStatus, String> {
+    pub(crate) fn set(&self, ac: bool, mode: PowerMode) -> Result<PowerStatus, String> {
         let mut prefs = self.prefs.lock().map_err(|e| e.to_string())?;
         if crate::gpu_mode::ac_power()? == ac {
             apply(mode)?;

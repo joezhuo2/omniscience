@@ -111,7 +111,7 @@ impl DisplayConfig {
         })
     }
 
-    fn set_refresh(&self, hz: Option<u32>) -> Result<DisplayStatus, String> {
+    pub(crate) fn set_refresh(&self, hz: Option<u32>) -> Result<DisplayStatus, String> {
         let mut prefs = self.prefs.lock().map_err(|e| e.to_string())?;
         let snap = read()?;
         match hz {

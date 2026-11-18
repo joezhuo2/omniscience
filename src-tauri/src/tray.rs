@@ -3,7 +3,7 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use tauri::menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem};
+use tauri::menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem, Submenu};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::{AppHandle, Emitter, Manager};
 
@@ -58,6 +58,7 @@ pub fn init(app: &AppHandle) -> tauri::Result<()> {
         true,
         None::<&str>,
     )?;
+    let profiles = Submenu::with_id(app, "profiles", "Profiles", true)?;
     let snooze = MenuItem::with_id(
         app,
         SNOOZE_ALERTS,
@@ -99,6 +100,7 @@ pub fn init(app: &AppHandle) -> tauri::Result<()> {
         hide_over_fullscreen,
         menu: menu.clone(),
         system_updates,
+        profiles,
         snooze,
     };
     let mut builder = TrayIconBuilder::with_id("main")
@@ -174,6 +176,14 @@ fn spawn_tooltip(app: AppHandle) {
 
 fn on_menu(app: &AppHandle, id: &str) {
     let shell = app.state::<Arc<Shell>>();
+    if let Some(profile) = id.strip_prefix(crate::profiles::MENU_PREFIX) {
+        let (app, profile) = (app.clone(), profile.to_string());
+        tauri::async_runtime::spawn_blocking(move || {
+            crate::profiles::run_logged(&app, &profile);
+            app.state::<Arc<Shell>>().sync_tray();
+        });
+        return;
+    }
     let mut s = shell.settings();
     match id {
         SHOW_HIDE => return shell.toggle(app),

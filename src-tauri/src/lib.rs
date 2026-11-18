@@ -34,6 +34,8 @@ mod positions;
 mod power_limits;
 #[cfg(feature = "standalone")]
 mod power_mode;
+#[cfg(feature = "standalone")]
+mod profiles;
 mod settings;
 #[cfg(feature = "standalone")]
 mod shell;
@@ -102,6 +104,7 @@ pub fn run() {
             cpu_boost::set_cpu_boost,
             power_mode::get_power_mode,
             power_mode::set_power_mode,
+            profiles::apply_profile,
             battery_saver::get_battery_saver,
             battery_saver::set_battery_saver_threshold,
             battery_saver::set_battery_saver,
