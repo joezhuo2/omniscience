@@ -327,6 +327,7 @@ mod tests {
                 gpu_mem_bytes: 0,
                 disk_bps: None,
                 net_bps: None,
+                members: vec![],
             }]),
             ..Default::default()
         }

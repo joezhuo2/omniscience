@@ -293,6 +293,75 @@ pub struct ProcessGroup {
     pub disk_bps: Option<f64>,
     /// TCP/UDP payload bytes sent + received per second; None when collection is unavailable.
     pub net_bps: Option<f64>,
+    pub members: Vec<ProcessMember>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, TS)]
+#[ts(export)]
+pub struct ProcessMember {
+    pub pid: u32,
+    pub cpu_pct: f32,
+    #[ts(type = "number")]
+    pub mem_bytes: u64,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, serde::Deserialize, TS)]
+#[serde(rename_all = "snake_case")]
+#[ts(export)]
+#[allow(dead_code)]
+pub enum ProcessPriority {
+    Idle,
+    BelowNormal,
+    Normal,
+    AboveNormal,
+    High,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, TS)]
+#[ts(export)]
+#[allow(dead_code)]
+pub struct ProcessDetails {
+    pub pid: u32,
+    pub name: String,
+    pub path: Option<String>,
+    pub command_line: Option<String>,
+    pub priority: Option<ProcessPriority>,
+    pub efficiency: Option<bool>,
+    pub suspended: Option<bool>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, TS)]
+#[serde(rename_all = "snake_case")]
+#[ts(export)]
+#[allow(dead_code)]
+pub enum ActionOutcome {
+    Ok,
+    Protected,
+    AccessDenied,
+    NotFound,
+    Failed,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, TS)]
+#[ts(export)]
+#[allow(dead_code)]
+pub struct ActionResult {
+    pub pid: u32,
+    pub outcome: ActionOutcome,
+    pub message: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, TS)]
+#[ts(export)]
+#[allow(dead_code)]
+pub struct StartupApp {
+    pub id: String,
+    pub name: String,
+    pub command: String,
+    #[ts(type = "'user' | 'machine' | 'folder'")]
+    pub source: String,
+    pub enabled: bool,
+    pub can_toggle: bool,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Serialize, TS)]
