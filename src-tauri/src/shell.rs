@@ -144,7 +144,7 @@ impl Shell {
     /// Validates, applies and saves new settings. Returns what was actually applied.
     pub fn update_settings(&self, app: &AppHandle, new: Settings) -> Result<Settings, String> {
         let mut new = new.sanitized();
-        if new.integrations.api_lan && new.integrations.api_token.is_empty() {
+        if new.integrations.api_enabled && new.integrations.api_token.is_empty() {
             new.integrations.api_token = settings::new_token();
         }
         let old = self.settings();
