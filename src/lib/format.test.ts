@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   formatBytes,
   formatDuration,
+  formatEnergy,
+  formatMbps,
+  formatUptime,
   formatGhz,
   formatLatency,
   formatRpm,
@@ -86,5 +89,34 @@ describe('format', () => {
     expect(formatLatency(14.2)).toBe('14 ms');
     expect(formatLatency(0)).toBe('<1 ms');
     expect(formatLatency(null)).toBe('--');
+  });
+});
+
+describe('formatUptime', () => {
+  it('formats days, hours and minutes', () => {
+    expect(formatUptime(3 * 86400 + 4 * 3600 + 12 * 60 + 30)).toBe('3d 4h 12m');
+    expect(formatUptime(2 * 3600 + 5 * 60)).toBe('2h 5m');
+    expect(formatUptime(59)).toBe('0m');
+  });
+  it('shows -- for missing input', () => {
+    expect(formatUptime(null)).toBe('--');
+    expect(formatUptime(-1)).toBe('--');
+    expect(formatUptime(NaN)).toBe('--');
+  });
+});
+
+describe('formatMbps', () => {
+  it('rounds and handles missing input', () => {
+    expect(formatMbps(866.7)).toBe('867 Mbps');
+    expect(formatMbps(null)).toBe('--');
+  });
+});
+
+describe('formatEnergy', () => {
+  it('formats watt-hours', () => {
+    expect(formatEnergy(12.34)).toBe('12.3 Wh');
+    expect(formatEnergy(250.6)).toBe('251 Wh');
+    expect(formatEnergy(null)).toBe('--');
+    expect(formatEnergy(-1)).toBe('--');
   });
 });

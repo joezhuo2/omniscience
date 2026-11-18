@@ -2,7 +2,9 @@ import { Segmented } from '../Segmented';
 import { useId, useState } from 'react';
 import { ConfigView } from '../config/ConfigView';
 import { BatteryCard } from './BatteryCard';
+import { BluetoothCard } from './BluetoothCard';
 import { CpuHeatmap } from './CpuHeatmap';
+import { DrivesCard } from './DrivesCard';
 import { FanCard } from './FanCard';
 import { GpuPowerCard } from './GpuPowerCard';
 import { HistoryCard } from './HistoryCard';
@@ -12,11 +14,13 @@ import type { SectionId } from '../../lib/sections';
 import { useTelemetryStore } from '../../store';
 import { SectionLayout } from './SectionLayout';
 import { Header } from './Header';
+import { MemoryCard } from './MemoryCard';
 import { MetricStrip } from './MetricStrip';
 import { NetworkCard } from './NetworkCard';
 import { InfoTabVisible } from './infoTabContext';
 import { ProcessList } from './ProcessList';
 import { SensorDetails } from './SensorDetails';
+import { SystemCard } from './SystemCard';
 import { Toasts } from './Toasts';
 
 /** Expanded view. Mounted on expand and unmounted on collapse. */
@@ -26,6 +30,10 @@ const SECTIONS = {
   fans: FanCard,
   'cpu-cores': CpuHeatmap,
   network: NetworkCard,
+  drives: DrivesCard,
+  memory: MemoryCard,
+  system: SystemCard,
+  bluetooth: BluetoothCard,
   processes: ProcessList,
   history: HistoryCard,
 };
@@ -60,9 +68,13 @@ export function Dashboard({
   const id = useId();
   const hasBattery = useTelemetryStore((state) => state.snapshot?.detail?.battery !== null);
   const hasFans = useTelemetryStore((state) => state.snapshot?.detail?.fans != null);
+  const hasBluetooth = useTelemetryStore(
+    (state) => (state.snapshot?.detail?.bluetooth.length ?? 0) > 0,
+  );
   const hiddenSections: SectionId[] = [];
   if (!hasBattery) hiddenSections.push('battery');
   if (!hasFans) hiddenSections.push('fans');
+  if (!hasBluetooth) hiddenSections.push('bluetooth');
   return (
     <div data-testid="dashboard" className="flex flex-col gap-2 pt-1">
       <Header

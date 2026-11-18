@@ -25,6 +25,10 @@ describe('section ordering', () => {
       'battery',
       'fans',
       'cpu-cores',
+      'drives',
+      'memory',
+      'system',
+      'bluetooth',
       'history',
     ]);
     expect(normalizeSectionOrder({})).toEqual([...DEFAULT_SECTION_ORDER]);
@@ -42,6 +46,10 @@ describe('section ordering', () => {
       'fans',
       'cpu-cores',
       'network',
+      'drives',
+      'memory',
+      'system',
+      'bluetooth',
       'history',
     ]);
     expect(original).toEqual([...DEFAULT_SECTION_ORDER]);

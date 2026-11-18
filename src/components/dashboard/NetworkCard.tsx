@@ -1,6 +1,6 @@
-import { Globe, Timer } from 'lucide-react';
+import { Globe, Timer, Wifi } from 'lucide-react';
 import { useEffect } from 'react';
-import { formatLatency } from '../../lib/format';
+import { formatBytes, formatLatency, formatMbps, formatPercent } from '../../lib/format';
 import { useSettingsStore } from '../../settings';
 import { useTelemetryStore } from '../../store';
 import { Card } from './Card';
@@ -27,6 +27,12 @@ export function NetworkCard() {
         <span data-testid="ping">
           <Num value={detail?.ping_ms} format={formatLatency} />
         </span>
+        {detail?.ping_jitter_ms != null && (
+          <span data-testid="ping-jitter">±{formatLatency(detail.ping_jitter_ms)}</span>
+        )}
+        {detail?.ping_loss_pct != null && (
+          <span data-testid="ping-loss">{formatPercent(detail.ping_loss_pct)} loss</span>
+        )}
       </span>
     </Tip>
   ) : null;
@@ -53,6 +59,35 @@ export function NetworkCard() {
               {index === 0 && ping}
             </div>
           ))}
+          {detail.wifi && (
+            <div
+              data-testid="wifi"
+              className="flex items-center gap-1 text-[10px] text-island-muted"
+            >
+              <Wifi size={10} aria-hidden />
+              <span className="min-w-0 truncate text-island-text">{detail.wifi.ssid}</span>
+              <span className="tabular-nums">
+                {formatPercent(detail.wifi.signal_pct)}
+                {detail.wifi.link_mbps != null && ` · ${formatMbps(detail.wifi.link_mbps)}`}
+              </span>
+            </div>
+          )}
+          {(detail.data_today_bytes != null || detail.data_month_bytes != null) && (
+            <div className="flex items-center gap-1.5 text-[10px] text-island-muted tabular-nums">
+              <span data-testid="data-usage">
+                Today {formatBytes(detail.data_today_bytes)} · This month{' '}
+                {formatBytes(detail.data_month_bytes)}
+              </span>
+              {detail.metered === true && (
+                <span
+                  data-testid="metered"
+                  className="shrink-0 rounded-full bg-island-warn/20 px-1.5 text-[9px] text-island-warn"
+                >
+                  Metered
+                </span>
+              )}
+            </div>
+          )}
           {detail.public_ip && (
             <div className="flex items-center gap-1 pt-0.5 text-[10px] text-island-muted">
               <Globe size={10} aria-hidden />

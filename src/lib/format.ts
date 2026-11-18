@@ -86,3 +86,24 @@ export function formatDuration(secs: number | null | undefined): string {
   const m = minutes % 60;
   return h > 0 ? `${h}h ${String(m).padStart(2, '0')}m` : `${m}m`;
 }
+
+/** Seconds -> "3d 4h 12m"; leading zero units are dropped. */
+export function formatUptime(secs: number | null | undefined): string {
+  if (secs == null || !Number.isFinite(secs) || secs < 0) return '--';
+  const minutes = Math.floor(secs / 60);
+  const d = Math.floor(minutes / 1440);
+  const h = Math.floor((minutes % 1440) / 60);
+  const m = minutes % 60;
+  return d > 0 ? `${d}d ${h}h ${m}m` : h > 0 ? `${h}h ${m}m` : `${m}m`;
+}
+
+export function formatMbps(mbps: number | null | undefined): string {
+  if (mbps == null || !Number.isFinite(mbps) || mbps < 0) return '--';
+  return `${Math.round(mbps)} Mbps`;
+}
+
+/** Watt-hours: "12.3 Wh", whole numbers from 100 up. */
+export function formatEnergy(wh: number | null | undefined): string {
+  if (wh == null || !Number.isFinite(wh) || wh < 0) return '--';
+  return `${wh >= 100 ? Math.round(wh) : wh.toFixed(1)} Wh`;
+}
