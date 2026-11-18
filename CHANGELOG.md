@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-18
+
+### Added
+
+- Add **Open delay** and **Close delay** settings: a short wait before the dashboard opens and before it closes, so passing the cursor near the top of the screen does not open it by accident. Defaults are 150 ms and 250 ms.
+- Add a **Pill rings** setting to choose which rings show on the pill and in what order, for example only CPU and RAM.
+- Add **Numbers on pill** (off by default): a tiny % or °C next to each ring.
+- Add **Dodge browser tabs** (on by default): while a browser's tabs are under the cursor, the pill fades and waits a second before opening.
+- The tray tooltip shows live CPU, memory, GPU and disk values.
+- Add an **Open in a window** button (between pin and appearance) that detaches the dashboard into a resizable, always-on-top window.
+
 ### Removed
 
 - Remove the pointer-following spotlight on cards.
