@@ -134,5 +134,12 @@ Requires a supported ASUS laptop. Config > Fan mode switches between Silent, Per
 Turbo through the same ASUS firmware interface as the other ASUS controls. The firmware does not
 report the current mode, so the card highlights the mode last set from Omniscience.
 
+## Startup apps
+
+Requires Windows. Config > Startup apps lists what starts with Windows: the per-user and
+all-users Run entries and the shortcuts in your Startup folder. Turning an entry off records the
+same disabled state Task Manager uses; the entry itself is never deleted, so it can be turned back
+on here or in Task Manager. All-users entries need administrator rights and are shown read-only.
+
 The update query uses Microsoft's
 [Windows Update Agent search API](https://learn.microsoft.com/en-us/windows/win32/api/wuapi/nf-wuapi-iupdatesearcher-search).

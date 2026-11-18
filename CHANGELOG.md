@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-11-18
+
 ### Added
 
 - Right-click a process for a menu: open file location, copy path or command line, set priority, Efficiency mode, suspend or resume, and end the whole process tree.
