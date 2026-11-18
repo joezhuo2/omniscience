@@ -50,6 +50,7 @@ struct Detail {
     #[cfg(windows)]
     fans: super::fans::FanSource,
     battery: battery::Devices,
+    slow: super::slow::SlowProbe,
     pinger: Option<Pinger>,
     /// `Some` while the processes section is open.
     procs: Option<Procs>,
@@ -266,6 +267,7 @@ impl Sampler {
             #[cfg(windows)]
             fans: super::fans::FanSource::start(),
             battery: battery::Devices::find(),
+            slow: super::slow::SlowProbe::start(),
             pinger: None,
             procs: None,
             warm: false,
@@ -348,6 +350,8 @@ impl Sampler {
             processes::groups(&list, cpus)
         });
 
+        let slow = detail.slow.latest();
+
         #[cfg(windows)]
         let fans = detail.fans.latest();
         #[cfg(not(windows))]
@@ -369,6 +373,19 @@ impl Sampler {
             battery: battery::estimate(&detail.battery.read()),
             fans,
             processes: groups,
+            drives: Vec::new(),
+            disks: slow.disks,
+            wifi: None,
+            ping_jitter_ms: None,
+            ping_loss_pct: None,
+            data_today_bytes: None,
+            data_month_bytes: None,
+            metered: slow.metered,
+            memory: None,
+            boot_ms: None,
+            power_events: slow.power_events,
+            bluetooth: slow.bluetooth,
+            energy_today_wh: None,
         })
     }
 }
@@ -618,6 +635,10 @@ mod win {
                     temp_c: perf.temp_c,
                     fan_rpm: perf.fan_rpm,
                     throttling: perf.throttling,
+                    core_clock_mhz: None,
+                    mem_clock_mhz: None,
+                    encode_pct: None,
+                    decode_pct: None,
                 }
             })
             .collect();

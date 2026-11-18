@@ -47,6 +47,8 @@ pub struct Settings {
     pub pill_rings: Vec<String>,
     pub pill_numbers: PillNumbers,
     pub dodge_browser_tabs: bool,
+    pub energy_price_per_kwh: f32,
+    pub energy_currency: String,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
@@ -85,6 +87,8 @@ impl Default for Settings {
             pill_rings: RING_KEYS.iter().map(|k| k.to_string()).collect(),
             pill_numbers: PillNumbers::Off,
             dodge_browser_tabs: true,
+            energy_price_per_kwh: 0.0,
+            energy_currency: "$".into(),
         }
     }
 }
@@ -120,6 +124,11 @@ impl Settings {
         self.ping_target = self.ping_target.trim().chars().take(253).collect();
         self.hover_open_delay_ms = self.hover_open_delay_ms.min(MAX_HOVER_DELAY_MS);
         self.hover_close_delay_ms = self.hover_close_delay_ms.min(MAX_HOVER_DELAY_MS);
+        if !self.energy_price_per_kwh.is_finite() {
+            self.energy_price_per_kwh = 0.0;
+        }
+        self.energy_price_per_kwh = self.energy_price_per_kwh.clamp(0.0, 1000.0);
+        self.energy_currency = self.energy_currency.trim().chars().take(4).collect();
         let mut rings: Vec<String> = Vec::new();
         for key in &self.pill_rings {
             if RING_KEYS.contains(&key.as_str()) && !rings.contains(key) {
