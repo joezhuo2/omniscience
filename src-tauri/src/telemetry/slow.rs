@@ -2,6 +2,7 @@
 use super::types::PowerEventKind;
 use super::types::{PhysicalDisk, PowerEvent};
 
+#[cfg(any(windows, test))]
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct SlowData {
     pub disks: Vec<PhysicalDisk>,

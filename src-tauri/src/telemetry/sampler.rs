@@ -25,6 +25,7 @@ const NET_WINDOW: usize = 60;
 const NET_FLOOR_BPS: f64 = 1_000_000.0;
 
 /// While collapsed, GPU engine counters (hundreds of instances) are read one tick in this many.
+#[cfg(windows)]
 const GPU_EVERY_COLLAPSED: u32 = 3;
 /// Drive space for a collapsed Drives card's summary is re-read one tick in this many.
 const DRIVES_EVERY_COLLAPSED: u32 = 10;
@@ -83,6 +84,7 @@ impl Sections {
 }
 
 /// Creates `slot` while `on`, drops it while off.
+#[cfg(windows)]
 fn keep<T>(slot: &mut Option<T>, on: bool, make: impl FnOnce() -> Option<T>) {
     if !on {
         *slot = None;
