@@ -101,7 +101,7 @@ pub fn run() {
             commands::suspend_processes,
             commands::resume_processes,
             commands::kill_process_tree,
-            commands::set_process_sampling,
+            commands::set_sampled_sections,
             commands::open_widget,
             commands::set_widget_active,
             commands::get_settings,
@@ -151,7 +151,7 @@ pub fn run() {
         .on_window_event(|window, event| {
             if matches!(event, tauri::WindowEvent::Destroyed) && window.label() == "widget" {
                 let telemetry = window.app_handle().state::<Arc<telemetry::Telemetry>>();
-                telemetry.set_process_viewer("widget", false);
+                telemetry.set_sampled_sections("widget", Vec::new());
                 telemetry.update(|c| c.widget = false);
             }
             if let (tauri::WindowEvent::Moved(pos), Some(main)) =

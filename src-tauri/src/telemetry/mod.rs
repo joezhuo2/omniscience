@@ -3,6 +3,8 @@
 
 mod alerts;
 mod battery;
+mod bluetooth;
+mod cached;
 mod drives;
 mod events;
 pub mod export;
@@ -30,7 +32,7 @@ mod wifi;
 #[cfg(windows)]
 mod windows;
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::panic::AssertUnwindSafe;
 use std::path::Path;
 use std::sync::{Arc, Condvar, Mutex};
@@ -50,8 +52,8 @@ pub const TICK_EVENT: &str = "telemetry://tick";
 pub struct Control {
     pub expanded: bool,
     pub visible: bool,
-    /// Whether the processes section is open, so the process list is sampled.
-    pub processes: bool,
+    /// Dashboard sections open in some window, so their data is sampled.
+    pub sections: sampler::Sections,
     pub interval: Duration,
     pub thresholds: MetricLimits,
     /// Host to ping while expanded; empty for none.
@@ -71,7 +73,7 @@ impl Default for Control {
         Self {
             expanded: false,
             visible: true,
-            processes: true,
+            sections: sampler::Sections::default(),
             interval: Duration::from_secs(1),
             thresholds: MetricLimits::default(),
             ping_target: "".into(),
@@ -93,22 +95,27 @@ pub struct Telemetry {
     history: Mutex<History>,
     events: Mutex<EventLog>,
     usage: Mutex<usage::Usage>,
-    process_viewers: Mutex<HashSet<String>>,
+    /// Open dashboard sections, per window label.
+    section_viewers: Mutex<HashMap<String, HashSet<String>>>,
 }
 
 impl Telemetry {
-    pub fn set_process_viewer(&self, label: &str, enabled: bool) {
+    /// Replaces the open dashboard sections of window `label`; wakes the collector only on change.
+    pub fn set_sampled_sections(&self, label: &str, sections: Vec<String>) {
         let mut viewers = self
-            .process_viewers
+            .section_viewers
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        if enabled {
-            viewers.insert(label.to_owned());
-        } else {
+        if sections.is_empty() {
             viewers.remove(label);
+        } else {
+            viewers.insert(label.to_owned(), sections.into_iter().collect());
         }
-        let any = !viewers.is_empty();
-        self.update(|c| c.processes = any);
+        let open = sampler::Sections::from_ids(viewers.values().flatten().map(String::as_str));
+        drop(viewers);
+        if self.peek(|c| c.sections) != open {
+            self.update(|c| c.sections = open);
+        }
     }
 
     pub fn new(control: Control) -> Arc<Self> {
@@ -119,7 +126,7 @@ impl Telemetry {
             history: Mutex::new(History::default()),
             events: Mutex::new(EventLog::default()),
             usage: Mutex::new(usage::Usage::open(None)),
-            process_viewers: Mutex::new(HashSet::new()),
+            section_viewers: Mutex::new(HashMap::new()),
         })
     }
 
@@ -161,6 +168,11 @@ impl Telemetry {
             .lock()
             .unwrap_or_else(|e| e.into_inner())
             .clone()
+    }
+
+    /// Reads part of the control state without cloning all of it.
+    pub fn peek<R>(&self, f: impl FnOnce(&Control) -> R) -> R {
+        f(&self.control.lock().unwrap_or_else(|e| e.into_inner()))
     }
 
     pub fn control(&self) -> Control {
@@ -213,7 +225,7 @@ impl Telemetry {
             let mut snapshot = sampler.sample(
                 control.thresholds,
                 control.expanded || control.widget,
-                control.processes,
+                control.sections,
             );
             {
                 let mut usage = self.usage.lock().unwrap_or_else(|e| e.into_inner());

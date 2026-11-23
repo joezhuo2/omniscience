@@ -65,14 +65,14 @@ pub fn set_overlay_height(
         .map_err(|e| e.to_string())
 }
 
-/// Turns process-list sampling on while the processes section is open and visible.
+/// The dashboard sections open and visible in the calling window; only their data is sampled.
 #[tauri::command]
-pub fn set_process_sampling(
-    enabled: bool,
+pub fn set_sampled_sections(
+    sections: Vec<String>,
     window: tauri::Window,
     telemetry: State<'_, Arc<Telemetry>>,
 ) {
-    telemetry.set_process_viewer(window.label(), enabled);
+    telemetry.set_sampled_sections(window.label(), sections);
 }
 
 #[cfg(feature = "standalone")]

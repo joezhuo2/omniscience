@@ -72,6 +72,7 @@ windows-core = { version = "0.62", optional = true }
 windows-sys = { version = "0.61", features = [
   "Wdk_Graphics_Direct3D",
   "Win32_Devices_DeviceAndDriverInstallation",
+  "Win32_Devices_Properties",
   "Win32_Foundation",
   "Win32_NetworkManagement_IpHelper",
   "Win32_NetworkManagement_WiFi",
