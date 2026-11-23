@@ -11,13 +11,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add a local API (off by default): JSON at `/api/status` and Prometheus metrics at `/metrics` on `127.0.0.1`, plus a command line, `omniscience status`.
 - Add a phone view: with **Allow other devices on this network** on, open the address shown in settings on a phone or tablet on the same network to see live readings. Access needs the token in that address.
+- Add a Stream Deck plugin (in `integrations/streamdeck`) that shows readings on keys through the local API.
+
+## [0.11.0] - 2026-11-23
+
+### Added
+
 - Add MQTT publishing with Home Assistant discovery, so readings show up as sensors automatically.
 - Add custom cards: describe a card in a small JSON file and it appears on the dashboard, with values from the live readings or from a local JSON endpoint. See `docs/custom-cards.md`.
-- Add a Stream Deck plugin (in `integrations/streamdeck`) that shows readings on keys through the local API.
 
 ### Changed
 
 - Settings are grouped under headers, each with its own reset.
+- Dashboard cards collect their data only while they are open, so collapsed cards cost almost nothing. Disk health, Bluetooth batteries, sleep and wake history and the metered-connection check are kept between openings and refresh on their own slower schedule.
+- Numbers update instantly instead of counting up, which saves a full repaint every frame while the dashboard is open.
+- Lower background CPU use while the overlay is collapsed.
+
+### Fixed
+
+- Disk health, Bluetooth batteries and sleep and wake history no longer take around 15 seconds to appear each time the dashboard opens, and no longer go missing when the first check runs slowly.
 
 ## [0.10.0] - 2026-11-18
 
