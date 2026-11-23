@@ -2,9 +2,23 @@ import { CSS } from '@dnd-kit/utilities';
 import { GlassAccordion, GlassAccordionItem } from '@crystalflux/accordion-glass';
 import { GlassSwitch } from '@crystalflux/switch-glass';
 import { useSectionDrag } from './SectionDragContext';
-import { useCallback, useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react';
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type MouseEvent,
+  type ReactNode,
+} from 'react';
+import { useSampling } from '../../hooks/useSampling';
+import { InfoTabVisible } from './infoTabContext';
 import { useSectionToggle } from '../config/sectionToggleContext';
-import { readSectionCollapsed, saveSectionCollapsed, type CardSectionId } from '../../lib/sections';
+import {
+  DEFAULT_SECTION_ORDER,
+  readSectionCollapsed,
+  saveSectionCollapsed,
+} from '../../lib/sections';
 
 const INTERACTIVE =
   'button, a, input, select, textarea, label, [role=slider], [role=tab], [contenteditable], [data-no-drag]';
@@ -16,14 +30,17 @@ export function Card({
   aside,
   summary,
   onOpenChange,
+  samples,
   children,
 }: {
   title: string;
-  section?: CardSectionId;
+  section?: string;
   aside?: ReactNode;
   summary?: ReactNode;
   /** Called with whether the card's content is shown, on mount and on every change. */
   onOpenChange?: (open: boolean) => void;
+  /** Backend sections to collect while the card is open; defaults to `section`. */
+  samples?: readonly string[];
   children: ReactNode;
 }) {
   const power = useSectionToggle();
@@ -52,6 +69,9 @@ export function Card({
   }, [isDragging]);
   const open = !off && (!section || !collapsed);
   useEffect(() => onOpenChange?.(open), [open, onOpenChange]);
+  const infoVisible = useContext(InfoTabVisible);
+  const dashboard = (DEFAULT_SECTION_ORDER as readonly string[]).includes(section ?? '');
+  useSampling(samples ?? (dashboard && section ? [section] : []), open && infoVisible);
   const setOpen = (open: boolean) => {
     setCollapsed(!open);
     if (section) saveSectionCollapsed(section, !open);

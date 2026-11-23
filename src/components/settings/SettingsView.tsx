@@ -11,7 +11,8 @@ import { useSettingsStore, type Settings } from '../../settings';
 import { useToastStore } from '../../toasts';
 import { Toasts } from '../dashboard/Toasts';
 import { AlertsSettings } from './AlertsSettings';
-import { BackupSettings, MetricThresholdsSettings, ResetSettings } from './SettingsTools';
+import { BackupSettings, MetricThresholdsSettings, ResetGroup } from './SettingsTools';
+import { IntegrationsSettings } from './IntegrationsSettings';
 import { IslandImageField } from './IslandImageField';
 import { Segmented } from '../Segmented';
 import { useGlass } from '../../lib/glass';
@@ -42,6 +43,25 @@ const NET_UNITS: { value: Settings['net_unit']; label: string }[] = [
   { value: 'bytes', label: 'Bytes' },
   { value: 'bits', label: 'Bits' },
 ];
+
+const button =
+  'rounded border border-island-faint px-2 py-0.5 text-[10px] text-island-text hover:border-island-muted';
+
+function Group({ title, reset, children }: { title: string; reset?: string; children: ReactNode }) {
+  return (
+    <section>
+      <div className="flex h-6 items-center justify-between px-1">
+        <h2 className="text-[10px] font-semibold tracking-wide text-island-muted uppercase">
+          {title}
+        </h2>
+        {reset && <ResetGroup id={reset} />}
+      </div>
+      <div className="divide-y divide-island-faint rounded-xl border border-island-faint bg-island-hover px-3">
+        {children}
+      </div>
+    </section>
+  );
+}
 
 export function Row({
   label,
@@ -84,24 +104,28 @@ export function Toggle({
 
 /** Number input that commits on blur or Enter, so typing "85" does not apply "8" first. */
 /** Free-text field committed on blur or Enter. Remount (via `key`) to reset the draft. */
-function TextInput({
+export function TextInput({
   value,
   label,
   placeholder,
+  type,
   onCommit,
 }: {
   value: string;
   label: string;
   placeholder?: string;
+  type?: 'password';
   onCommit: (v: string) => void;
 }) {
   const [draft, setDraft] = useState(value);
   const commit = () => {
-    if (draft.trim() !== value) onCommit(draft.trim());
+    const next = type === 'password' ? draft : draft.trim();
+    if (next !== value) onCommit(next);
   };
   return (
     <input
       aria-label={label}
+      type={type}
       value={draft}
       placeholder={placeholder}
       spellCheck={false}
@@ -319,132 +343,9 @@ export function SettingsView({ onBack }: { onBack: () => void }) {
       {!settings ? (
         <p className="py-4 text-center text-[11px] text-island-muted">Loading…</p>
       ) : (
-        <div className="divide-y divide-island-faint rounded-xl border border-island-faint bg-island-hover px-3">
-          <Row label="Warning above">
-            <ThresholdInput
-              key={`warn-${settings.warn_threshold}`}
-              label="Warning threshold"
-              value={settings.warn_threshold}
-              onCommit={(v) => set({ warn_threshold: v })}
-            />
-          </Row>
-          <Row label="Critical above">
-            <ThresholdInput
-              key={`crit-${settings.crit_threshold}`}
-              label="Critical threshold"
-              value={settings.crit_threshold}
-              onCommit={(v) => set({ crit_threshold: v })}
-            />
-          </Row>
-          <Row label="CPU temp warning above">
-            <ThresholdInput
-              key={`cpu-warn-${settings.cpu_temp_warn_c}-${tempSymbol()}`}
-              label="CPU temperature warning"
-              value={tempValue(settings.cpu_temp_warn_c)}
-              min={tempValue(30)}
-              max={tempValue(109)}
-              unit={tempSymbol()}
-              onCommit={(v) => set({ cpu_temp_warn_c: tempFromDisplay(v) })}
-            />
-          </Row>
-          <Row label="CPU temp critical above">
-            <ThresholdInput
-              key={`cpu-crit-${settings.cpu_temp_crit_c}-${tempSymbol()}`}
-              label="CPU temperature critical"
-              value={tempValue(settings.cpu_temp_crit_c)}
-              min={tempValue(31)}
-              max={tempValue(110)}
-              unit={tempSymbol()}
-              onCommit={(v) => set({ cpu_temp_crit_c: tempFromDisplay(v) })}
-            />
-          </Row>
-          <MetricThresholdsSettings settings={settings} set={set} />
-          <Row label="Open delay">
-            <ThresholdInput
-              key={`open-${settings.hover_open_delay_ms}`}
-              label="Open delay"
-              value={settings.hover_open_delay_ms}
-              min={0}
-              max={2000}
-              step={50}
-              unit="ms"
-              onCommit={(v) => set({ hover_open_delay_ms: v })}
-            />
-          </Row>
-          <Row label="Close delay">
-            <ThresholdInput
-              key={`close-${settings.hover_close_delay_ms}`}
-              label="Close delay"
-              value={settings.hover_close_delay_ms}
-              min={0}
-              max={2000}
-              step={50}
-              unit="ms"
-              onCommit={(v) => set({ hover_close_delay_ms: v })}
-            />
-          </Row>
+        <div className="flex flex-col gap-3">
           {standalone && (
-            <>
-              <Row
-                label="Dodge browser tabs"
-                hint="Fades the pill and waits a second before opening while a browser's tabs are under the cursor."
-              >
-                <Toggle
-                  label="Dodge browser tabs"
-                  checked={settings.dodge_browser_tabs}
-                  onChange={(v) => set({ dodge_browser_tabs: v })}
-                />
-              </Row>
-              <Row label="Pill rings">
-                <PillRings
-                  value={settings.pill_rings}
-                  onChange={(pill_rings) => set({ pill_rings })}
-                />
-              </Row>
-              <Row label="Numbers on pill">
-                <Segmented
-                  label="Numbers on pill"
-                  items={pillNumbers()}
-                  value={settings.pill_numbers}
-                  onChange={(pill_numbers) => set({ pill_numbers })}
-                />
-              </Row>
-            </>
-          )}
-          <Row label="Update every">
-            <Segmented
-              label="Update interval"
-              items={INTERVALS.map((ms) => ({ value: ms, label: `${ms / 1000} s` }))}
-              value={settings.poll_interval_ms}
-              onChange={(ms) => set({ poll_interval_ms: ms })}
-            />
-          </Row>
-          <Row label="Keep history for">
-            <Segmented
-              label="History retention"
-              items={RANGES.map(({ label, hours }) => ({ value: hours, label }))}
-              value={settings.history_hours}
-              onChange={(hours) => set({ history_hours: hours })}
-            />
-          </Row>
-          <Row label="Glass cards" hint="Translucent cards that show the island image through.">
-            <Toggle label="Glass cards" checked={glass} onChange={setGlass} />
-          </Row>
-          {glass && (
-            <Row label={`Glass opacity ${glassOpacity}%`}>
-              <SmoothRange
-                aria-label="Glass opacity"
-                className="w-28"
-                min={20}
-                max={95}
-                step={5}
-                value={glassOpacity}
-                onValue={setGlassOpacity}
-              />
-            </Row>
-          )}
-          {standalone && (
-            <>
+            <Group title="General">
               <Row label="Show/hide hotkey">
                 <HotkeyRecorder value={settings.hotkey} onChange={(hotkey) => set({ hotkey })} />
               </Row>
@@ -469,77 +370,225 @@ export function SettingsView({ onBack }: { onBack: () => void }) {
                   onChange={(v) => set({ hide_over_fullscreen: v })}
                 />
               </Row>
-            </>
+              <Row label="Position">
+                <FeedbackButton
+                  action={() => invoke('reset_position')}
+                  done="Moved"
+                  className={button}
+                >
+                  Reset to top center
+                </FeedbackButton>
+              </Row>
+              <Row label="Island image" hint="Background for the island. Blank when none is set.">
+                <IslandImageField />
+              </Row>
+            </Group>
           )}
-          <Row label="Temperature unit">
-            <Segmented
-              label="Temperature unit"
-              items={TEMP_UNITS}
-              value={settings.temp_unit}
-              onChange={(temp_unit) => set({ temp_unit })}
-            />
-          </Row>
-          <Row label="Network speed unit">
-            <Segmented
-              label="Network speed unit"
-              items={NET_UNITS}
-              value={settings.net_unit}
-              onChange={(net_unit) => set({ net_unit })}
-            />
-          </Row>
-          <Row label="Ping target">
-            <TextInput
-              key={`ping-${settings.ping_target}`}
-              label="Ping target"
-              placeholder="Off"
-              value={settings.ping_target}
-              onCommit={(v) => set({ ping_target: v })}
-            />
-          </Row>
-          <Row
-            label="Energy price per kWh"
-            hint="Shows a cost estimate next to today's energy. 0 turns it off."
-          >
-            <TextInput
-              key={`price-${settings.energy_price_per_kwh}`}
-              label="Energy price per kWh"
-              value={String(settings.energy_price_per_kwh)}
-              onCommit={(v) => {
-                const n = Number(v.replace(',', '.'));
-                if (v !== '' && Number.isFinite(n) && n >= 0) set({ energy_price_per_kwh: n });
-              }}
-            />
-          </Row>
-          {settings.energy_price_per_kwh > 0 && (
-            <Row label="Currency symbol">
-              <TextInput
-                key={`currency-${settings.energy_currency}`}
-                label="Currency symbol"
-                value={settings.energy_currency}
-                onCommit={(v) => set({ energy_currency: v })}
+          <Group title="Island and pill" reset="island">
+            <Row label="Open delay">
+              <ThresholdInput
+                key={`open-${settings.hover_open_delay_ms}`}
+                label="Open delay"
+                value={settings.hover_open_delay_ms}
+                min={0}
+                max={2000}
+                step={50}
+                unit="ms"
+                onCommit={(v) => set({ hover_open_delay_ms: v })}
               />
             </Row>
-          )}
-          <Row label="Show public IP (asks OpenDNS)">
-            <Toggle
-              label="Show public IP"
-              checked={settings.show_public_ip}
-              onChange={(v) => set({ show_public_ip: v })}
-            />
-          </Row>
-          <AlertsSettings settings={settings} set={set} />
-          <Row
-            label="Sensor details"
-            hint="Shows each reading's source, age and whether it is a proxy. Problems always show."
-          >
-            <Toggle
-              label="Show sensor details"
-              checked={settings.sensor_details}
-              onChange={(v) => set({ sensor_details: v })}
-            />
-          </Row>
+            <Row label="Close delay">
+              <ThresholdInput
+                key={`close-${settings.hover_close_delay_ms}`}
+                label="Close delay"
+                value={settings.hover_close_delay_ms}
+                min={0}
+                max={2000}
+                step={50}
+                unit="ms"
+                onCommit={(v) => set({ hover_close_delay_ms: v })}
+              />
+            </Row>
+            {standalone && (
+              <>
+                <Row
+                  label="Dodge browser tabs"
+                  hint="Fades the pill and waits a second before opening while a browser's tabs are under the cursor."
+                >
+                  <Toggle
+                    label="Dodge browser tabs"
+                    checked={settings.dodge_browser_tabs}
+                    onChange={(v) => set({ dodge_browser_tabs: v })}
+                  />
+                </Row>
+                <Row label="Pill rings">
+                  <PillRings
+                    value={settings.pill_rings}
+                    onChange={(pill_rings) => set({ pill_rings })}
+                  />
+                </Row>
+                <Row label="Numbers on pill">
+                  <Segmented
+                    label="Numbers on pill"
+                    items={pillNumbers()}
+                    value={settings.pill_numbers}
+                    onChange={(pill_numbers) => set({ pill_numbers })}
+                  />
+                </Row>
+              </>
+            )}
+            <Row label="Glass cards" hint="Translucent cards that show the island image through.">
+              <Toggle label="Glass cards" checked={glass} onChange={setGlass} />
+            </Row>
+            {glass && (
+              <Row label={`Glass opacity ${glassOpacity}%`}>
+                <SmoothRange
+                  aria-label="Glass opacity"
+                  className="w-28"
+                  min={20}
+                  max={95}
+                  step={5}
+                  value={glassOpacity}
+                  onValue={setGlassOpacity}
+                />
+              </Row>
+            )}
+          </Group>
+          <Group title="Thresholds and units" reset="thresholds">
+            <Row label="Warning above">
+              <ThresholdInput
+                key={`warn-${settings.warn_threshold}`}
+                label="Warning threshold"
+                value={settings.warn_threshold}
+                onCommit={(v) => set({ warn_threshold: v })}
+              />
+            </Row>
+            <Row label="Critical above">
+              <ThresholdInput
+                key={`crit-${settings.crit_threshold}`}
+                label="Critical threshold"
+                value={settings.crit_threshold}
+                onCommit={(v) => set({ crit_threshold: v })}
+              />
+            </Row>
+            <Row label="CPU temp warning above">
+              <ThresholdInput
+                key={`cpu-warn-${settings.cpu_temp_warn_c}-${tempSymbol()}`}
+                label="CPU temperature warning"
+                value={tempValue(settings.cpu_temp_warn_c)}
+                min={tempValue(30)}
+                max={tempValue(109)}
+                unit={tempSymbol()}
+                onCommit={(v) => set({ cpu_temp_warn_c: tempFromDisplay(v) })}
+              />
+            </Row>
+            <Row label="CPU temp critical above">
+              <ThresholdInput
+                key={`cpu-crit-${settings.cpu_temp_crit_c}-${tempSymbol()}`}
+                label="CPU temperature critical"
+                value={tempValue(settings.cpu_temp_crit_c)}
+                min={tempValue(31)}
+                max={tempValue(110)}
+                unit={tempSymbol()}
+                onCommit={(v) => set({ cpu_temp_crit_c: tempFromDisplay(v) })}
+              />
+            </Row>
+            <MetricThresholdsSettings settings={settings} set={set} />
+            <Row label="Temperature unit">
+              <Segmented
+                label="Temperature unit"
+                items={TEMP_UNITS}
+                value={settings.temp_unit}
+                onChange={(temp_unit) => set({ temp_unit })}
+              />
+            </Row>
+            <Row label="Network speed unit">
+              <Segmented
+                label="Network speed unit"
+                items={NET_UNITS}
+                value={settings.net_unit}
+                onChange={(net_unit) => set({ net_unit })}
+              />
+            </Row>
+          </Group>
+          <Group title="Monitoring" reset="monitoring">
+            <Row label="Update every">
+              <Segmented
+                label="Update interval"
+                items={INTERVALS.map((ms) => ({ value: ms, label: `${ms / 1000} s` }))}
+                value={settings.poll_interval_ms}
+                onChange={(ms) => set({ poll_interval_ms: ms })}
+              />
+            </Row>
+            <Row label="Keep history for">
+              <Segmented
+                label="History retention"
+                items={RANGES.map(({ label, hours }) => ({ value: hours, label }))}
+                value={settings.history_hours}
+                onChange={(hours) => set({ history_hours: hours })}
+              />
+            </Row>
+            <Row label="Ping target">
+              <TextInput
+                key={`ping-${settings.ping_target}`}
+                label="Ping target"
+                placeholder="Off"
+                value={settings.ping_target}
+                onCommit={(v) => set({ ping_target: v })}
+              />
+            </Row>
+            <Row label="Show public IP (asks OpenDNS)">
+              <Toggle
+                label="Show public IP"
+                checked={settings.show_public_ip}
+                onChange={(v) => set({ show_public_ip: v })}
+              />
+            </Row>
+            <Row
+              label="Sensor details"
+              hint="Shows each reading's source, age and whether it is a proxy. Problems always show."
+            >
+              <Toggle
+                label="Show sensor details"
+                checked={settings.sensor_details}
+                onChange={(v) => set({ sensor_details: v })}
+              />
+            </Row>
+            <Row
+              label="Energy price per kWh"
+              hint="Shows a cost estimate next to today's energy. 0 turns it off."
+            >
+              <TextInput
+                key={`price-${settings.energy_price_per_kwh}`}
+                label="Energy price per kWh"
+                value={String(settings.energy_price_per_kwh)}
+                onCommit={(v) => {
+                  const n = Number(v.replace(',', '.'));
+                  if (v !== '' && Number.isFinite(n) && n >= 0) set({ energy_price_per_kwh: n });
+                }}
+              />
+            </Row>
+            {settings.energy_price_per_kwh > 0 && (
+              <Row label="Currency symbol">
+                <TextInput
+                  key={`currency-${settings.energy_currency}`}
+                  label="Currency symbol"
+                  value={settings.energy_currency}
+                  onCommit={(v) => set({ energy_currency: v })}
+                />
+              </Row>
+            )}
+          </Group>
+          <Group title="Alerts" reset="alerts">
+            <AlertsSettings settings={settings} set={set} />
+          </Group>
           {standalone && (
-            <>
+            <Group title="Integrations" reset="integrations">
+              <IntegrationsSettings settings={settings} set={set} />
+            </Group>
+          )}
+          {standalone && (
+            <Group title="System config" reset="profiles">
               <Row
                 label="System config (GPU, power, display)"
                 hint="Adds the Config tab, which changes hardware settings."
@@ -550,49 +599,30 @@ export function SettingsView({ onBack }: { onBack: () => void }) {
                   onChange={(v) => set({ config_enabled: v })}
                 />
               </Row>
-              <Row label="Island image" hint="Background for the island. Blank when none is set.">
-                <IslandImageField />
-              </Row>
-              <Row label="Position">
-                <FeedbackButton
-                  action={() => invoke('reset_position')}
-                  done="Moved"
-                  className="rounded border border-island-faint px-2 py-0.5 text-[10px] text-island-text hover:border-island-muted"
-                >
-                  Reset to top center
-                </FeedbackButton>
-              </Row>
-            </>
+            </Group>
           )}
-          <Row
-            label="Diagnostic report"
-            hint="App version, sensor and control availability, recent errors. Telemetry leaves out process names and IP addresses."
-          >
-            <div className="flex shrink-0 flex-col items-end gap-1.5">
-              <GlassCheckbox
-                className="text-[10px] text-island-muted"
-                checked={includeTelemetry}
-                onChange={setIncludeTelemetry}
-                label="Include telemetry"
-              />
-              <FeedbackButton
-                action={copyReport}
-                done="Copied"
-                className="rounded border border-island-faint px-2 py-0.5 text-[10px] text-island-text hover:border-island-muted"
-              >
-                Copy diagnostic report
-              </FeedbackButton>
-              <FeedbackButton
-                action={copySummary}
-                done="Copied"
-                className="rounded border border-island-faint px-2 py-0.5 text-[10px] text-island-text hover:border-island-muted"
-              >
-                Copy system summary
-              </FeedbackButton>
-            </div>
-          </Row>
-          <BackupSettings />
-          <ResetSettings />
+          <Group title="Data and support">
+            <BackupSettings />
+            <Row
+              label="Diagnostic report"
+              hint="App version, sensor and control availability, recent errors. Telemetry leaves out process names and IP addresses."
+            >
+              <div className="flex shrink-0 flex-col items-end gap-1.5">
+                <GlassCheckbox
+                  className="text-[10px] text-island-muted"
+                  checked={includeTelemetry}
+                  onChange={setIncludeTelemetry}
+                  label="Include telemetry"
+                />
+                <FeedbackButton action={copyReport} done="Copied" className={button}>
+                  Copy diagnostic report
+                </FeedbackButton>
+                <FeedbackButton action={copySummary} done="Copied" className={button}>
+                  Copy system summary
+                </FeedbackButton>
+              </div>
+            </Row>
+          </Group>
         </div>
       )}
       {error && <p className="pt-2 text-[11px] text-island-crit">{error}</p>}

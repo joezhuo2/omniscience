@@ -203,8 +203,10 @@ pub fn spawn(app: AppHandle) {
             let mut checked = Instant::now();
             let mut handle = 0;
             loop {
-                let control = app.state::<Arc<Telemetry>>().control();
-                if !control.visible {
+                let (visible, expanded, pill_w, dodge_tabs) = app
+                    .state::<Arc<Telemetry>>()
+                    .peek(|c| (c.visible, c.expanded, c.pill_w, c.dodge_tabs));
+                if !visible {
                     was_inside = false;
                     dodging = false;
                     std::thread::sleep(POLL_HIDDEN);
@@ -217,15 +219,8 @@ pub fn spawn(app: AppHandle) {
                 let Some(p) = probe(&win, &mut handle) else {
                     continue;
                 };
-                let now = inside(
-                    p.cursor,
-                    p.pos,
-                    p.size,
-                    p.scale,
-                    control.expanded,
-                    control.pill_w,
-                );
-                let dodge = if !(control.dodge_tabs && !control.expanded && now) {
+                let now = inside(p.cursor, p.pos, p.size, p.scale, expanded, pill_w);
+                let dodge = if !(dodge_tabs && !expanded && now) {
                     false
                 } else if !was_inside || checked.elapsed() >= DODGE_RECHECK {
                     checked = Instant::now();

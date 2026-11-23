@@ -49,7 +49,7 @@ commands![
     commands::get_history_events,
     commands::export_history,
     embed::set_active,
-    commands::set_process_sampling,
+    commands::set_sampled_sections,
 ];
 
 fn setup(app: &AppHandle) {
@@ -140,7 +140,7 @@ mod tests {
                 "get_history_events",
                 "export_history",
                 "set_active",
-                "set_process_sampling",
+                "set_sampled_sections",
             ]
         );
     }

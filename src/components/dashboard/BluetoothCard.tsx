@@ -8,15 +8,15 @@ import { Skeleton } from './Skeleton';
 const LOW_PCT = 20;
 
 export function BluetoothCard() {
-  const detail = useTelemetryStore((s) => s.snapshot?.detail);
-  if (detail && detail.bluetooth.length === 0) return null;
+  const devices = useTelemetryStore((s) => s.snapshot?.detail?.bluetooth);
+  if (devices?.length === 0) return null;
   return (
     <Card title="Bluetooth" section="bluetooth">
-      {!detail ? (
+      {!devices ? (
         <Skeleton className="h-6" />
       ) : (
         <div className="space-y-2">
-          {detail.bluetooth.map((d) => {
+          {devices.map((d) => {
             const low = d.percent <= LOW_PCT;
             return (
               <div key={d.name} data-testid="bluetooth-device" className="space-y-1">

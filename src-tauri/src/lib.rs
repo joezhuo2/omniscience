@@ -1,10 +1,14 @@
 #[cfg(feature = "standalone")]
 mod accent;
+#[cfg(feature = "standalone")]
+mod api_server;
 #[cfg(windows)]
 #[cfg_attr(not(feature = "standalone"), allow(dead_code))]
 mod asus;
 #[cfg(feature = "standalone")]
 mod battery_saver;
+#[cfg(feature = "standalone")]
+mod cards;
 #[cfg(feature = "standalone")]
 mod charge_limit;
 mod commands;
@@ -28,6 +32,8 @@ mod fullscreen;
 mod gpu_mode;
 #[cfg(feature = "standalone")]
 mod hover;
+#[cfg(feature = "standalone")]
+mod mqtt;
 #[cfg(feature = "standalone")]
 mod platform;
 #[cfg(feature = "standalone")]
@@ -95,7 +101,7 @@ pub fn run() {
             commands::suspend_processes,
             commands::resume_processes,
             commands::kill_process_tree,
-            commands::set_process_sampling,
+            commands::set_sampled_sections,
             commands::open_widget,
             commands::set_widget_active,
             commands::get_settings,
@@ -137,12 +143,15 @@ pub fn run() {
             display_toggles::set_night_light,
             display_toggles::set_brightness,
             startup_apps::get_startup_apps,
-            startup_apps::set_startup_app_enabled
+            startup_apps::set_startup_app_enabled,
+            cards::get_custom_cards,
+            cards::get_custom_card_data,
+            cards::open_custom_cards_folder
         ])
         .on_window_event(|window, event| {
             if matches!(event, tauri::WindowEvent::Destroyed) && window.label() == "widget" {
                 let telemetry = window.app_handle().state::<Arc<telemetry::Telemetry>>();
-                telemetry.set_process_viewer("widget", false);
+                telemetry.set_sampled_sections("widget", Vec::new());
                 telemetry.update(|c| c.widget = false);
             }
             if let (tauri::WindowEvent::Moved(pos), Some(main)) =

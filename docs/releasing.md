@@ -1,9 +1,13 @@
 # Releasing
 
-Releases are built by `.github/workflows/release.yml` when a `v*` tag is pushed. The workflow:
+Releases are made by `.github/workflows/release.yml` when a `v*` tag is pushed. The workflow:
 
-- builds the Windows installers (`.msi`, NSIS `.exe`) and a universal macOS `.dmg`;
-- signs the updater artifacts;
+- reuses the installers CI built for the tagged commit, when it is on `main`: every push to
+  `main` builds the signed Windows installers (`.msi`, NSIS `.exe`) and universal macOS `.dmg`
+  and keeps them as run artifacts for 30 days. If that CI run is still going, the release waits
+  for it;
+- otherwise (no successful `main` run for the commit, or its artifacts expired) builds and signs
+  them itself;
 - creates a **draft** GitHub Release with `latest.json` attached.
 
 ## One-time setup: updater signing key

@@ -4,9 +4,65 @@ on:
   push:
     tags: ['v*']
 
+env:
+  NOTES: See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/CHANGELOG.md) for what changed. Windows and macOS builds are not code-signed yet.
+
 jobs:
+  # Publishes the installers CI already built for this commit on main, when there are any.
+  reuse:
+    name: Reuse CI installers
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    outputs:
+      reused: ${{ steps.publish.outputs.reused }}
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+
+      - run: npm run version:check -- ${{ github.ref_name }}
+
+      - name: Download installers built for this commit
+        id: download
+        run: |
+          run=$(gh run list --workflow ci.yml --branch main --event push --commit "$GITHUB_SHA" \
+            --json databaseId --jq '.[0].databaseId // empty')
+          if [ -z "$run" ]; then echo "No CI run on main for $GITHUB_SHA; building instead."; exit 0; fi
+          # Waits if the run is still going; fails if it did not succeed.
+          if ! gh run watch "$run" --exit-status > /dev/null; then
+            echo "CI run $run did not succeed; building instead."; exit 0
+          fi
+          if ! gh run download "$run" --pattern 'installers-*' --dir installers; then
+            echo "CI run $run has no installers; building instead."; exit 0
+          fi
+          echo found=true >> "$GITHUB_OUTPUT"
+
+      - name: Publish the draft release
+        id: publish
+        if: steps.download.outputs.found == 'true'
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          mkdir assets
+          find installers -type f -exec cp {} assets/ \;
+          # tauri-action's name for the macOS updater bundle.
+          for f in assets/Omniscience.app.tar.gz*; do mv "$f" "${f/Omniscience.app/Omniscience_universal.app}"; done
+          ls assets | grep -q "_${version}_" || { echo "Installers are not version $version"; exit 1; }
+          node scripts/updater-json.mjs assets "$version" "$GITHUB_REPOSITORY" "$NOTES" > latest.json
+          gh release create "$GITHUB_REF_NAME" assets/* latest.json --draft --verify-tag \
+            --title "Omniscience v$version" --notes "$NOTES"
+          echo reused=true >> "$GITHUB_OUTPUT"
+
   release:
     name: Release (${{ matrix.platform }})
+    needs: reuse
+    if: ${{ !cancelled() && needs.reuse.outputs.reused != 'true' }}
     permissions:
       contents: write
     strategy:
@@ -45,7 +101,7 @@ jobs:
         with:
           tagName: v__VERSION__
           releaseName: Omniscience v__VERSION__
-          releaseBody: See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/CHANGELOG.md) for what changed. Windows and macOS builds are not code-signed yet.
+          releaseBody: ${{ env.NOTES }}
           releaseDraft: true
           prerelease: false
           includeUpdaterJson: true

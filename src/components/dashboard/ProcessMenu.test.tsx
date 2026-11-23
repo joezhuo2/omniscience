@@ -30,7 +30,7 @@ describe('process menu', () => {
     mockIPC((cmd, args) => {
       calls.push({ cmd, args });
       if (cmd === 'process_details') return { ...details, suspended };
-      return cmd === 'open_process_location' ? null : results;
+      return cmd === 'open_process_location' || cmd === 'get_custom_cards' ? null : results;
     });
     act(() =>
       useTelemetryStore.getState().setSnapshot({ ...sampleSnapshot, detail: sampleDetail }),

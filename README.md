@@ -145,6 +145,9 @@ See [System configuration](docs/configuration.md) for coverage and usage.
   metric its own warning and critical thresholds; pick a theme preset (Dark, Light, Midnight, High
   contrast) or follow the Windows accent color in **Appearance**; export, import or reset settings
   by group; and copy a system summary (specs and current readings) for a support post.
+- 🔌 **Integrations:** publish readings over MQTT with Home Assistant discovery, and add your own
+  dashboard cards from small JSON files. See [docs/integrations.md](docs/integrations.md#mqtt) and
+  [docs/custom-cards.md](docs/custom-cards.md).
 - 🔔 **Alerts:** desktop notifications when a reading stays past its limit. **Settings > Alerts** sets
   a threshold and duration per metric (CPU, memory, disk, GPUs, temperatures), plus low disk space,
   network down, ping spike and battery reminders, with quiet hours and snooze (also in the tray menu).

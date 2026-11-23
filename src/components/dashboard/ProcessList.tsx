@@ -1,6 +1,6 @@
 import { invoke } from '../../lib/ipc';
 import { ChevronDown, ChevronRight, MoreHorizontal, Pin, Search, X } from 'lucide-react';
-import { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { formatBytes, formatRateRounded } from '../../lib/format';
 import {
   CONFIRM_MS,
@@ -18,7 +18,6 @@ import { useToastStore } from '../../toasts';
 import type { KillReport, ProcessGroup } from '../../types/telemetry';
 import { Card } from './Card';
 import { ProcessMenu, type MenuTarget } from './ProcessMenu';
-import { InfoTabVisible } from './infoTabContext';
 import { Segmented } from '../Segmented';
 import { ScrollArea } from '../ScrollArea';
 import { Skeleton } from './Skeleton';
@@ -224,15 +223,6 @@ export function ProcessList() {
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searching = query !== settledQuery;
   const disarm = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [open, setOpen] = useState(true);
-  const sampling = useContext(InfoTabVisible) && open;
-
-  useEffect(() => {
-    const send = (enabled: boolean) =>
-      void invoke('set_process_sampling', { enabled }).catch(() => {});
-    send(sampling);
-    return () => send(false);
-  }, [sampling]);
 
   useEffect(
     () => () => {
@@ -307,7 +297,6 @@ export function ProcessList() {
       section="processes"
       title="Top processes"
       aside={<SortToggle sort={sort} onChange={setSort} />}
-      onOpenChange={setOpen}
     >
       <div className="glass-field mb-2 flex items-center gap-1.5 rounded-md px-2 focus-within:ring-1 focus-within:ring-island-muted">
         <Search size={12} aria-hidden className="shrink-0 text-island-muted" />

@@ -19,6 +19,20 @@ const make = (over: Partial<Settings> = {}): Settings =>
     hover_open_delay_ms: 0,
     hover_close_delay_ms: 0,
     dodge_browser_tabs: false,
+    integrations: {
+      api_enabled: false,
+      api_port: 8765,
+      api_lan: false,
+      api_token: '',
+      mqtt_enabled: false,
+      mqtt_host: '',
+      mqtt_port: 1883,
+      mqtt_username: '',
+      mqtt_password: '',
+      mqtt_topic: 'omniscience',
+      mqtt_interval_s: 10,
+      mqtt_discovery: false,
+    },
     poll_interval_ms: 1000,
     history_hours: 24,
     ping_target: '',
@@ -101,11 +115,13 @@ describe('resetPatch', () => {
       'cpu_temp_warn_c',
       'crit_threshold',
       'metric_thresholds',
+      'net_unit',
+      'temp_unit',
       'warn_threshold',
     ]);
     expect(thresholds.warn_threshold).toBe(75);
     expect(resetPatch('island', defaults, current).pill_rings).toEqual(['cpu', 'ram']);
-    expect(Object.keys(resetPatch('monitoring', defaults, current))).toContain('net_unit');
+    expect(Object.keys(resetPatch('monitoring', defaults, current))).toContain('ping_target');
     expect(Object.keys(resetPatch('profiles', defaults, current)).sort()).toEqual([
       'active_profile',
       'profiles',
@@ -124,6 +140,7 @@ describe('resetPatch', () => {
       'island',
       'monitoring',
       'alerts',
+      'integrations',
       'profiles',
     ]);
     expect(resetPatch('nope', defaults, current)).toEqual({});

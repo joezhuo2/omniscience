@@ -213,16 +213,18 @@ describe('Dashboard', () => {
     expect(tip).toHaveTextContent('48°C');
   });
 
-  it('samples processes only while their card is open', async () => {
-    const sampling: unknown[] = [];
+  it('samples a section only while its card is open', async () => {
+    const sampled: string[][] = [];
     mockIPC((cmd, args) => {
-      if (cmd === 'set_process_sampling') sampling.push(args);
+      if (cmd === 'set_sampled_sections') sampled.push((args as { sections: string[] }).sections);
       return null;
     });
     render(<Dashboard />);
-    await waitFor(() => expect(sampling.at(-1)).toEqual({ enabled: true }));
+    await waitFor(() => expect(sampled.at(-1)).toContain('processes'));
+    expect(sampled.at(-1)).toContain('drives');
     fireEvent.click(screen.getByRole('button', { name: 'Top processes' }));
-    await waitFor(() => expect(sampling.at(-1)).toEqual({ enabled: false }));
+    await waitFor(() => expect(sampled.at(-1)).not.toContain('processes'));
+    expect(sampled.at(-1)).toContain('drives');
   });
 
   it('keeps the last process list on ticks that carry none', () => {

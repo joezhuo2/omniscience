@@ -36,6 +36,20 @@ const makeSettings = (over: Partial<Settings> = {}): Settings => ({
   pill_rings: ['cpu', 'ram', 'igpu', 'dgpu', 'disk', 'net'],
   pill_numbers: 'off',
   dodge_browser_tabs: false,
+  integrations: {
+    api_enabled: false,
+    api_port: 8765,
+    api_lan: false,
+    api_token: '',
+    mqtt_enabled: false,
+    mqtt_host: '',
+    mqtt_port: 1883,
+    mqtt_username: '',
+    mqtt_password: '',
+    mqtt_topic: 'omniscience',
+    mqtt_interval_s: 10,
+    mqtt_discovery: false,
+  },
   energy_price_per_kwh: 0,
   energy_currency: '$',
   temp_unit: 'celsius',
@@ -151,23 +165,21 @@ describe('settings tools', () => {
   it('resets one group only, after a second click', async () => {
     current = makeSettings({ warn_threshold: 50, hover_open_delay_ms: 300 });
     render(<SettingsView onBack={() => {}} />);
-    const button = await screen.findByRole('button', { name: 'Reset' });
+    const button = await screen.findByRole('button', { name: 'Reset Thresholds and units' });
     fireEvent.click(button);
     expect(saved).toHaveLength(0);
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm reset' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm reset Thresholds and units' }));
     await waitFor(() => expect(saved).toHaveLength(1));
     expect(saved[0]?.warn_threshold).toBe(75);
     expect(saved[0]?.hover_open_delay_ms).toBe(300);
-    expect(await screen.findByText('Thresholds reset to defaults.')).toBeVisible();
+    expect(await screen.findByText('Thresholds and units reset to defaults.')).toBeVisible();
   });
 
-  it('picks another group to reset', async () => {
+  it('resets another group from its own heading', async () => {
     current = makeSettings({ hover_open_delay_ms: 300 });
     render(<SettingsView onBack={() => {}} />);
-    fireEvent.click(await screen.findByRole('combobox', { name: 'Settings group' }));
-    fireEvent.click(await screen.findByRole('option', { name: 'Island and pill' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm reset' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Reset Island and pill' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm reset Island and pill' }));
     await waitFor(() => expect(saved).toHaveLength(1));
     expect(saved[0]?.hover_open_delay_ms).toBe(100);
     expect(saved[0]?.warn_threshold).toBe(70);

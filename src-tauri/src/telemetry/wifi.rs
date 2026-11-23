@@ -9,14 +9,38 @@ use windows_sys::Win32::NetworkManagement::WiFi::{
 use super::parse;
 use super::types::WifiInfo;
 
-pub fn current() -> Option<WifiInfo> {
-    // SAFETY: the client handle is closed and every WLAN allocation freed before returning; the
-    // interface list and attributes are only read while alive and within their reported counts.
-    unsafe {
+/// An open WLAN client handle, kept for as long as Wi-Fi is shown.
+pub struct Wifi(windows_sys::Win32::Foundation::HANDLE);
+
+// SAFETY: a WLAN client handle may be used from any thread.
+unsafe impl Send for Wifi {}
+
+impl Wifi {
+    pub fn open() -> Option<Self> {
         let (mut version, mut handle) = (0u32, std::ptr::null_mut());
-        if WlanOpenHandle(2, std::ptr::null(), &mut version, &mut handle) != 0 {
-            return None;
+        // SAFETY: out-pointers are valid locals; the handle is closed in Drop.
+        (unsafe { WlanOpenHandle(2, std::ptr::null(), &mut version, &mut handle) } == 0)
+            .then_some(Self(handle))
+    }
+
+    pub fn current(&self) -> Option<WifiInfo> {
+        current(self.0)
+    }
+}
+
+impl Drop for Wifi {
+    fn drop(&mut self) {
+        // SAFETY: the handle came from WlanOpenHandle.
+        unsafe {
+            WlanCloseHandle(self.0, std::ptr::null());
         }
+    }
+}
+
+fn current(handle: windows_sys::Win32::Foundation::HANDLE) -> Option<WifiInfo> {
+    // SAFETY: every WLAN allocation is freed before returning; the interface list and attributes
+    // are only read while alive and within their reported counts.
+    unsafe {
         let mut list: *mut WLAN_INTERFACE_INFO_LIST = std::ptr::null_mut();
         let mut found = None;
         if WlanEnumInterfaces(handle, std::ptr::null(), &mut list) == 0 && !list.is_null() {
@@ -58,7 +82,6 @@ pub fn current() -> Option<WifiInfo> {
         if !list.is_null() {
             WlanFreeMemory(list.cast());
         }
-        WlanCloseHandle(handle, std::ptr::null());
         found
     }
 }
@@ -67,6 +90,6 @@ pub fn current() -> Option<WifiInfo> {
 mod tests {
     #[test]
     fn queries_without_crashing() {
-        let _ = super::current();
+        let _ = super::Wifi::open().and_then(|w| w.current());
     }
 }

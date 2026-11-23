@@ -55,6 +55,94 @@ pub struct Settings {
     pub temp_unit: TempUnit,
     pub net_unit: NetUnit,
     pub metric_thresholds: MetricThresholds,
+    pub integrations: IntegrationSettings,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
+#[serde(default)]
+#[ts(export)]
+pub struct IntegrationSettings {
+    pub api_enabled: bool,
+    pub api_port: u16,
+    pub api_lan: bool,
+    pub api_token: String,
+    pub mqtt_enabled: bool,
+    pub mqtt_host: String,
+    pub mqtt_port: u16,
+    pub mqtt_username: String,
+    pub mqtt_password: String,
+    pub mqtt_topic: String,
+    pub mqtt_interval_s: u32,
+    pub mqtt_discovery: bool,
+}
+
+impl Default for IntegrationSettings {
+    fn default() -> Self {
+        Self {
+            api_enabled: false,
+            api_port: 9124,
+            api_lan: false,
+            api_token: String::new(),
+            mqtt_enabled: false,
+            mqtt_host: String::new(),
+            mqtt_port: 1883,
+            mqtt_username: String::new(),
+            mqtt_password: String::new(),
+            mqtt_topic: "omniscience".into(),
+            mqtt_interval_s: 10,
+            mqtt_discovery: true,
+        }
+    }
+}
+
+impl IntegrationSettings {
+    fn sanitized(mut self) -> Self {
+        let d = Self::default();
+        if self.api_port < 1024 {
+            self.api_port = d.api_port;
+        }
+        self.api_token = self
+            .api_token
+            .chars()
+            .filter(char::is_ascii_alphanumeric)
+            .take(64)
+            .collect();
+        self.mqtt_host = self.mqtt_host.trim().chars().take(253).collect();
+        if self.mqtt_port == 0 {
+            self.mqtt_port = d.mqtt_port;
+        }
+        self.mqtt_username = self.mqtt_username.trim().chars().take(128).collect();
+        self.mqtt_password = self.mqtt_password.chars().take(256).collect();
+        let topic: String = self
+            .mqtt_topic
+            .chars()
+            .filter(|c| !matches!(c, '#' | '+') && !c.is_control())
+            .take(128)
+            .collect();
+        self.mqtt_topic = topic.trim().trim_matches('/').to_string();
+        if self.mqtt_topic.is_empty() {
+            self.mqtt_topic = d.mqtt_topic;
+        }
+        self.mqtt_interval_s = self.mqtt_interval_s.clamp(2, 3600);
+        self
+    }
+}
+
+#[cfg(any(feature = "standalone", test))]
+pub fn new_token() -> String {
+    use std::hash::{BuildHasher, Hasher};
+    let nanos = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_nanos())
+        .unwrap_or_default();
+    let mut out = String::new();
+    for round in 0..2u8 {
+        let mut hasher = std::collections::hash_map::RandomState::new().build_hasher();
+        hasher.write_u128(nanos);
+        hasher.write_u8(round);
+        out.push_str(&format!("{:016x}", hasher.finish()));
+    }
+    out
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
@@ -327,6 +415,7 @@ impl Default for Settings {
             temp_unit: TempUnit::Celsius,
             net_unit: NetUnit::Bytes,
             metric_thresholds: MetricThresholds::default(),
+            integrations: IntegrationSettings::default(),
         }
     }
 }
@@ -368,6 +457,7 @@ impl Settings {
         self.energy_price_per_kwh = self.energy_price_per_kwh.clamp(0.0, 1000.0);
         self.energy_currency = self.energy_currency.trim().chars().take(4).collect();
         self.alerts = self.alerts.sanitized();
+        self.integrations = self.integrations.sanitized();
         self.metric_thresholds = self.metric_thresholds.sanitized(Thresholds {
             warn: self.warn_threshold,
             crit: self.crit_threshold,
@@ -655,6 +745,32 @@ mod tests {
             })
         );
         assert_eq!(s.metric_thresholds.disk, None);
+    }
+
+    #[test]
+    fn sanitizes_integrations() {
+        let d = IntegrationSettings::default();
+        assert!(!d.api_enabled && !d.api_lan && !d.mqtt_enabled);
+        let mut s = Settings::default();
+        s.integrations.api_port = 80;
+        s.integrations.api_token = "ab c/../d!".into();
+        s.integrations.mqtt_topic = " /home/+/pc/# ".into();
+        s.integrations.mqtt_interval_s = 0;
+        s.integrations.mqtt_port = 0;
+        let s = s.sanitized();
+        assert_eq!(s.integrations.api_port, 9124);
+        assert_eq!(s.integrations.api_token, "abcd");
+        assert_eq!(s.integrations.mqtt_topic, "home//pc");
+        assert_eq!(s.integrations.mqtt_interval_s, 2);
+        assert_eq!(s.integrations.mqtt_port, 1883);
+    }
+
+    #[test]
+    fn tokens_are_long_and_differ() {
+        let (a, b) = (new_token(), new_token());
+        assert_eq!(a.len(), 32);
+        assert!(a.chars().all(|c| c.is_ascii_hexdigit()));
+        assert_ne!(a, b);
     }
 
     #[test]
