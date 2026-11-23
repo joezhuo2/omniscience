@@ -66,10 +66,12 @@ describe('embedded mode', () => {
       cmd: 'plugin:omniscience|set_expanded',
       args: { expanded: false },
     });
-    expect(calls.filter((c) => c.cmd.endsWith('set_process_sampling')).at(-1)).toEqual({
-      cmd: 'plugin:omniscience|set_process_sampling',
-      args: { enabled: false },
-    });
+    await waitFor(() =>
+      expect(calls.filter((c) => c.cmd.endsWith('set_sampled_sections')).at(-1)).toEqual({
+        cmd: 'plugin:omniscience|set_sampled_sections',
+        args: { sections: [] },
+      }),
+    );
   });
 
   it('hides standalone-only settings', async () => {

@@ -9,7 +9,7 @@ const vendored = fileURLToPath(new URL('./src/vendor/crystal/', import.meta.url)
 // Crystal packages not on npm are copied into src/vendor/crystal; the two published ones resolve from node_modules.
 const alias = [
   {
-    find: /^@crystalflux\/(?!animated-number$|color-picker$)([\w-]+)$/,
+    find: /^@crystalflux\/(?!color-picker$)([\w-]+)$/,
     replacement: `${vendored}$1/index.ts`,
   },
 ];

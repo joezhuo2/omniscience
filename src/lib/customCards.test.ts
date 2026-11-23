@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fillTemplate } from './customCards';
+import { fillTemplate, sampledSections } from './customCards';
 
 const sources = {
   core: { cpu: { percent: 12.345 }, name: 'pc' },
@@ -38,5 +38,14 @@ describe('fillTemplate', () => {
   it('keeps text around placeholders and ignores text without them', () => {
     expect(fillTemplate('plain', sources)).toBe('plain');
     expect(fillTemplate('a {core.name} b {core.name}', sources)).toBe('a pc b pc');
+  });
+});
+
+describe('sampledSections', () => {
+  it('maps detail fields to the sections that collect them', () => {
+    expect(
+      sampledSections(['{detail.disks.0.temp_c}', '{ detail.fans.cpu_rpm|0} {core.cpu.percent}']),
+    ).toEqual(['drives', 'fans']);
+    expect(sampledSections(['{detail.unknown}', '{data.x}'])).toEqual([]);
   });
 });

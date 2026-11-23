@@ -60,16 +60,16 @@ function HealthRow({ battery }: { battery: Battery }) {
 
 /** Laptop battery. Not rendered on machines without one. */
 export function BatteryCard() {
-  const detail = useTelemetryStore((s) => s.snapshot?.detail);
+  const loaded = useTelemetryStore((s) => s.snapshot?.detail != null);
+  const battery = useTelemetryStore((s) => s.snapshot?.detail?.battery);
   const configEnabled = useSettingsStore((s) => s.settings?.config_enabled ?? false);
-  if (!detail) {
+  if (!loaded) {
     return (
       <Card section="battery" title="Battery">
         <Skeleton className="h-6" />
       </Card>
     );
   }
-  const battery = detail.battery;
   if (!battery) return null;
   const Icon =
     battery.state === 'charging'

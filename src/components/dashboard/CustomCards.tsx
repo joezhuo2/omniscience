@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { fillTemplate } from '../../lib/customCards';
+import { fillTemplate, sampledSections } from '../../lib/customCards';
 import { invoke, isEmbedded } from '../../lib/ipc';
 import { useTelemetryStore } from '../../store';
 import type { CustomCard } from '../../types/generated/CustomCard';
@@ -34,7 +34,11 @@ function CustomCardView({ card }: { card: CustomCard }) {
   }, [id, refresh]);
 
   return (
-    <Card title={card.title} section={`custom:${id}`}>
+    <Card
+      title={card.title}
+      section={`custom:${id}`}
+      samples={sampledSections(card.rows.map((r) => r.value))}
+    >
       {card.error ? (
         <p className="text-[11px] text-island-crit">{card.error}</p>
       ) : (
